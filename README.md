@@ -19,6 +19,7 @@
 - docs:      README나 WIKI 등의 문서 개정
 - revert:    이전 커밋을 되돌리는 경우
 - ci:      CI 구성 파일 및 스크립트 변경
-- Merge: 다른브렌치를 merge하는 경우
+- cd: 		 CD 구성 파일 및 스크립트 변경 
+- Merge: 다른 branch를 merge하는 경우
 - Init : Initial commit을 하는 경우
 ```
