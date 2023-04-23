@@ -49,4 +49,4 @@ jobs:
         file: ./Dockerfile
         platforms: linux/amd64
         push: true
-        tags: ${{ secrets.DOCKERHUB_REPO }}:${{env.TAG_VERSION}}
+        tags: ${{ secrets.DOCKERHUB_REPO }}:env.TAG_VERSION
