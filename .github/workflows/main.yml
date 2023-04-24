@@ -22,7 +22,49 @@ jobs:
         java-version: '11'
         distribution: 'temurin' # jdk를 제공하는 vender사 이름 ex. zulu, adopt, microsoft
 
+    ## Create properties
+    - name: make application-database.yml
+      run: 
+        touch ./src/main/resources/application-database.yml 
+      run:
+        echo "${{env.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
+    - uses: actions/upload-artifact@v3
+      with: 
+        name: application-database.yml 
+        path: ./src/main/resources/application-database.yml
+
+    - name: make application-oauth.yml
+      run: 
+        touch ./src/main/resources/application-oauth.yml 
+      run:
+        echo "${{env.APPLICATION_OAUTH}}" > ./src/main/resources/application-oauth.yml
+    - uses: actions/upload-artifact@v3
+      with: 
+        name: application-oauth.yml 
+        path: ./src/main/resources/application-oauth.yml
+
+    - name: make test/resources/application.yml
+      run: 
+        touch ./src/test/resources/application.yml 
+      run:
+        echo "${{env.APPLICATION_TEST}}" > ./src/test/resources/application.yml
+    - uses: actions/upload-artifact@v3
+      with: 
+        name: application.yml 
+        path: ./src/test/resources/application.yml
+
+
     ## Gradle
+    - name: Cache gradle packages
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
         
@@ -48,3 +90,4 @@ jobs:
         push: true
         # tags: ${{ secrets.DOCKERHUB_REPO }}:${{ github.sha }}  
         tags: ${{ secrets.DOCKERHUB_REPO }}:latest
+
