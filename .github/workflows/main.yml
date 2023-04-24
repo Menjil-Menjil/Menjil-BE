@@ -22,35 +22,6 @@ jobs:
         java-version: '11'
         distribution: 'temurin' # jdk를 제공하는 vender사 이름 ex. zulu, adopt, microsoft
 
-    ## Create properties
-    - name: make application-database.yml
-      run: 
-        touch ./src/main/resources/application-database.yml |
-        echo "${{env.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
-    - uses: actions/upload-artifact@v3
-      with: 
-        name: application-database.yml 
-        path: ./src/main/resources/application-database.yml
-
-    - name: make application-oauth.yml
-      run: 
-        touch ./src/main/resources/application-oauth.yml |
-        echo "${{env.APPLICATION_OAUTH}}" > ./src/main/resources/application-oauth.yml
-    - uses: actions/upload-artifact@v3
-      with: 
-        name: application-oauth.yml 
-        path: ./src/main/resources/application-oauth.yml
-
-    - name: make test/resources/application.yml
-      run: 
-        touch ./src/test/resources/application.yml |
-        echo "${{env.APPLICATION_TEST}}" > ./src/test/resources/application.yml
-    - uses: actions/upload-artifact@v3
-      with: 
-        name: application.yml 
-        path: ./src/test/resources/application.yml
-
-
     ## Gradle
     - name: Cache gradle packages
     - uses: actions/cache@v3
