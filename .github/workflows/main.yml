@@ -23,6 +23,7 @@ jobs:
         distribution: 'temurin' # jdk를 제공하는 vender사 이름 ex. zulu, adopt, microsoft
 
     ## Create properties
+    - uses: actions/checkout@v3
     - name: make application-database.yml
       run: 
         touch ./src/main/resources/application-database.yml 
@@ -33,6 +34,7 @@ jobs:
         name: application-database.yml 
         path: ./src/main/resources/application-database.yml
 
+    - uses: actions/checkout@v3
     - name: make application-oauth.yml
       run: 
         touch ./src/main/resources/application-oauth.yml 
@@ -43,6 +45,7 @@ jobs:
         name: application-oauth.yml 
         path: ./src/main/resources/application-oauth.yml
 
+    - uses: actions/checkout@v3
     - name: make test/resources/application.yml
       run: 
         touch ./src/test/resources/application.yml 
