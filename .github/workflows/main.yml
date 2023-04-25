@@ -35,7 +35,8 @@ jobs:
     - name: make application-oauth.yml
       run: 
         touch ./src/main/resources/application-oauth.yml |
-        echo "${{env.APPLICATION_OAUTH}}" | base64 --decode > ./src/main/resources/application-oauth.yml
+        echo "${{env.APPLICATION_OAUTH}}" | base64 --decode > ./src/main/resources/application-oauth.yml | 
+        cat ./src/main/resources/application-oauth.yml
     - uses: actions/upload-artifact@v3
       with: 
         name: application-oauth.yml 
