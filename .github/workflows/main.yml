@@ -42,8 +42,8 @@ jobs:
 #         path: ./src/main/resources/application-oauth.yml
 
     - name: make test/resources/application-database-test.yml
-      run: 
-        touch src/test/resources/application-database-test.yml |
+      run: |
+        touch src/test/resources/application-database-test.yml 
         echo "${{env.APPLICATION_TEST}}" | base64 --decode > src/test/resources/application-database-test.yml
 
     - name: upload application-database-test.yml
