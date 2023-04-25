@@ -45,12 +45,6 @@ jobs:
       run: 
         touch ./src/test/resources/application-database-test.yml |
         echo "${{env.APPLICATION_TEST}}" | base64 --decode > ./src/test/resources/application-database-test.yml
-        
-    - name: upload application-database-test.yml
-      uses: actions/upload-artifact@v3
-      with: 
-        name: application-database-test.yml 
-        path: ./src/test/resources/application-database-test.yml
 
     ## Gradle
     - name: Cache gradle packages
@@ -68,6 +62,12 @@ jobs:
         
     - name: Build with Gradle
       run : ./gradlew clean build
+
+    - name: upload application-database-test.yml
+      uses: actions/upload-artifact@v3
+      with: 
+        name: application-database-test.yml 
+        path: ./src/test/resources/application-database-test.yml
 
     ## Docker
     - name: Login to Docker Hub
