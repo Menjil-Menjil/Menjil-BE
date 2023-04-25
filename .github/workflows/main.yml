@@ -43,11 +43,13 @@ jobs:
 
     - name: make test/resources/application-database-test.yml
       run: 
-        touch ./src/test/resources/application.yml |
+        touch ./src/test/resources/application-database-test.yml |
         echo "${{env.APPLICATION_TEST}}" | base64 --decode > ./src/test/resources/application-database-test.yml
-    - uses: actions/upload-artifact@v3
+        
+    - name: upload application-database-test.yml
+      uses: actions/upload-artifact@v3
       with: 
-        name: application.yml 
+        name: application-database-test.yml 
         path: ./src/test/resources/application-database-test.yml
 
     ## Gradle
