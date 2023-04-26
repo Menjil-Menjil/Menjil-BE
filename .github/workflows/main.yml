@@ -24,34 +24,25 @@ jobs:
         
     ## Create properties
     - name: make application-database.yml
-      run: 
-        touch ./src/main/resources/application-database.yml |
-        echo "${{env.APPLICATION_DATABASE}}" | base64 --decode > ./src/main/resources/application-database.yml
-#     - uses: actions/upload-artifact@v3
-#       with: 
-#         name: application-database.yml 
-#         path: ./src/main/resources/application-database.yml
+      run: |
+        touch src/main/resources/application-database.yml 
+        echo "${{env.APPLICATION_DATABASE}}" | base64 --decode > src/main/resources/application-database.yml
 
     - name: make application-oauth.yml
-      run: 
-        touch ./src/main/resources/application-oauth.yml |
-        echo "${{env.APPLICATION_OAUTH}}" | base64 --decode > ./src/main/resources/application-oauth.yml
-#     - uses: actions/upload-artifact@v3
-#       with: 
-#         name: application-oauth.yml 
-#         path: ./src/main/resources/application-oauth.yml
+      run: |
+        touch src/main/resources/application-oauth.yml 
+        echo "${{env.APPLICATION_OAUTH}}" | base64 --decode > src/main/resources/application-oauth.yml
 
     - name: make test/resources/application-database-test.yml
       run: |
         touch src/test/resources/application-database-test.yml 
-        # echo "${{env.APPLICATION_TEST}}" | base64 --decode > src/test/resources/application-database-test.yml
-        echo "test here!!!!!!" > src/test/resources/application-database-test.yml
+        echo "${{env.APPLICATION_TEST}}" | base64 --decode > src/test/resources/application-database-test.yml
 
-    - name: upload application-database-test.yml
-      uses: actions/upload-artifact@v3
-      with: 
-        name: application-database-test.yml 
-        path: src/test/resources/application-database-test.yml
+    # - name: upload application-database-test.yml
+    #   uses: actions/upload-artifact@v3
+    #   with: 
+    #     name: application-database-test.yml 
+    #     path: src/test/resources/application-database-test.yml
 
     ## Gradle
     - name: Cache gradle packages
