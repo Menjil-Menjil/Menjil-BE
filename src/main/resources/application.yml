@@ -5,7 +5,7 @@ spring:
   config:
     import:
     - classpath:/application-database.yml # for AWS RES(MySQL)
-#    - classpath:/application-oauth.yml    # for Google OAuth
+    - classpath:/application-security.yml    # for OAuth2: google, kakao
 
   jpa:
     open-in-view: false
