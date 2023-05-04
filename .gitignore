@@ -28,7 +28,7 @@ out/
 
 ### private info ### 
 src/main/resources/application-database.yml
-src/main/resources/application-oauth.yml
+src/main/resources/application-security.yml
 
 src/test/resources/application-database-test.yml
 
