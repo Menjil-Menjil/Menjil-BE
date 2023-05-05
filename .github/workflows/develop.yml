@@ -33,7 +33,7 @@ jobs:
         touch src/main/resources/application-security.yml 
         echo "${{env.APPLICATION_SECURITY_DEV}}" | base64 --decode > src/main/resources/application-security.yml
 
-    - name: make test/resources/application-database-test.yml
+    - name: make application-database-test.yml
       shell: bash
       run: |
         touch src/test/resources/application-database-test.yml 

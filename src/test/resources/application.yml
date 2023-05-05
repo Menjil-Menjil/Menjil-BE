@@ -3,12 +3,12 @@ spring:
     import:
       - classpath:/application-database-test.yml
 
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: create    # test can use create or update
-    properties:
-      hibernate:
-        #        show_sql: true
-        format_sql: true
+#  jpa:
+#    open-in-view: false
+#    hibernate:
+#      ddl-auto: create    # test can use create or update
+#    properties:
+#      hibernate:
+#        #        show_sql: true
+#        format_sql: true
 
