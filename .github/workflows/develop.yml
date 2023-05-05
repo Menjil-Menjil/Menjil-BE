@@ -24,20 +24,20 @@ jobs:
     - name: make application-database.yml
       shell: bash
       run: |
-        touch src/main/resources/application-database.yml 
-        echo "${{env.APPLICATION_DATABASE}}" | base64 --decode > src/main/resources/application-database.yml
+        touch ./src/main/resources/application-database.yml 
+        echo "${{env.APPLICATION_DATABASE}}" | base64 --decode > ./src/main/resources/application-database.yml
 
     - name: make application-security.yml
       shell: bash
       run: |
-        touch src/main/resources/application-security.yml 
-        echo "${{env.APPLICATION_SECURITY_DEV}}" | base64 --decode > src/main/resources/application-security.yml
+        touch ./src/main/resources/application-security.yml 
+        echo "${{env.APPLICATION_SECURITY_DEV}}" | base64 --decode > ./src/main/resources/application-security.yml
 
     - name: make application-database-test.yml
       shell: bash
       run: |
-        touch src/test/resources/application-database-test.yml 
-        echo "${{env.APPLICATION_TEST}}" | base64 --decode > src/test/resources/application-database-test.yml
+        touch ./src/test/resources/application-database-test.yml 
+        echo "${{env.APPLICATION_TEST}}" | base64 --decode > ./src/test/resources/application-database-test.yml
 
     ## Gradle
     - name: Cache gradle packages
