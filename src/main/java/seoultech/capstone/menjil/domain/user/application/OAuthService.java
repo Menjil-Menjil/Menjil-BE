@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import seoultech.capstone.menjil.domain.user.application.social.GoogleOAuthHandler;
-import seoultech.capstone.menjil.domain.user.application.social.KaKaoOauthHandler;
+import seoultech.capstone.menjil.domain.user.application.handler.GoogleOAuthHandler;
+import seoultech.capstone.menjil.domain.user.application.handler.KaKaoOauthHandler;
 import seoultech.capstone.menjil.domain.user.domain.SocialLoginType;
 import seoultech.capstone.menjil.domain.user.dto.GoogleOAuthTokenDto;
 import seoultech.capstone.menjil.domain.user.dto.GoogleOAuthUserDto;
@@ -57,6 +57,7 @@ public class OAuthService {
                 ResponseEntity<String> userInfoResponse = googleOAuthHandler.requestUserInfo(googleOAuthTokenDto);
                 // Deserialize From JSON to Object
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
+                log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
                 return googleOAuthUserDto.toString();
             }
             case KAKAO: {
@@ -69,12 +70,14 @@ public class OAuthService {
                 ResponseEntity<String> userInfoResponse = kaKaoOauthHandler.requestUserInfo(kaKaoOauthTokenDto);
                 // Deserialize From JSON to Object
                 KaKaoOAuthUserDto kaKaoOAuthUserDto = kaKaoOauthHandler.getUserInfoFromJson(userInfoResponse);
+                log.info(">> 요청이 들어온 사용자 정보 :: provider=kakao, user e-mail={}", kaKaoOAuthUserDto.getKakaoAccount().getEmail());
                 return kaKaoOAuthUserDto.toString();
             }
             default: {
                 throw new IllegalArgumentException("알 수 없는 소셜 로그인 형식입니다.");
             }
         }
-
     }
+
+
 }
