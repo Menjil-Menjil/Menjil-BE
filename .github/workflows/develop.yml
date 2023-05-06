@@ -21,9 +21,11 @@ jobs:
         distribution: 'temurin' 
         
     ## Create secret yml files
-    - name: make application-database.yml
+    - name: make empty application-database.yml
       shell: bash
       run: touch ./src/main/resources/application-database.yml 
+    - name: update application-database.yml from github secrets
+      shell: bash
       run: echo "${{env.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
     - name: upload application-database.yml
       uses: actions/upload-artifact@v3
