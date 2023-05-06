@@ -33,10 +33,12 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
     private static final String GOOGLE_OAUTH_TOKEN_BASED_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_OAUTH_USERINFO_REQUEST_URL = "https://www.googleapis.com/oauth2/v1/userinfo";
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public GoogleOAuthHandler(RestTemplate restTemplate) {
+    public GoogleOAuthHandler(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -79,7 +81,6 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
      */
     @Override
     public GoogleOAuthTokenDto getAccessToken(ResponseEntity<String> response) {
-        ObjectMapper objectMapper = new ObjectMapper();
         GoogleOAuthTokenDto googleOAuthTokenDto = new GoogleOAuthTokenDto();
         try {
             googleOAuthTokenDto = objectMapper.readValue(response.getBody(), GoogleOAuthTokenDto.class);
@@ -109,7 +110,6 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
 
     @Override
     public GoogleOAuthUserDto getUserInfoFromJson(ResponseEntity<String> userInfoRes) {
-        ObjectMapper objectMapper = new ObjectMapper();
         GoogleOAuthUserDto googleOAuthUserDto = new GoogleOAuthUserDto();
         try {
             googleOAuthUserDto = objectMapper.readValue(userInfoRes.getBody(), GoogleOAuthUserDto.class);

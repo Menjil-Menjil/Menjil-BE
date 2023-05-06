@@ -2,8 +2,8 @@ package seoultech.capstone.menjil.domain.user.application.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -19,10 +19,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class KaKaoOauthHandler implements SocialOAuthHandler {
-
-    private final RestTemplate restTemplate;
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String KAKAO_OAUTH_CLIENT_ID;
@@ -34,6 +31,15 @@ public class KaKaoOauthHandler implements SocialOAuthHandler {
     private String KAKAO_OAUTH_REDIRECT_URI;
 
     private static final String KAKAO_OAUTH_ENDPOINT_URL = "https://kauth.kakao.com/oauth/authorize";
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Autowired
+    public KaKaoOauthHandler(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public String getOauthRedirectURL() {
@@ -79,7 +85,6 @@ public class KaKaoOauthHandler implements SocialOAuthHandler {
      */
     @Override
     public KaKaoOAuthTokenDto getAccessToken(ResponseEntity<String> response) {
-        ObjectMapper objectMapper = new ObjectMapper();
         KaKaoOAuthTokenDto kaKaoOauthTokenDto = new KaKaoOAuthTokenDto();
         try {
             kaKaoOauthTokenDto = objectMapper.readValue(response.getBody(), KaKaoOAuthTokenDto.class);
@@ -110,7 +115,6 @@ public class KaKaoOauthHandler implements SocialOAuthHandler {
 
     @Override
     public KaKaoOAuthUserDto getUserInfoFromJson(ResponseEntity<String> userInfoRes) {
-        ObjectMapper objectMapper = new ObjectMapper();
         KaKaoOAuthUserDto kaKaoOAuthUserDto = new KaKaoOAuthUserDto();
         try {
             kaKaoOAuthUserDto = objectMapper.readValue(userInfoRes.getBody(), KaKaoOAuthUserDto.class);
