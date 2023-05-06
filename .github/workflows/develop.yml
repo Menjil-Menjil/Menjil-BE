@@ -23,27 +23,21 @@ jobs:
     ## Create secret yml files
     - name: make empty application-database.yml
       shell: bash
-      run: touch ./src/main/resources/application-database.yml 
-    - name: update application-database.yml from github secrets
-      shell: bash
-      run: echo "${{env.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
-    - name: upload application-database.yml
-      uses: actions/upload-artifact@v3
-      with:
-        name: application-database.yml
-        path: ./src/main/resources/application-database.yml
+      run: |
+        touch ./src/main/resources/application-database.yml 
+        echo "${{secrets.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
 
     - name: make application-security.yml
       shell: bash
       run: |
         touch ./src/main/resources/application-security.yml 
-        echo "${{env.APPLICATION_SECURITY_DEV}}" | base64 --decode > ./src/main/resources/application-security.yml
+        echo "${{secrets.APPLICATION_SECURITY_DEV}}" > ./src/main/resources/application-security.yml
 
     - name: make application-database-test.yml
       shell: bash
       run: |
         touch ./src/test/resources/application-database-test.yml 
-        echo "${{env.APPLICATION_TEST}}" | base64 --decode > ./src/test/resources/application-database-test.yml
+        echo "${{secrets.APPLICATION_TEST}}" > ./src/test/resources/application-database-test.yml
 
     ## Gradle
     - name: Cache gradle packages
@@ -81,23 +75,23 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
 
-  # deploy:
-  #   needs: build  # build 이후에 실행되도록 설정
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: connect EC2 instance and deploy docker images to Dev server
-  #       uses: appleboy/ssh-action@v0.1.10
-  #       with: 
-  #         host: ${{ secrets.AWS_EC2_HOST_IP_DEV }}
-  #         username: ${{ secrets.AWS_EC2_USERNAME_DEV }}
-  #         key: ${{ secrets.AWS_SSH_KEY }}
-  #         # port: ${{ secrets.AWS_SSH_PORT }} # 생략하면 default 22
+  deploy:
+    needs: build  # build 이후에 실행되도록 설정
+    runs-on: ubuntu-latest
+    steps:
+      - name: connect EC2 instance and deploy docker images to Dev server
+        uses: appleboy/ssh-action@v0.1.10
+        with: 
+          host: ${{ secrets.AWS_EC2_HOST_IP_DEV }}
+          username: ${{ secrets.AWS_EC2_USERNAME_DEV }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          # port: ${{ secrets.AWS_SSH_PORT }} # 생략하면 default 22
 
-  #         # kill container -> remove container -> remove image -> pull new image -> run
-  #         script: |
-  #           sudo docker kill ${{ secrets.PROJECT_NAME }}  
-  #           sudo docker rm ${{ secrets.PROJECT_NAME }} 
-  #           sudo docker rmi ${{ secrets.DOCKERHUB_REPO_DEV }}
+          # kill container -> remove container -> remove image -> pull new image -> run
+          script: |
+            sudo docker kill ${{ secrets.PROJECT_NAME }}  
+            sudo docker rm ${{ secrets.PROJECT_NAME }} 
+            sudo docker rmi ${{ secrets.DOCKERHUB_REPO_DEV }}
 
-  #           sudo docker pull ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
-  #           sudo docker run -d --name ${{ secrets.PROJECT_NAME }} -p ${{ secrets.APPLICATION_PORT_DEV }}:${{ secrets.APPLICATION_PORT }} ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
+            sudo docker pull ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
+            sudo docker run -d --name ${{ secrets.PROJECT_NAME }} -p ${{ secrets.APPLICATION_PORT_DEV }}:${{ secrets.APPLICATION_PORT }} ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
