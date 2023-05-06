@@ -26,11 +26,11 @@ jobs:
       run: |
         touch ./src/main/resources/application-database.yml 
         echo "${{env.APPLICATION_DATABASE}}" | base64 --decode > ./src/main/resources/application-database.yml
-    - name: upload application-database-test.yml
-      uses: actions/upload-artifact@v2
+    - name: upload application.yml
+      uses: actions/upload-artifact@v3
       with:
-        name: application-database.yml
-        path: ./src/main/resources/application-database.yml
+        name: application.yml
+        path: ./src/main/resources/application.yml
 
     - name: make application-security.yml
       shell: bash
