@@ -99,7 +99,7 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
 
         // header
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token.getAccess_token());
+        headers.set("Authorization", "Bearer " + token.getAccessToken());
         // body 정보는 따로 필요 없음.
 
         // 요청하기 위해 Header 를 HttpEntity 로 묶기
