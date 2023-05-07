@@ -31,6 +31,7 @@ public class KaKaoOauthHandler implements SocialOAuthHandler {
     private String KAKAO_OAUTH_REDIRECT_URI;
 
     private static final String KAKAO_OAUTH_ENDPOINT_URL = "https://kauth.kakao.com/oauth/authorize";
+    private static final String KAKAO_OAUTH_USERINFO_REQUEST_URL = "https://kauth.kakao.com/oauth/token";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -71,7 +72,7 @@ public class KaKaoOauthHandler implements SocialOAuthHandler {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(
-                "https://kauth.kakao.com/oauth/token",
+                KAKAO_OAUTH_USERINFO_REQUEST_URL,
                 HttpMethod.POST, entity, String.class);
 
         if (responseEntity.getStatusCode() == HttpStatus.OK) {

@@ -10,7 +10,6 @@ import seoultech.capstone.menjil.domain.user.domain.SocialLoginType;
 
 @Slf4j
 @RequiredArgsConstructor
-@CrossOrigin
 @Controller
 @RequestMapping(value = "/auth")
 public class OAuthController {
@@ -34,7 +33,7 @@ public class OAuthController {
      *
      * @param socialLoginType; GOOGLE, KAKAO
      * @param code             API Server 로부터 넘어오는 code
-     * @return 암호화된 GoogleUser data
+     * @return User data wrapped by JWT
      */
     @GetMapping(value = "/{socialLoginType}/callback")
     @ResponseBody
@@ -44,14 +43,5 @@ public class OAuthController {
         log.info(">> 소셜 로그인 API 서버로부터 받은 code :: {}", code);
         String str = oAuthService.oAuthLogin(socialLoginType, code);
         return str;
-    }
-
-    /**
-     * 회원가입 로직
-     * GoogleUser 와 클라이언트에서 입력받은 사용자의 추가 정보를 받아 db 에 저장한다.
-     */
-    @PostMapping("/signup")
-    public void signUp() {
-
     }
 }
