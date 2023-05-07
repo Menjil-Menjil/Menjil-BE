@@ -14,10 +14,30 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)   // JSON type(snake case) -> java(camel case)
-public class KaKaoOAuthUserDto {
+public class KaKaoOAuthUserDto implements OAuthUserDto {
 
     private String id;  // Google id 와 동일한 Primitive type 사용
     private KakaoAccount kakaoAccount;
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public String getEmail() {
+        return this.getKakaoAccount().getEmail();
+    }
+
+    @Override
+    public String getName() {
+        return this.getKakaoAccount().getProfile().getNickname();
+    }
+
+    @Override
+    public String getProvider() {
+        return "kakao";
+    }
 
     @Getter
     @NoArgsConstructor
