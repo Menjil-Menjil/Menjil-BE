@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.application;
+package seoultech.capstone.menjil.domain.auth.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Jwts;
@@ -10,10 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import seoultech.capstone.menjil.domain.user.application.handler.GoogleOAuthHandler;
-import seoultech.capstone.menjil.domain.user.application.handler.KaKaoOauthHandler;
-import seoultech.capstone.menjil.domain.user.domain.SocialLoginType;
-import seoultech.capstone.menjil.domain.user.dto.*;
+import seoultech.capstone.menjil.domain.auth.application.handler.GoogleOAuthHandler;
+import seoultech.capstone.menjil.domain.auth.application.handler.KaKaoOauthHandler;
+import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
+import seoultech.capstone.menjil.domain.auth.dto.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;

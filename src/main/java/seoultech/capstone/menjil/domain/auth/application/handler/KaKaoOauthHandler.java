@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.application.handler;
+package seoultech.capstone.menjil.domain.auth.application.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import seoultech.capstone.menjil.domain.user.dto.KaKaoOAuthTokenDto;
-import seoultech.capstone.menjil.domain.user.dto.KaKaoOAuthUserDto;
+import seoultech.capstone.menjil.domain.auth.dto.KaKaoOAuthTokenDto;
+import seoultech.capstone.menjil.domain.auth.dto.KaKaoOAuthUserDto;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

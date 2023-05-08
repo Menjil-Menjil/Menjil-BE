@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.dto;
+package seoultech.capstone.menjil.domain.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;

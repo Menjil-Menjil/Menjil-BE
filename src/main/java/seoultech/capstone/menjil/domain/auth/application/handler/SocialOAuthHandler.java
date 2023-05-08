@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.application.handler;
+package seoultech.capstone.menjil.domain.auth.application.handler;
 
 import org.springframework.http.ResponseEntity;
 

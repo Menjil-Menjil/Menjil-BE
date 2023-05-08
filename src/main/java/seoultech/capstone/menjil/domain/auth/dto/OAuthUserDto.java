@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.dto;
+package seoultech.capstone.menjil.domain.auth.dto;
 
 public interface OAuthUserDto {
 

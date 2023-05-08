@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.application.handler;
+package seoultech.capstone.menjil.domain.auth.application.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,8 +9,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import seoultech.capstone.menjil.domain.user.dto.GoogleOAuthTokenDto;
-import seoultech.capstone.menjil.domain.user.dto.GoogleOAuthUserDto;
+import seoultech.capstone.menjil.domain.auth.dto.GoogleOAuthTokenDto;
+import seoultech.capstone.menjil.domain.auth.dto.GoogleOAuthUserDto;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

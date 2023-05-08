@@ -1,12 +1,12 @@
-package seoultech.capstone.menjil.domain.user.api;
+package seoultech.capstone.menjil.domain.auth.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import seoultech.capstone.menjil.domain.user.application.OAuthService;
-import seoultech.capstone.menjil.domain.user.domain.SocialLoginType;
+import seoultech.capstone.menjil.domain.auth.application.OAuthService;
+import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 
 @Slf4j
 @RequiredArgsConstructor
