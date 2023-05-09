@@ -1,8 +1,8 @@
-package seoultech.capstone.menjil.domain.user.config;
+package seoultech.capstone.menjil.domain.auth.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import seoultech.capstone.menjil.domain.user.domain.SocialLoginType;
+import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 
 @Configuration
 public class SocialLoginTypeConverter implements Converter<String, SocialLoginType> {

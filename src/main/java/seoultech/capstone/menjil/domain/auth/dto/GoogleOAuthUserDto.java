@@ -1,26 +1,43 @@
-package seoultech.capstone.menjil.domain.user.dto;
+package seoultech.capstone.menjil.domain.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GoogleOAuthUserDto {
+public class GoogleOAuthUserDto implements OAuthUserDto {
     private String id;  // id 값의 범위가 long 이상으로 넓어서, String type 으로 선언
     private String email;
-    //    private Boolean verified_email;
+    //    private Boolean verifiedEmail;
     private String name;
-//    private String given_name;
-//    private String family_name;
+//    private String givenName;
+//    private String familyName;
 //    private String picture;
 //    private String locale;
 
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public String getEmail() {
+        return this.email;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
+    public String getProvider() {
+        return "google";
+    }
 
     @Override
     public String toString() {

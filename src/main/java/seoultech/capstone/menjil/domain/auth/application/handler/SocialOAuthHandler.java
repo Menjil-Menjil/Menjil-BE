@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.application.social;
+package seoultech.capstone.menjil.domain.auth.application.handler;
 
 import org.springframework.http.ResponseEntity;
 
@@ -20,4 +20,5 @@ public interface SocialOAuthHandler {
 
     Object getAccessToken(ResponseEntity<String> response);
 
+    Object getUserInfoFromJson(ResponseEntity<String> response);
 }

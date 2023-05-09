@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.user.application.social;
+package seoultech.capstone.menjil.domain.auth.application.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,8 +9,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import seoultech.capstone.menjil.domain.user.dto.GoogleOAuthTokenDto;
-import seoultech.capstone.menjil.domain.user.dto.GoogleOAuthUserDto;
+import seoultech.capstone.menjil.domain.auth.dto.GoogleOAuthTokenDto;
+import seoultech.capstone.menjil.domain.auth.dto.GoogleOAuthUserDto;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,10 +33,12 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
     private static final String GOOGLE_OAUTH_TOKEN_BASED_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_OAUTH_USERINFO_REQUEST_URL = "https://www.googleapis.com/oauth2/v1/userinfo";
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public GoogleOAuthHandler(RestTemplate restTemplate) {
+    public GoogleOAuthHandler(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -58,8 +60,6 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
 
     @Override
     public ResponseEntity<String> requestAccessToken(String code) {
-//        RestTemplate restTemplate = new RestTemplate();
-
         Map<String, Object> params = new ConcurrentHashMap<>();
         params.put("code", code);
         params.put("client_id", GOOGLE_OAUTH_CLIENT_ID);
@@ -71,7 +71,6 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
                 restTemplate.postForEntity(GOOGLE_OAUTH_TOKEN_BASED_URL, params, String.class);
 
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
-            System.out.println("responseEntity = " + responseEntity);
             return responseEntity;
         }
         return null;
@@ -82,9 +81,6 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
      */
     @Override
     public GoogleOAuthTokenDto getAccessToken(ResponseEntity<String> response) {
-        System.out.println("response.getBody() = " + response.getBody());
-
-        ObjectMapper objectMapper = new ObjectMapper();
         GoogleOAuthTokenDto googleOAuthTokenDto = new GoogleOAuthTokenDto();
         try {
             googleOAuthTokenDto = objectMapper.readValue(response.getBody(), GoogleOAuthTokenDto.class);
@@ -96,10 +92,9 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
     }
 
     public ResponseEntity<String> requestUserInfo(GoogleOAuthTokenDto token) {
-
         // header
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token.getAccess_token());
+        headers.set("Authorization", "Bearer " + token.getAccessToken());
         // body 정보는 따로 필요 없음.
 
         // 요청하기 위해 Header 를 HttpEntity 로 묶기
@@ -113,9 +108,8 @@ public class GoogleOAuthHandler implements SocialOAuthHandler {
         return response;
     }
 
+    @Override
     public GoogleOAuthUserDto getUserInfoFromJson(ResponseEntity<String> userInfoRes) {
-        System.out.println("userInfoRes.getBody() = " + userInfoRes.getBody());
-        ObjectMapper objectMapper = new ObjectMapper();
         GoogleOAuthUserDto googleOAuthUserDto = new GoogleOAuthUserDto();
         try {
             googleOAuthUserDto = objectMapper.readValue(userInfoRes.getBody(), GoogleOAuthUserDto.class);
