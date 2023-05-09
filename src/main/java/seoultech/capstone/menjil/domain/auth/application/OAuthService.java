@@ -8,12 +8,14 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.application.handler.GoogleOAuthHandler;
 import seoultech.capstone.menjil.domain.auth.application.handler.KaKaoOauthHandler;
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 import seoultech.capstone.menjil.domain.auth.dto.*;
+import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserDtoRes;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -54,7 +56,7 @@ public class OAuthService {
         }
     }
 
-    public String oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
+    public OAuthUserDtoRes oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
         switch (socialLoginType) {
             case GOOGLE: {
                 // 구글로 code 를 보내 액세스 토큰이 담긴 응답 객체를 받아온다.
@@ -64,13 +66,26 @@ public class OAuthService {
 
                 // 액세스 토큰을 다시 구글 서버로 보내서 구글에 저장된 사용자 정보가 담긴 응답 객체를 받아온다.
                 ResponseEntity<String> userInfoResponse = googleOAuthHandler.requestUserInfo(googleOAuthTokenDto);
+
+                // Error handling
+                if (userInfoResponse == null) {
+                    return OAuthUserDtoRes.builder()
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .message("서버 내부 오류")
+                            .build();
+                }
                 // Deserialize From JSON to Object
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
 
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
-                return jwtInfo;
+
+                return OAuthUserDtoRes.builder()
+                        .status(HttpStatus.OK)
+                        .message("요청이 정상적으로 처리 되었습니다.")
+                        .data(jwtInfo)
+                        .build();
             }
             case KAKAO: {
                 // 카카오로 인가 코드를 보내 토큰을 받아온다.
@@ -80,13 +95,26 @@ public class OAuthService {
 
                 // 토큰 유효성 검증. 토큰으로 사용자 조회. 서비스 회원 정보 또는 가입 처리가 가능함.
                 ResponseEntity<String> userInfoResponse = kaKaoOauthHandler.requestUserInfo(kaKaoOauthTokenDto);
+
+                // Error handling
+                if (userInfoResponse == null) {
+                    return OAuthUserDtoRes.builder()
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .message("서버 내부 오류")
+                            .build();
+                }
                 // Deserialize From JSON to Object
                 KaKaoOAuthUserDto kaKaoOAuthUserDto = kaKaoOauthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=kakao, user e-mail={}", kaKaoOAuthUserDto.getKakaoAccount().getEmail());
 
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(kaKaoOAuthUserDto);
-                return jwtInfo;
+
+                return OAuthUserDtoRes.builder()
+                        .status(HttpStatus.OK)
+                        .message("요청이 정상적으로 처리 되었습니다.")
+                        .data(jwtInfo)
+                        .build();
             }
             default: {
                 log.error(">> oAuthLogin error");
