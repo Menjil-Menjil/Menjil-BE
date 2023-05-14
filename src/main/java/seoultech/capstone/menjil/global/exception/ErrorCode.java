@@ -15,7 +15,9 @@ public enum ErrorCode {
 
     // User
     NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "U001", "Nickname is already existed"),
-    LOGIN_INPUT_INVALID(HttpStatus.BAD_REQUEST, "U002", "Login input is invalid. " +
+    NICKNAME_CONTAINS_BLANK(HttpStatus.BAD_REQUEST, "U002", "Nickname only contains blank"),
+    NICKNAME_CONTAINS_SPECIAL_CHARACTER(HttpStatus.BAD_REQUEST, "U003", "Nickname cannot contains special character"),
+    LOGIN_INPUT_INVALID(HttpStatus.BAD_REQUEST, "U004", "Login input is invalid. " +
             "Please check your email or password");
 
     private final HttpStatus httpStatus;
