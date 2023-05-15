@@ -7,7 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.auth.application.OAuthService;
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
-import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserDtoRes;
+import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserRequestDto;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,7 +38,7 @@ public class OAuthController {
      */
     @GetMapping(value = "/{socialLoginType}/callback")
     @ResponseBody
-    public OAuthUserDtoRes callback(
+    public OAuthUserRequestDto callback(
             @PathVariable(name = "socialLoginType") SocialLoginType socialLoginType,
             @RequestParam(name = "code") String code) throws JsonProcessingException {
         log.info(">> 소셜 로그인 API 서버로부터 받은 code :: {}", code);

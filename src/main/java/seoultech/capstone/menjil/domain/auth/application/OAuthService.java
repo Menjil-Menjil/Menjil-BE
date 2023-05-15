@@ -15,7 +15,7 @@ import seoultech.capstone.menjil.domain.auth.application.handler.GoogleOAuthHand
 import seoultech.capstone.menjil.domain.auth.application.handler.KaKaoOauthHandler;
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 import seoultech.capstone.menjil.domain.auth.dto.*;
-import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserDtoRes;
+import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserRequestDto;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -56,7 +56,7 @@ public class OAuthService {
         }
     }
 
-    public OAuthUserDtoRes oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
+    public OAuthUserRequestDto oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
         switch (socialLoginType) {
             case GOOGLE: {
                 // 구글로 code 를 보내 액세스 토큰이 담긴 응답 객체를 받아온다.
@@ -69,7 +69,7 @@ public class OAuthService {
 
                 // Error handling
                 if (userInfoResponse == null) {
-                    return OAuthUserDtoRes.builder()
+                    return OAuthUserRequestDto.builder()
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .message("서버 내부 오류")
                             .build();
@@ -81,7 +81,7 @@ public class OAuthService {
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
 
-                return OAuthUserDtoRes.builder()
+                return OAuthUserRequestDto.builder()
                         .status(HttpStatus.OK)
                         .message("요청이 정상적으로 처리 되었습니다.")
                         .data(jwtInfo)
@@ -98,7 +98,7 @@ public class OAuthService {
 
                 // Error handling
                 if (userInfoResponse == null) {
-                    return OAuthUserDtoRes.builder()
+                    return OAuthUserRequestDto.builder()
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .message("서버 내부 오류")
                             .build();
@@ -110,7 +110,7 @@ public class OAuthService {
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(kaKaoOAuthUserDto);
 
-                return OAuthUserDtoRes.builder()
+                return OAuthUserRequestDto.builder()
                         .status(HttpStatus.OK)
                         .message("요청이 정상적으로 처리 되었습니다.")
                         .data(jwtInfo)
