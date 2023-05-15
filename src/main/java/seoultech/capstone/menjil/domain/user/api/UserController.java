@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import seoultech.capstone.menjil.domain.user.application.UserService;
-import seoultech.capstone.menjil.domain.user.dto.response.UserAcceptDtoRes;
+import seoultech.capstone.menjil.domain.user.dto.response.UserAcceptResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
@@ -27,7 +27,7 @@ public class UserController {
      * 닉네임 중복 체크
      */
     @GetMapping("/check-nickname")
-    public UserAcceptDtoRes checkNicknameDuplicate(@RequestParam("nickname") String nickname) {
+    public UserAcceptResponseDto checkNicknameDuplicate(@RequestParam("nickname") String nickname) {
 
         String pattern1 = "^[가-힣a-zA-Z0-9]*$";    // 특수문자, 공백 모두 체크 가능
 
@@ -38,10 +38,11 @@ public class UserController {
             throw new CustomException(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER);
         }
 
-        return UserAcceptDtoRes
+        return UserAcceptResponseDto
                 .builder()
                 .status(HttpStatus.OK)
                 .message(userService.checkNicknameDuplication(nickname))
                 .build();
     }
+
 }

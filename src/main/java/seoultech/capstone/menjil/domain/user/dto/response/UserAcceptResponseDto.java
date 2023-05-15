@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class UserAcceptDtoRes {
+public class UserAcceptResponseDto {
     /**
      * nickname 중복 확인, 회원가입 로직 등에 사용.
      */
@@ -13,7 +13,7 @@ public class UserAcceptDtoRes {
     private String message;
 
     @Builder
-    public UserAcceptDtoRes(HttpStatus status, String message) {
+    public UserAcceptResponseDto(HttpStatus status, String message) {
         this.status = status;
         this.message = message;
     }
