@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @Builder
 @Getter
 @AllArgsConstructor
-public class OAuthUserRequestDto {
+public class OAuthUserResponseDto {
     private final HttpStatus status;
     private final String message;
     private final String data;
