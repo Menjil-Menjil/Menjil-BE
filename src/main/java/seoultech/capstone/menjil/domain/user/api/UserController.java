@@ -3,13 +3,14 @@ package seoultech.capstone.menjil.domain.user.api;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import seoultech.capstone.menjil.domain.user.application.UserService;
 import seoultech.capstone.menjil.domain.user.dto.response.UserAcceptDtoRes;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
-import seoultech.capstone.menjil.global.validator.CheckNicknameValidator;
 
 import java.util.regex.Pattern;
 
@@ -21,12 +22,6 @@ import java.util.regex.Pattern;
 public class UserController {
 
     private final UserService userService;
-    private final CheckNicknameValidator checkNicknameValidator;
-
-    @InitBinder
-    public void validatorBinder(WebDataBinder binder) {
-        binder.addValidators(checkNicknameValidator);
-    }
 
     /**
      * 닉네임 중복 체크
