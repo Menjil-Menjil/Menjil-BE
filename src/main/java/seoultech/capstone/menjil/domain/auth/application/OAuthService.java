@@ -20,6 +20,7 @@ import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserResponseDto;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Key;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class OAuthService {
     private String generateUserDataJwt(OAuthUserDto oAuthUserDto) {
         Key key = jwtSecretKeyProvider(JWT_SECRET_KEY);
         Date now = new Date();
-        Date expireDate = new Date(System.currentTimeMillis() + (60 * 30));
+        long expireTime = Duration.ofMinutes(30).toMillis();    // 만료시간 30분
 
         // Set header
         Map<String, Object> header = new HashMap<>();
@@ -157,7 +158,7 @@ public class OAuthService {
                 .setClaims(payload) // token 에서 사용할 정보의 조각들
                 .setSubject("users")    // token 용도
                 .setIssuedAt(now)   // token 발급 시간
-                .setExpiration(expireDate)
+                .setExpiration(new Date(now.getTime() + expireTime))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
