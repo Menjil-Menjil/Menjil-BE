@@ -11,9 +11,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import seoultech.capstone.menjil.domain.user.application.UserService;
 import seoultech.capstone.menjil.domain.user.dao.UserRepository;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -33,6 +36,8 @@ class UserControllerTest {
         mvc.perform(get("/users/check-nickname")
                         .queryParam("nickname", "  "))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is(ErrorCode.NICKNAME_CONTAINS_BLANK.getMessage())))
+                .andExpect(jsonPath("$.code", is(ErrorCode.NICKNAME_CONTAINS_BLANK.getCode())))
                 .andDo(print());
     }
 
@@ -42,6 +47,8 @@ class UserControllerTest {
         mvc.perform(get("/users/check-nickname")
                         .queryParam("nickname", "*ea3sf"))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getMessage())))
+                .andExpect(jsonPath("$.code", is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getCode())))
                 .andDo(print());
     }
 
