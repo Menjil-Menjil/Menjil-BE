@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public class UserAcceptResponseDto {
     /**
-     * nickname 중복 확인, 회원가입 로직 등에 사용.
+     * nickname 중복 확인에 사용
      */
     private HttpStatus status;
     private String message;
