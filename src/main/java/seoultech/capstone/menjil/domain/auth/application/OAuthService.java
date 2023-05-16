@@ -16,6 +16,10 @@ import seoultech.capstone.menjil.domain.auth.application.handler.KaKaoOauthHandl
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 import seoultech.capstone.menjil.domain.auth.dto.*;
 import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserResponseDto;
+import seoultech.capstone.menjil.domain.user.dao.UserRepository;
+import seoultech.capstone.menjil.domain.user.domain.User;
+import seoultech.capstone.menjil.global.exception.CustomException;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -32,6 +36,7 @@ public class OAuthService {
     private final GoogleOAuthHandler googleOAuthHandler;
     private final KaKaoOauthHandler kaKaoOauthHandler;
     private final HttpServletResponse response;
+    private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
     private String JWT_SECRET_KEY;
@@ -79,6 +84,13 @@ public class OAuthService {
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
 
+                // 기존에 사이트에 가입된 유저인지 검증 필요
+                User userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
+                        googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider()).orElse(null);
+                if (userInDb != null) {
+                    throw new CustomException(ErrorCode.USER_DUPLICATED);
+                }
+
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
 
@@ -108,6 +120,13 @@ public class OAuthService {
                 KaKaoOAuthUserDto kaKaoOAuthUserDto = kaKaoOauthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=kakao, user e-mail={}", kaKaoOAuthUserDto.getKakaoAccount().getEmail());
 
+                // 기존에 사이트에 가입된 유저인지 검증 필요
+                User userInDb = userRepository.findUserByEmailAndNameAndProvider(kaKaoOAuthUserDto.getEmail(),
+                        kaKaoOAuthUserDto.getName(), kaKaoOAuthUserDto.getProvider()).orElse(null);
+                if (userInDb != null) {
+                    throw new CustomException(ErrorCode.USER_DUPLICATED);
+                }
+                
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(kaKaoOAuthUserDto);
 
