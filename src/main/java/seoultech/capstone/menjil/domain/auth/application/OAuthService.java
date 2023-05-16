@@ -132,7 +132,7 @@ public class OAuthService {
     private String generateUserDataJwt(OAuthUserDto oAuthUserDto) {
         Key key = jwtSecretKeyProvider(JWT_SECRET_KEY);
         Date now = new Date();
-        long expireTime = Duration.ofMinutes(30).toMillis();    // 만료시간 30분
+        long expireTime = Duration.ofMinutes(120).toMillis();    // 만료시간 120분
 
         // Set header
         Map<String, Object> header = new HashMap<>();
