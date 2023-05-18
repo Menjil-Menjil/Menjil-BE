@@ -72,15 +72,6 @@ public class User extends BaseTimeEntity {
     /**
      * 아래는 선택 입력 정보: 가입 단계에서 굳이 받지 않아도 되는 정보
      */
-    @Column(columnDefinition = "TEXT")
-    private String career;
-
-    @Column(columnDefinition = "TEXT")
-    private String certificate;
-
-    @Column(columnDefinition = "TEXT")
-    private String awards;
-
-    @Column(columnDefinition = "TEXT")
-    private String activity;
+    @Embedded
+    private OptionInfo optionInfo;
 }

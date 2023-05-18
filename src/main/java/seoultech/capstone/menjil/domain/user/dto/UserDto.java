@@ -2,6 +2,7 @@ package seoultech.capstone.menjil.domain.user.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import seoultech.capstone.menjil.domain.user.domain.OptionInfo;
 import seoultech.capstone.menjil.domain.user.domain.User;
 import seoultech.capstone.menjil.domain.user.domain.UserRole;
 
@@ -108,10 +109,7 @@ public class UserDto {
                 .minor(minor)
                 .field(field)
                 .techStack(techStack)
-                .career(career)
-                .certificate(certificate)
-                .awards(awards)
-                .activity(activity)
+                .optionInfo(new OptionInfo(career, certificate, awards, activity))  // use Embedded type
                 .build();
     }
 
