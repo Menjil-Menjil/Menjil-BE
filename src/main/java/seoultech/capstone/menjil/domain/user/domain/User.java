@@ -32,8 +32,8 @@ public class User extends BaseTimeEntity {
      * 아래 부터는 사용자에게 추가적으로 입력받는 정보
      * 여기부터는 필수적으로 입력 받는 정보
      */
-    @Column(nullable = false)
-    private String nickname;
+    @Column(nullable = false, unique = true)
+    private String nickname;    // 고유 유저를 식별할 정보
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -35,19 +35,19 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public String checkNicknameDuplication(String nickname) {
-        boolean nicknameExistStatus;
-
         try {
-            nicknameExistStatus = userRepository.existsByNickname(nickname);
+            User user = userRepository.findByNickname(nickname)
+                    .orElse(null);
+
+            if (user != null) {
+                throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
+            }
         } catch (Exception e) {
-            log.error(">> DB error in find nickname :: ", e);
+            log.error(">> DB error in UserService > 'checkNicknameDuplication' :: ", e);
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
-        if (nicknameExistStatus)  // nickname 이 이미 존재하면 true
-            throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
-        else
-            return "Nickname is available";
+        return "Nickname is available";
     }
 
     /* setSignKey() 에 Secret Key 를 직접 넣는 방법의 경우 deprecated 되어서 byte[] 형으로 받아야 한다 */
@@ -84,7 +84,7 @@ public class UserService {
             userRepository.save(user);
 
         } catch (DataIntegrityViolationException e) {
-            
+
             if (e.getCause() instanceof ConstraintViolationException) {
                 if (e.getMessage().contains("users.email")) {
                     throw new CustomException(ErrorCode.USER_DUPLICATED);
