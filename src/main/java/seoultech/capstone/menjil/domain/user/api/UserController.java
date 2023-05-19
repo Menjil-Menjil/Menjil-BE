@@ -14,6 +14,7 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.validation.Valid;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 
@@ -57,10 +58,20 @@ public class UserController {
                                         BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
-            log.error(">> error type : {}", bindingResult.toString());
-            throw new CustomException(ErrorCode.SIGNUP_INPUT_INVALID);
-        }
+            // 특정 field error 의 값을 담는다.
+            StringBuilder sb = new StringBuilder();
+            AtomicInteger i = new AtomicInteger(1);
+            bindingResult.getFieldErrors()
+                    .forEach(fieldError -> {
+                        sb.append(i.get()).append(". ").append(fieldError.getDefaultMessage()).append(" ");
+                        i.getAndIncrement();
+                    });
 
-        return userService.signUp(requestDto);
+            CustomException exception = new CustomException(ErrorCode.SIGNUP_INPUT_INVALID);
+            exception.getErrorCode().setMessage(sb.toString()); // 필드 오류를 메시지로 설정
+            throw exception;
+        } else {
+            return userService.signUp(requestDto);
+        }
     }
 }
