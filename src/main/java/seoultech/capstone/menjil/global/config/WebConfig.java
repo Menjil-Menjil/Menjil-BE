@@ -1,10 +1,6 @@
 package seoultech.capstone.menjil.global.config;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-@Configuration
+/*@Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
@@ -17,6 +13,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .maxAge(3600);
     }
 
-}
+}*/
 
 
