@@ -15,11 +15,16 @@ import seoultech.capstone.menjil.domain.auth.application.handler.GoogleOAuthHand
 import seoultech.capstone.menjil.domain.auth.application.handler.KaKaoOauthHandler;
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 import seoultech.capstone.menjil.domain.auth.dto.*;
-import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserDtoRes;
+import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserResponseDto;
+import seoultech.capstone.menjil.domain.auth.exception.CustomAuthException;
+import seoultech.capstone.menjil.domain.user.dao.UserRepository;
+import seoultech.capstone.menjil.domain.user.domain.User;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Key;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +36,7 @@ public class OAuthService {
     private final GoogleOAuthHandler googleOAuthHandler;
     private final KaKaoOauthHandler kaKaoOauthHandler;
     private final HttpServletResponse response;
+    private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
     private String JWT_SECRET_KEY;
@@ -56,7 +62,7 @@ public class OAuthService {
         }
     }
 
-    public OAuthUserDtoRes oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
+    public OAuthUserResponseDto oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
         switch (socialLoginType) {
             case GOOGLE: {
                 // 구글로 code 를 보내 액세스 토큰이 담긴 응답 객체를 받아온다.
@@ -69,19 +75,24 @@ public class OAuthService {
 
                 // Error handling
                 if (userInfoResponse == null) {
-                    return OAuthUserDtoRes.builder()
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .message("서버 내부 오류")
-                            .build();
+                    throw new CustomAuthException(ErrorCode.SERVER_ERROR);
                 }
                 // Deserialize From JSON to Object
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
 
+                // 기존에 사이트에 가입된 유저인지 검증 필요
+                User userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
+                        googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider()).orElse(null);
+                if (userInDb != null) {
+                    log.error("here is worked");
+                    throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
+                }
+
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
 
-                return OAuthUserDtoRes.builder()
+                return OAuthUserResponseDto.builder()
                         .status(HttpStatus.OK)
                         .message("요청이 정상적으로 처리 되었습니다.")
                         .data(jwtInfo)
@@ -98,19 +109,23 @@ public class OAuthService {
 
                 // Error handling
                 if (userInfoResponse == null) {
-                    return OAuthUserDtoRes.builder()
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .message("서버 내부 오류")
-                            .build();
+                    throw new CustomAuthException(ErrorCode.SERVER_ERROR);
                 }
                 // Deserialize From JSON to Object
                 KaKaoOAuthUserDto kaKaoOAuthUserDto = kaKaoOauthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=kakao, user e-mail={}", kaKaoOAuthUserDto.getKakaoAccount().getEmail());
 
+                // 기존에 사이트에 가입된 유저인지 검증 필요
+                User userInDb = userRepository.findUserByEmailAndNameAndProvider(kaKaoOAuthUserDto.getEmail(),
+                        kaKaoOAuthUserDto.getName(), kaKaoOAuthUserDto.getProvider()).orElse(null);
+                if (userInDb != null) {
+                    throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
+                }
+
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(kaKaoOAuthUserDto);
 
-                return OAuthUserDtoRes.builder()
+                return OAuthUserResponseDto.builder()
                         .status(HttpStatus.OK)
                         .message("요청이 정상적으로 처리 되었습니다.")
                         .data(jwtInfo)
@@ -131,7 +146,7 @@ public class OAuthService {
     private String generateUserDataJwt(OAuthUserDto oAuthUserDto) {
         Key key = jwtSecretKeyProvider(JWT_SECRET_KEY);
         Date now = new Date();
-        Date expireDate = new Date(System.currentTimeMillis() + (60 * 30));
+        long expireTime = Duration.ofMinutes(120).toMillis();    // 만료시간 120분
 
         // Set header
         Map<String, Object> header = new HashMap<>();
@@ -157,7 +172,7 @@ public class OAuthService {
                 .setClaims(payload) // token 에서 사용할 정보의 조각들
                 .setSubject("users")    // token 용도
                 .setIssuedAt(now)   // token 발급 시간
-                .setExpiration(expireDate)
+                .setExpiration(new Date(now.getTime() + expireTime))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }

@@ -19,6 +19,7 @@ spring:
       hibernate:
         #        show_sql: true
         format_sql: true
+    database: mysql
 
 logging.level:
   org.hibernate.SQL: debug
