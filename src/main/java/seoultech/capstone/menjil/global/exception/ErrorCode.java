@@ -24,5 +24,9 @@ public enum ErrorCode {
 
     private final HttpStatus httpStatus;
     private final String code;
-    private final String message;
+    private String message;
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
