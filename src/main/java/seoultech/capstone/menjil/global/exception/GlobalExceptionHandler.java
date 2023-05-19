@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import seoultech.capstone.menjil.domain.auth.exception.AuthErrorResponse;
+import seoultech.capstone.menjil.domain.auth.exception.CustomAuthException;
 
 @Slf4j
 @RestControllerAdvice
@@ -18,6 +20,17 @@ public class GlobalExceptionHandler {
                         .errorName(e.getErrorCode().getHttpStatus().name())
                         .message(e.getErrorCode().getMessage())
                         .code(e.getErrorCode().getCode())
+                        .build());
+    }
+
+    @ExceptionHandler(value = {CustomAuthException.class})
+    public ResponseEntity<AuthErrorResponse> handleCustomAuthException(CustomAuthException e) {
+        log.error("handleCustomAuthException throw CustomAuthException : {}", e.getErrorCode());
+        return ResponseEntity.status(e.getErrorCode().getHttpStatus())
+                .body(AuthErrorResponse.builder()
+                        .status(e.getErrorCode().getHttpStatus().value())
+                        .message(e.getErrorCode().getMessage())
+                        .data(null)
                         .build());
     }
 }

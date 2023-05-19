@@ -16,9 +16,9 @@ import seoultech.capstone.menjil.domain.auth.application.handler.KaKaoOauthHandl
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
 import seoultech.capstone.menjil.domain.auth.dto.*;
 import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserResponseDto;
+import seoultech.capstone.menjil.domain.auth.exception.CustomAuthException;
 import seoultech.capstone.menjil.domain.user.dao.UserRepository;
 import seoultech.capstone.menjil.domain.user.domain.User;
-import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.servlet.http.HttpServletResponse;
@@ -75,10 +75,7 @@ public class OAuthService {
 
                 // Error handling
                 if (userInfoResponse == null) {
-                    return OAuthUserResponseDto.builder()
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .message("서버 내부 오류")
-                            .build();
+                    throw new CustomAuthException(ErrorCode.SERVER_ERROR);
                 }
                 // Deserialize From JSON to Object
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
@@ -88,7 +85,8 @@ public class OAuthService {
                 User userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
                         googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider()).orElse(null);
                 if (userInDb != null) {
-                    throw new CustomException(ErrorCode.USER_DUPLICATED);
+                    log.error("here is worked");
+                    throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
                 }
 
                 // Wrap user data from Jwt
@@ -111,10 +109,7 @@ public class OAuthService {
 
                 // Error handling
                 if (userInfoResponse == null) {
-                    return OAuthUserResponseDto.builder()
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .message("서버 내부 오류")
-                            .build();
+                    throw new CustomAuthException(ErrorCode.SERVER_ERROR);
                 }
                 // Deserialize From JSON to Object
                 KaKaoOAuthUserDto kaKaoOAuthUserDto = kaKaoOauthHandler.getUserInfoFromJson(userInfoResponse);
@@ -124,9 +119,9 @@ public class OAuthService {
                 User userInDb = userRepository.findUserByEmailAndNameAndProvider(kaKaoOAuthUserDto.getEmail(),
                         kaKaoOAuthUserDto.getName(), kaKaoOAuthUserDto.getProvider()).orElse(null);
                 if (userInDb != null) {
-                    throw new CustomException(ErrorCode.USER_DUPLICATED);
+                    throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
                 }
-                
+
                 // Wrap user data from Jwt
                 String jwtInfo = generateUserDataJwt(kaKaoOAuthUserDto);
 
