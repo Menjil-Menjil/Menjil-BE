@@ -12,7 +12,6 @@ public class ErrorResponse {
     private String code;
 
     @Builder
-
     public ErrorResponse(int status, String errorName, String message, String code) {
         this.status = status;
         this.errorName = errorName;
