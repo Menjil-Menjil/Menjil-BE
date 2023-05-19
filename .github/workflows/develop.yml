@@ -94,4 +94,4 @@ jobs:
             sudo docker rmi ${{ secrets.DOCKERHUB_REPO_DEV }}
 
             sudo docker pull ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
-            sudo docker run -d TZ=Asia/Seoul --name ${{ secrets.PROJECT_NAME }} -p ${{ secrets.APPLICATION_PORT_DEV }}:${{ secrets.APPLICATION_PORT }} ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
+            sudo docker run -d --name ${{ secrets.PROJECT_NAME }} -p ${{ secrets.APPLICATION_PORT_DEV }}:${{ secrets.APPLICATION_PORT }} ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
