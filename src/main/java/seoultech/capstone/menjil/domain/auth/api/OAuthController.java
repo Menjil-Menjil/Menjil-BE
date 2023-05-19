@@ -23,10 +23,11 @@ public class OAuthController {
      * @param socialLoginType; GOOGLE, KAKAO
      */
     @GetMapping(value = "/{socialLoginType}")
-    public void socialLoginType(
+    @ResponseBody
+    public String socialLoginType(
             @PathVariable(name = "socialLoginType") SocialLoginType socialLoginType) {
         log.info(">> 사용자로부터 SNS 로그인 요청을 받음 :: {} Social Login", socialLoginType);
-        oAuthService.requestRedirectURL(socialLoginType);
+        return oAuthService.requestRedirectURL(socialLoginType);
     }
 
     /**

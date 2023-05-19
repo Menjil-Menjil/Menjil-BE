@@ -41,7 +41,7 @@ public class OAuthService {
     @Value("${jwt.secret}")
     private String JWT_SECRET_KEY;
 
-    public void requestRedirectURL(SocialLoginType socialLoginType) {
+    public String requestRedirectURL(SocialLoginType socialLoginType) {
         String redirectURL = "";
         switch (socialLoginType) {
             case GOOGLE:
@@ -49,17 +49,13 @@ public class OAuthService {
                 break;
             case KAKAO:
                 redirectURL = kaKaoOauthHandler.getOauthRedirectURL();
+                System.out.println("redirectURL = " + redirectURL);
                 break;
             default:
                 throw new IllegalArgumentException("알 수 없는 소셜 로그인 형식입니다.");
         }
 
-        try {
-            response.sendRedirect(redirectURL);
-        } catch (IOException e) {
-            log.error("redirect error of request");
-            e.printStackTrace();
-        }
+        return redirectURL;
     }
 
     public OAuthUserResponseDto oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
