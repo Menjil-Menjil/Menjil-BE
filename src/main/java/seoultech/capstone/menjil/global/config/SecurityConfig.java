@@ -15,6 +15,15 @@ public class SecurityConfig {   // WebSecurityConfigurerAdapter is deprecated
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable();
 
+       /* http.cors().configurationSource(request -> {
+            var cors = new CorsConfiguration();
+            cors.setAllowedOrigins(List.of("http://localhost:3000"));
+            cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            cors.setAllowedHeaders(List.of("*"));
+            return cors;
+        });*/
+
+
         // Security 는 기본적으로 세션을 사용
         // 여기서는 세션을 사용하지 않기 때문에 세션 설정을 Stateless 로 설정
         http
