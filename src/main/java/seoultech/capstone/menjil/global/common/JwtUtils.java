@@ -32,4 +32,8 @@ public class JwtUtils {
     private void setJwtSecretKey(String key) {
         JwtUtils.JWT_SECRET_KEY = key;
     }
+
+    public static String getJwtSecretKey() {
+        return JWT_SECRET_KEY;
+    }
 }

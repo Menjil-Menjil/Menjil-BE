@@ -3,11 +3,8 @@ package seoultech.capstone.menjil.domain.auth.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,6 +26,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
+import static seoultech.capstone.menjil.global.common.JwtUtils.jwtSecretKeyProvider;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -38,10 +38,7 @@ public class OAuthService {
     private final HttpServletResponse response;
     private final UserRepository userRepository;
 
-    @Value("${jwt.secret}")
-    private String JWT_SECRET_KEY;
-
-    public String requestRedirectURL(SocialLoginType socialLoginType) {
+    public void requestRedirectURL(SocialLoginType socialLoginType) {
         String redirectURL = "";
         switch (socialLoginType) {
             case GOOGLE:
@@ -49,13 +46,17 @@ public class OAuthService {
                 break;
             case KAKAO:
                 redirectURL = kaKaoOauthHandler.getOauthRedirectURL();
-                System.out.println("redirectURL = " + redirectURL);
                 break;
             default:
                 throw new IllegalArgumentException("알 수 없는 소셜 로그인 형식입니다.");
         }
 
-        return redirectURL;
+        try {
+            response.sendRedirect(redirectURL);
+        } catch (IOException e) {
+            log.error("redirect error of request");
+            e.printStackTrace();
+        }
     }
 
     public OAuthUserResponseDto oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
@@ -134,13 +135,9 @@ public class OAuthService {
         }
     }
 
-    public Key jwtSecretKeyProvider(String secretKey) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
 
     private String generateUserDataJwt(OAuthUserDto oAuthUserDto) {
-        Key key = jwtSecretKeyProvider(JWT_SECRET_KEY);
+        Key key = jwtSecretKeyProvider(getJwtSecretKey());
         Date now = new Date();
         long expireTime = Duration.ofMinutes(120).toMillis();    // 만료시간 120분
 
