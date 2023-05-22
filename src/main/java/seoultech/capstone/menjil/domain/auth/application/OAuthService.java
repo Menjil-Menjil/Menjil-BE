@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
-import static seoultech.capstone.menjil.global.common.JwtUtils.jwtSecretKeyProvider;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,7 +49,6 @@ public class OAuthService {
             default:
                 throw new IllegalArgumentException("알 수 없는 소셜 로그인 형식입니다.");
         }
-
         try {
             response.sendRedirect(redirectURL);
         } catch (IOException e) {
@@ -59,7 +57,7 @@ public class OAuthService {
         }
     }
 
-    public OAuthUserResponseDto oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
+    public Object oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
         switch (socialLoginType) {
             case GOOGLE: {
                 // 구글로 code 를 보내 액세스 토큰이 담긴 응답 객체를 받아온다.
@@ -78,22 +76,25 @@ public class OAuthService {
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
 
-                // 기존에 사이트에 가입된 유저인지 검증 필요
+                // 로그인, 회원가입 검증 로직
                 User userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
                         googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider()).orElse(null);
                 if (userInDb != null) {
-                    log.error("here is worked");
-                    throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
+                    // 이미 가입된 유저이므로, 여기에서 access token, refresh token 을 만들어서 보낸다.
+
+
+                } else {
+                    // 신규 유저이므로, 회원가입 처리를 하도록 해야함
+
+                    // Wrap user data from Jwt
+                    String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
+
+                    return OAuthUserResponseDto.builder()
+                            .status(HttpStatus.OK)
+                            .message("요청이 정상적으로 처리 되었습니다. 회원가입 처리를 마저 진행해 주세요.")
+                            .data(jwtInfo)
+                            .build();
                 }
-
-                // Wrap user data from Jwt
-                String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
-
-                return OAuthUserResponseDto.builder()
-                        .status(HttpStatus.OK)
-                        .message("요청이 정상적으로 처리 되었습니다.")
-                        .data(jwtInfo)
-                        .build();
             }
             case KAKAO: {
                 // 카카오로 인가 코드를 보내 토큰을 받아온다.
@@ -135,9 +136,8 @@ public class OAuthService {
         }
     }
 
-
     private String generateUserDataJwt(OAuthUserDto oAuthUserDto) {
-        Key key = jwtSecretKeyProvider(getJwtSecretKey());
+        Key key = getJwtSecretKey();  // use JwtUtils in common
         Date now = new Date();
         long expireTime = Duration.ofMinutes(120).toMillis();    // 만료시간 120분
 
