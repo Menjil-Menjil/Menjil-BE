@@ -7,7 +7,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.auth.application.OAuthService;
 import seoultech.capstone.menjil.domain.auth.domain.SocialLoginType;
-import seoultech.capstone.menjil.domain.auth.dto.response.OAuthUserResponseDto;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,8 +23,7 @@ public class OAuthController {
      */
     @GetMapping(value = "/{socialLoginType}")
     @ResponseBody
-    public void socialLoginType(
-            @PathVariable(name = "socialLoginType") SocialLoginType socialLoginType) {
+    public void socialLoginType(@PathVariable(name = "socialLoginType") SocialLoginType socialLoginType) {
         log.info(">> 사용자로부터 SNS 로그인 요청을 받음 :: {} Social Login", socialLoginType);
         oAuthService.requestRedirectURL(socialLoginType);
     }
@@ -39,7 +37,7 @@ public class OAuthController {
      */
     @GetMapping(value = "/{socialLoginType}/callback")
     @ResponseBody
-    public OAuthUserResponseDto callback(
+    public Object callback(
             @PathVariable(name = "socialLoginType") SocialLoginType socialLoginType,
             @RequestParam(name = "code") String code) throws JsonProcessingException {
         log.info(">> 소셜 로그인 API 서버로부터 받은 code :: {}", code);
