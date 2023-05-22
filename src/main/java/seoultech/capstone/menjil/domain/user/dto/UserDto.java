@@ -34,7 +34,9 @@ public class UserDto {
     @NotBlank
     private UserRole role;
     @NotNull
-    private String birthDate;
+    private Integer birthYear;
+    @NotNull
+    private Integer birthMonth;
     @NotBlank
     private String school;
     @NotBlank
@@ -63,11 +65,10 @@ public class UserDto {
     private String activity;
 
     @Builder
-    public UserDto(String id, String email, String name, String provider,
-                   String nickname, UserRole role, String birthDate,
-                   String school, Integer score, String scoreRange,
-                   Integer graduateDate, String major, String subMajor,
-                   String minor, String field, String techStack,
+    public UserDto(String id, String email, String name, String provider, String nickname,
+                   UserRole role, Integer birthYear, Integer birthMonth, String school,
+                   Integer score, String scoreRange, Integer graduateDate, String major,
+                   String subMajor, String minor, String field, String techStack,
                    String career, String certificate, String awards, String activity) {
         this.id = id;
         this.email = email;
@@ -75,7 +76,8 @@ public class UserDto {
         this.provider = provider;
         this.nickname = nickname;
         this.role = role;
-        this.birthDate = birthDate;
+        this.birthYear = birthYear;
+        this.birthMonth = birthMonth;
         this.school = school;
         this.score = score;
         this.scoreRange = scoreRange;
@@ -99,7 +101,8 @@ public class UserDto {
                 .provider(provider)
                 .nickname(nickname)
                 .role(role)
-                .birthDate(birthDate)
+                .birthYear(birthYear)
+                .birthMonth(birthMonth)
                 .school(school)
                 .score(score)
                 .scoreRange(scoreRange)

@@ -32,9 +32,11 @@ public class UserRequestDto {
     private String nickname;
     @NotNull
     private UserRole role;
-    @NotNull(message = "생년연월은 OOOO-OO 형식으로 입력해주세요")
-    @Pattern(regexp = "\\d{4}-(0[1-9]|1[012])$", message = "생년연월은 OOOO-OO 형식으로 입력해주세요")
-    private String birthDate;
+    @NotNull(message = "생년은 OOOO형식으로 입력해주세요")
+    private Integer birthYear;
+
+    @NotNull(message = "1~12 사이의 값을 입력해주세요")
+    private Integer birthMonth;
     @NotBlank
     private String school;
     @NotNull(message = "학점은 0이상 4이하로 작성해주세요")
@@ -70,7 +72,8 @@ public class UserRequestDto {
                 .provider(dataMap.get("provider").toString())
                 .nickname(nickname)
                 .role(role)
-                .birthDate(birthDate)
+                .birthYear(birthYear)
+                .birthMonth(birthMonth)
                 .school(school)
                 .score(score)
                 .scoreRange(scoreRange)
