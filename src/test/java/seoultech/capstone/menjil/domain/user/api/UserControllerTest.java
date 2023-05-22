@@ -11,7 +11,6 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import seoultech.capstone.menjil.domain.user.application.UserService;
-import seoultech.capstone.menjil.domain.user.dao.UserRepository;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import static org.hamcrest.Matchers.is;
@@ -27,10 +26,9 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
     @MockBean
     private UserService userService;
-    @MockBean
-    private UserRepository userRepository;
 
     @Test
     @DisplayName("닉네임 검증; 공백 체크")
@@ -55,16 +53,10 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("닉네임 검증; db 조회 후 중복 닉네임 확인")
-    public void NicknameDuplicateDB() throws Exception {
-
-    }
-
-    @Test
-    @DisplayName("닉네임 검증; 정상적인 반환")
+    @DisplayName("닉네임 검증; 정상적인 반환: 공백과 특수문자가 없는 경우")
     public void NickNameCorrect() throws Exception {
         mvc.perform(get("/users/check-nickname")
-                        .queryParam("nickname", "test1234"))
+                        .queryParam("nickname", "test33AA가나마"))
                 .andExpect(status().isOk())
                 .andDo(print());
     }
