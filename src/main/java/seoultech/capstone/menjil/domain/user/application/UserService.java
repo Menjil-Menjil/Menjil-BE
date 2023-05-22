@@ -35,18 +35,10 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public String checkNicknameDuplication(String nickname) {
-        try {
-            User user = userRepository.findByNickname(nickname)
-                    .orElse(null);
-
-            if (user != null) {
-                throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
-            }
-        } catch (Exception e) {
-            log.error(">> DB error in UserService > 'checkNicknameDuplication' :: ", e);
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+        User user = userRepository.findByNickname(nickname).orElse(null);
+        if (user != null) {
+            throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
-
         return "Nickname is available";
     }
 
