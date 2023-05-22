@@ -3,7 +3,6 @@ package seoultech.capstone.menjil.domain.user.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +24,6 @@ import static seoultech.capstone.menjil.global.common.JwtUtils.decodeJwt;
 public class UserService {
 
     private final UserRepository userRepository;
-
-    @Value("${jwt.secret}")
-    private String JWT_SECRET_KEY;
 
     @Transactional(readOnly = true)
     public String checkNicknameDuplication(String nickname) {
