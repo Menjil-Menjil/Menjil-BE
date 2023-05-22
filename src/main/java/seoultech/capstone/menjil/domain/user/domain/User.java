@@ -39,8 +39,11 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private UserRole role;    // Mentor or Mentee
 
-    @Column(name = "birth_date", nullable = false)
-    private String birthDate;
+    @Column(name = "birth_year", nullable = false)
+    private Integer birthYear;
+
+    @Column(name = "birth_month", nullable = false)
+    private Integer birthMonth;
 
     @Column(length = 30, nullable = false)
     private String school;      // 교육 기관
