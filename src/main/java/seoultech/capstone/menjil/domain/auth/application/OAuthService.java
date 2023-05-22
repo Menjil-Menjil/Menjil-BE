@@ -3,11 +3,8 @@ package seoultech.capstone.menjil.domain.auth.application;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,6 +26,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -38,10 +37,7 @@ public class OAuthService {
     private final HttpServletResponse response;
     private final UserRepository userRepository;
 
-    @Value("${jwt.secret}")
-    private String JWT_SECRET_KEY;
-
-    public String requestRedirectURL(SocialLoginType socialLoginType) {
+    public void requestRedirectURL(SocialLoginType socialLoginType) {
         String redirectURL = "";
         switch (socialLoginType) {
             case GOOGLE:
@@ -49,16 +45,19 @@ public class OAuthService {
                 break;
             case KAKAO:
                 redirectURL = kaKaoOauthHandler.getOauthRedirectURL();
-                System.out.println("redirectURL = " + redirectURL);
                 break;
             default:
                 throw new IllegalArgumentException("알 수 없는 소셜 로그인 형식입니다.");
         }
-
-        return redirectURL;
+        try {
+            response.sendRedirect(redirectURL);
+        } catch (IOException e) {
+            log.error("redirect error of request");
+            e.printStackTrace();
+        }
     }
 
-    public OAuthUserResponseDto oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
+    public Object oAuthLogin(SocialLoginType socialLoginType, String code) throws JsonProcessingException {
         switch (socialLoginType) {
             case GOOGLE: {
                 // 구글로 code 를 보내 액세스 토큰이 담긴 응답 객체를 받아온다.
@@ -77,22 +76,25 @@ public class OAuthService {
                 GoogleOAuthUserDto googleOAuthUserDto = googleOAuthHandler.getUserInfoFromJson(userInfoResponse);
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
 
-                // 기존에 사이트에 가입된 유저인지 검증 필요
+                // 로그인, 회원가입 검증 로직
                 User userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
                         googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider()).orElse(null);
                 if (userInDb != null) {
-                    log.error("here is worked");
-                    throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
+                    // 이미 가입된 유저이므로, 여기에서 access token, refresh token 을 만들어서 보낸다.
+
+
+                } else {
+                    // 신규 유저이므로, 회원가입 처리를 하도록 해야함
+
+                    // Wrap user data from Jwt
+                    String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
+
+                    return OAuthUserResponseDto.builder()
+                            .status(HttpStatus.OK)
+                            .message("요청이 정상적으로 처리 되었습니다. 회원가입 처리를 마저 진행해 주세요.")
+                            .data(jwtInfo)
+                            .build();
                 }
-
-                // Wrap user data from Jwt
-                String jwtInfo = generateUserDataJwt(googleOAuthUserDto);
-
-                return OAuthUserResponseDto.builder()
-                        .status(HttpStatus.OK)
-                        .message("요청이 정상적으로 처리 되었습니다.")
-                        .data(jwtInfo)
-                        .build();
             }
             case KAKAO: {
                 // 카카오로 인가 코드를 보내 토큰을 받아온다.
@@ -134,13 +136,8 @@ public class OAuthService {
         }
     }
 
-    public Key jwtSecretKeyProvider(String secretKey) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
     private String generateUserDataJwt(OAuthUserDto oAuthUserDto) {
-        Key key = jwtSecretKeyProvider(JWT_SECRET_KEY);
+        Key key = getJwtSecretKey();  // use JwtUtils in common
         Date now = new Date();
         long expireTime = Duration.ofMinutes(120).toMillis();    // 만료시간 120분
 
