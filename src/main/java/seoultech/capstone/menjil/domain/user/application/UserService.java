@@ -1,10 +1,5 @@
 package seoultech.capstone.menjil.domain.user.application;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
@@ -20,8 +15,9 @@ import seoultech.capstone.menjil.domain.user.dto.response.UserSignupResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
-import java.security.Key;
 import java.util.Map;
+
+import static seoultech.capstone.menjil.global.common.JwtUtils.decodeJwt;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,25 +31,11 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public String checkNicknameDuplication(String nickname) {
-        User user = userRepository.findByNickname(nickname).orElse(null);
+        User user = userRepository.findUserByNickname(nickname).orElse(null);
         if (user != null) {
             throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
         return "Nickname is available";
-    }
-
-    /* setSignKey() 에 Secret Key 를 직접 넣는 방법의 경우 deprecated 되어서 byte[] 형으로 받아야 한다 */
-    public Key jwtSecretKeyProvider(String secretKey) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public Map<String, Object> decodeJwt(String jwt) {
-        Jws<Claims> jws = Jwts.parserBuilder()
-                .setSigningKey(jwtSecretKeyProvider(JWT_SECRET_KEY))
-                .build().parseClaimsJws(jwt);
-
-        return jws.getBody();
     }
 
     public UserSignupResponseDto signUp(UserRequestDto requestDto) {
