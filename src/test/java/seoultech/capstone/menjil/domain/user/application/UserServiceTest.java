@@ -30,7 +30,7 @@ class UserServiceTest {
         // given
         User userA = new User("google_test33333333333", "testUserA@gmail.com",
                 "testUserAInGoogle", "google", "testUserA입니다", UserRole.MENTEE,
-                "1999-04", "경북대학교", 4, "초반", 2023,
+                1999, 3, "경북대학교", 4, "초반", 2023,
                 "컴퓨터공학과", null, null, "백엔드", "Spring, AWS", null);
         userRepository.save(userA);
 
