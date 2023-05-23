@@ -9,7 +9,8 @@ import javax.persistence.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)  // 인자 없는 기본 생성자 필요
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {@UniqueConstraint(name = "UniqueNickName",
+        columnNames = {"nickname"})})
 public class User extends BaseTimeEntity {
 
     /**
@@ -32,7 +33,7 @@ public class User extends BaseTimeEntity {
      * 아래 부터는 사용자에게 추가적으로 입력받는 정보
      * 여기부터는 필수적으로 입력 받는 정보
      */
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String nickname;    // 고유 유저를 식별할 정보
 
     @Enumerated(EnumType.STRING)
