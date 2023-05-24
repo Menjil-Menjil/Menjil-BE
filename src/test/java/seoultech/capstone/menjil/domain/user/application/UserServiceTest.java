@@ -31,7 +31,8 @@ import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
 @SpringBootTest(properties = "spring.config.location=" +
         "classpath:/application.yml" +
         ",classpath:/application-security.yml" +
-        ",classpath:/application-database.yml")
+        ",classpath:/application-database.yml" +
+        ",classpath:/application-jwt.properties")
 @Transactional
 class UserServiceTest {
 
