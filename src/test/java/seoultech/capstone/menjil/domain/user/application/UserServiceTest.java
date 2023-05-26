@@ -118,7 +118,7 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("닉네임 중복 가입 요청 시 CustomException")
+    @DisplayName("닉네임 중복 가입 요청 시 CustomException이 발생한다")
     public void duplicateUser() {
         // given
         UserRequestDto userRequestDtoA = new UserRequestDto(jwtDataA, "testUserA", UserRole.MENTEE,

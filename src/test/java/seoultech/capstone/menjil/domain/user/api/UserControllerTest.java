@@ -79,7 +79,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("닉네임 검증; 공백 체크")
+    @DisplayName("닉네임 검증; 공백이 들어오면 CustomException을 발생시킨다")
     public void NicknameIsBlank() throws Exception {
         mvc.perform(get("/users/check-nickname")
                         .queryParam("nickname", "  "))
@@ -90,7 +90,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("닉네임 검증; 특수문자 테스트")
+    @DisplayName("닉네임 검증; 특수문자가 들어오면 CustomException을 발생시킨다")
     public void NicknameHasSpecialChar() throws Exception {
         mvc.perform(get("/users/check-nickname")
                         .queryParam("nickname", "*ea3sf"))
@@ -101,7 +101,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("닉네임 검증; 정상적인 반환: 공백과 특수문자가 없는 경우")
+    @DisplayName("닉네임 검증; 공백과 특수문자가 없는 경우 정상적인 응답이 출력된다")
     public void NickNameCorrect() throws Exception {
         mvc.perform(get("/users/check-nickname")
                         .queryParam("nickname", "test33AA가나마"))
@@ -110,7 +110,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("가입 요청; Jwt 토큰 만료 응답 테스트(@Expired)")
+    @DisplayName("가입 요청; Jwt 토큰이 만료된 경우(@Expired) CustomException이 발생한다")
     public void jwtExpiredTest() throws Exception {
         UserRequestDto jwtExpiredDto = UserRequestDto.builder()
                 .data(expiredUserJwtData)
@@ -131,7 +131,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("가입 요청; 닉네임에 공백이 포함된 경우")
+    @DisplayName("가입 요청; 닉네임에 공백이 포함된 경우 CustomException이 발생한다")
     public void nicknameHasBlankInSingUp() throws Exception {
         UserRequestDto jwtExpiredDto = UserRequestDto.builder()
                 .data(jwtDataA)
@@ -152,7 +152,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("가입 요청; 닉네임에 특수문자가 포함된 경우")
+    @DisplayName("가입 요청; 닉네임에 특수문자가 포함된 경우 CustomException이 발생한다")
     public void nicknameHasCharacterInSingUp() throws Exception {
         UserRequestDto jwtExpiredDto = UserRequestDto.builder()
                 .data(jwtDataA)
@@ -173,7 +173,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("가입 요청; @NotBlank 검증")
+    @DisplayName("가입 요청; @NotBlank 검증 ")
     public void validateNotBlankAnnotation() throws Exception {
         UserRequestDto jwtExpiredDto = UserRequestDto.builder()
                 .data(jwtDataA)
