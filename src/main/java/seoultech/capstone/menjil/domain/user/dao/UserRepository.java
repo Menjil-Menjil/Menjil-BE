@@ -12,15 +12,11 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findUserById(String id);
 
-    Optional<User> findUserByEmailAndNameAndProvider(String email, String name, String provider);
+    List<User> findUserByEmailAndNameAndProvider(String email, String name, String provider);
 
-    Optional<User> findUserByEmailAndProvider(String email, String provider);
-
-    Optional<User> findUserByNickname(String nickname);
+    List<User> findUserByNickname(String nickname);
 
     List<User> findAllByNickname(String nickname);
-
-    User save(User user);
 
     void deleteUserByNickname(String nickname);
 }

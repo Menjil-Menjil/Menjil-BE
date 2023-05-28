@@ -24,6 +24,7 @@ import java.security.Key;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
@@ -77,9 +78,10 @@ public class OAuthService {
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=google, user e-mail={}", googleOAuthUserDto.getEmail());
 
                 // 로그인, 회원가입 검증 로직
-                User userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
-                        googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider()).orElse(null);
-                if (userInDb != null) {
+                List<User> userInDb = userRepository.findUserByEmailAndNameAndProvider(googleOAuthUserDto.getEmail(),
+                        googleOAuthUserDto.getName(), googleOAuthUserDto.getProvider());
+
+                if (userInDb.size() > 0) {
                     // 이미 가입된 유저이므로, 여기에서 access token, refresh token 을 만들어서 보낸다.
 
 
@@ -114,9 +116,10 @@ public class OAuthService {
                 log.info(">> 요청이 들어온 사용자 정보 :: provider=kakao, user e-mail={}", kaKaoOAuthUserDto.getKakaoAccount().getEmail());
 
                 // 기존에 사이트에 가입된 유저인지 검증 필요
-                User userInDb = userRepository.findUserByEmailAndNameAndProvider(kaKaoOAuthUserDto.getEmail(),
-                        kaKaoOAuthUserDto.getName(), kaKaoOAuthUserDto.getProvider()).orElse(null);
-                if (userInDb != null) {
+                List<User> userInDb = userRepository.findUserByEmailAndNameAndProvider(kaKaoOAuthUserDto.getEmail(),
+                        kaKaoOAuthUserDto.getName(), kaKaoOAuthUserDto.getProvider());
+
+                if (userInDb.size() > 0) {
                     throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
                 }
 

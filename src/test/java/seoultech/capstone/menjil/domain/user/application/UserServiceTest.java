@@ -5,10 +5,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.user.dao.UserRepository;
 import seoultech.capstone.menjil.domain.user.domain.User;
@@ -27,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(properties = "spring.config.location=" +
         "classpath:/application.yml" +
         ",classpath:/application-security.yml" +
@@ -102,7 +99,8 @@ class UserServiceTest {
         userService.signUp(userRequestDtoA);
 
         // when
-        User userA = userRepository.findUserByNickname("testUserA").orElse(null);
+        List<User> users = userRepository.findUserByNickname("testUserA");
+        User userA = users.get(0);
 
         // then
         // jwt 토큰이 정상적으로 decode 되어서 db 에 들어갔는지 확인
@@ -139,28 +137,5 @@ class UserServiceTest {
         // 예외 처리 이후 실제로 db에 저장되지 않았는지 검증
         List<User> testUserAList = userRepository.findAllByNickname("testUserA");
         assertThat(testUserAList.size()).isEqualTo(1);
-    }
-
-
-    /**
-     * 해당 부분은 Repository 코드 기본 검증이라 굳이 필요할까 싶은 test 부분이다.
-     */
-    @Test
-    @DisplayName("회원가입 및 닉네임으로 조회")
-    public void save() {
-        // given
-        User userA = new User("google_test33333333333", "testUserA@gmail.com",
-                "testUserAInGoogle", "google", "testUserA입니다", UserRole.MENTEE,
-                1999, 3, "경북대학교", 4, "초반", 2023,
-                "컴퓨터공학과", null, null, "백엔드", "Spring, AWS", null);
-        userRepository.save(userA);
-
-        // when
-        User savedUser = userRepository.findUserByNickname("testUserA입니다")
-                .orElse(null);
-
-        // then
-        assert savedUser != null;
-        assertThat(userA.getNickname()).isEqualTo(savedUser.getNickname());
     }
 }
