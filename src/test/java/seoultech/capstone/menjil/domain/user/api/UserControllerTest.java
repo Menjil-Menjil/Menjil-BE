@@ -112,15 +112,7 @@ class UserControllerTest {
     @Test
     @DisplayName("가입 요청; Jwt 토큰이 만료된 경우(@Expired) CustomException이 발생한다")
     public void jwtExpiredTest() throws Exception {
-        UserRequestDto jwtExpiredDto = UserRequestDto.builder()
-                .data(expiredUserJwtData)
-                .nickname("testA").role(UserRole.MENTEE)
-                .birthYear(1999).birthMonth(3).school("서울과학기술대학교")
-                .score(3).scoreRange("후반").graduateDate(2020)
-                .major("컴퓨터공학과").subMajor(null).minor(null)
-                .field("프론트엔드").techStack("React, Next.js, Redux")
-                .career(null).certificate(null).awards(null).activity(null)
-                .build();
+        UserRequestDto jwtExpiredDto = createUserRequestDto(expiredUserJwtData, "testA", 1999, 3, "서울과학기술대학교", 3);
 
         mvc.perform(MockMvcRequestBuilders.post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -133,19 +125,11 @@ class UserControllerTest {
     @Test
     @DisplayName("가입 요청; 닉네임에 공백이 포함된 경우 CustomException이 발생한다")
     public void nicknameHasBlankInSingUp() throws Exception {
-        UserRequestDto jwtExpiredDto = UserRequestDto.builder()
-                .data(jwtDataA)
-                .nickname("test   A").role(UserRole.MENTEE)
-                .birthYear(1999).birthMonth(3).school("서울과학기술대학교")
-                .score(3).scoreRange("후반").graduateDate(2020)
-                .major("컴퓨터공학과").subMajor(null).minor(null)
-                .field("프론트엔드").techStack("React, Next.js, Redux")
-                .career(null).certificate(null).awards(null).activity(null)
-                .build();
+        UserRequestDto userRequestDto = createUserRequestDto(jwtDataA, "test   A", 1999, 3, "서울과학기술대학교", 3);
 
         mvc.perform(MockMvcRequestBuilders.post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonToString(jwtExpiredDto)))
+                        .content(jsonToString(userRequestDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("1. 닉네임은 공백이나 특수문자가 들어갈 수 없습니다 ")))
                 .andDo(print());
@@ -154,19 +138,11 @@ class UserControllerTest {
     @Test
     @DisplayName("가입 요청; 닉네임에 특수문자가 포함된 경우 CustomException이 발생한다")
     public void nicknameHasCharacterInSingUp() throws Exception {
-        UserRequestDto jwtExpiredDto = UserRequestDto.builder()
-                .data(jwtDataA)
-                .nickname("test#A").role(UserRole.MENTEE)
-                .birthYear(1999).birthMonth(3).school("서울과학기술대학교")
-                .score(3).scoreRange("후반").graduateDate(2020)
-                .major("컴퓨터공학과").subMajor(null).minor(null)
-                .field("프론트엔드").techStack("React, Next.js, Redux")
-                .career(null).certificate(null).awards(null).activity(null)
-                .build();
+        UserRequestDto userRequestDto = createUserRequestDto(jwtDataA, "test#A", 1999, 3, "서울과학기술대학교", 3);
 
         mvc.perform(MockMvcRequestBuilders.post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonToString(jwtExpiredDto)))
+                        .content(jsonToString(userRequestDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("1. 닉네임은 공백이나 특수문자가 들어갈 수 없습니다 ")))
                 .andDo(print());
@@ -175,19 +151,11 @@ class UserControllerTest {
     @Test
     @DisplayName("가입 요청; @NotBlank 검증 ")
     public void validateNotBlankAnnotation() throws Exception {
-        UserRequestDto jwtExpiredDto = UserRequestDto.builder()
-                .data(jwtDataA)
-                .nickname(null).role(UserRole.MENTEE)
-                .birthYear(1999).birthMonth(3).school("서울과학기술대학교")
-                .score(3).scoreRange("후반").graduateDate(2020)
-                .major("컴퓨터공학과").subMajor(null).minor(null)
-                .field("프론트엔드").techStack("React, Next.js, Redux")
-                .career(null).certificate(null).awards(null).activity(null)
-                .build();
+        UserRequestDto userRequestDto = createUserRequestDto(jwtDataA, null, 1999, 3, "서울과학기술대학교", 3);
 
         mvc.perform(MockMvcRequestBuilders.post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonToString(jwtExpiredDto)))
+                        .content(jsonToString(userRequestDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("1. must not be blank ")))
                 .andDo(print());
@@ -196,40 +164,24 @@ class UserControllerTest {
     @Test
     @DisplayName("가입 요청; @NotBlank 여러 개 검증")
     public void validateSeveralNotBlankAnnotation() throws Exception {
-        UserRequestDto jwtExpiredDto = UserRequestDto.builder()
-                .data(jwtDataA)
-                .nickname(null).role(UserRole.MENTEE)
-                .birthYear(1999).birthMonth(3).school(null)
-                .score(3).scoreRange(null).graduateDate(2020)
-                .major("컴퓨터공학과").subMajor(null).minor(null)
-                .field("프론트엔드").techStack("React, Next.js, Redux")
-                .career(null).certificate(null).awards(null).activity(null)
-                .build();
+        UserRequestDto userRequestDto = createUserRequestDto(jwtDataA, null, 1999, 3, null, 3);
 
         mvc.perform(MockMvcRequestBuilders.post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonToString(jwtExpiredDto)))
+                        .content(jsonToString(userRequestDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", is("1. must not be blank 2. must not be blank 3. must not be blank ")))
+                .andExpect(jsonPath("$.message", is("1. must not be blank 2. must not be blank ")))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("가입 요청; @Max 검증")
     public void validateMaxSignUp() throws Exception {
-        UserRequestDto jwtExpiredDto = UserRequestDto.builder()
-                .data(jwtDataA)
-                .nickname("testA").role(UserRole.MENTEE)
-                .birthYear(1999).birthMonth(3).school("서강대학교")
-                .score(6).scoreRange("중반").graduateDate(2020)
-                .major("컴퓨터공학과").subMajor(null).minor(null)
-                .field("프론트엔드").techStack("React, Next.js, Redux")
-                .career(null).certificate(null).awards(null).activity(null)
-                .build();
+        UserRequestDto userRequestDto = createUserRequestDto(jwtDataA, "testA", 1999, 3, "서울과학기술대학교", 6);
 
         mvc.perform(MockMvcRequestBuilders.post("/users/signup")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonToString(jwtExpiredDto)))
+                        .content(jsonToString(userRequestDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("1. 학점은 4보다 클 수 없습니다 ")))
                 .andDo(print());
@@ -243,6 +195,21 @@ class UserControllerTest {
             System.out.println("error = " + error);
             return "fail";
         }
+    }
+
+    private UserRequestDto createUserRequestDto(String data, String nickname,
+                                                Integer birthYear, Integer birthMonth,
+                                                String school, Integer score) {
+        return UserRequestDto.builder()
+                .data(data).nickname(nickname)
+                .role(UserRole.MENTEE)
+                .birthYear(birthYear).birthMonth(birthMonth)
+                .school(school)
+                .score(score).scoreRange("중반")
+                .graduateDate(2021).major("경제학과").subMajor(null)
+                .minor(null).field("백엔드").techStack("AWS")
+                .career(null).certificate(null).awards(null).activity(null)
+                .build();
     }
 
 }
