@@ -33,6 +33,12 @@ jobs:
         touch ./src/main/resources/application-security.yml 
         echo "${{secrets.APPLICATION_SECURITY_DEV}}" > ./src/main/resources/application-security.yml
 
+    - name: make application-jwt.properties
+      shell: bash
+      run: |
+        touch ./src/main/resources/application-jwt.properties
+        echo "${{secrets.APPLICATION_JWT_PROPERTIES}}" > ./src/main/resources/application-jwt.properties
+
     - name: make application-database-test.yml
       shell: bash
       run: |
