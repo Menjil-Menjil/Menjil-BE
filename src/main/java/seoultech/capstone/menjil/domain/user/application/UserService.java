@@ -2,8 +2,6 @@ package seoultech.capstone.menjil.domain.user.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.user.dao.UserRepository;
@@ -14,6 +12,7 @@ import seoultech.capstone.menjil.domain.user.dto.response.UserSignupResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
+import java.util.List;
 import java.util.Map;
 
 import static seoultech.capstone.menjil.global.common.JwtUtils.decodeJwt;
@@ -27,13 +26,14 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public String checkNicknameDuplication(String nickname) {
-        User user = userRepository.findUserByNickname(nickname).orElse(null);
-        if (user != null) {
+        List<User> NicknameExistsInDb = userRepository.findUserByNickname(nickname);
+        if (NicknameExistsInDb.size() > 0) {
             throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
         return "Nickname is available";
     }
 
+    @Transactional
     public UserSignupResponseDto signUp(UserRequestDto requestDto) {
         // UserRequestDto -> UserDto 변환 (decode jwt data)
         Map<String, Object> dataMap = decodeJwt(requestDto.getData());
@@ -42,28 +42,20 @@ public class UserService {
         // UserDto -> User Entity 변환
         User user = userDto.toEntity();
 
-        // db 에 저장
-        try {
-            User userInDb = userRepository.findUserByEmailAndProvider(user.getEmail(), user.getProvider())
-                    .orElse(null);
+        // 기존에 중복된 유저가 있는 지 조회
+        List<User> userInDb = userRepository.findUserByEmailAndNameAndProvider(user.getEmail(),
+                user.getName(), user.getProvider());
+        List<User> NicknameExistsInDb = userRepository.findUserByNickname(user.getNickname());
 
-            if (userInDb != null) {
-                throw new CustomException(ErrorCode.USER_DUPLICATED);
-            }
-
-            userRepository.save(user);
-
-        } catch (DataIntegrityViolationException e) {
-
-            if (e.getCause() instanceof ConstraintViolationException) {
-                if (e.getMessage().contains("users.email")) {
-                    throw new CustomException(ErrorCode.USER_DUPLICATED);
-                } else if (e.getMessage().contains("users.id")) {
-                    throw new CustomException(ErrorCode.USER_DUPLICATED);
-                }
-            }
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+        if (userInDb.size() > 0) {
+            throw new CustomException(ErrorCode.USER_DUPLICATED);
         }
+        if (NicknameExistsInDb.size() > 0) {
+            throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
+        }
+
+        // db에 저장
+        userRepository.save(user);
 
         // User Entity -> UserSignupResponseDto
         return new UserSignupResponseDto(user);

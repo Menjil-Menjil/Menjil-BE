@@ -3,6 +3,7 @@ package seoultech.capstone.menjil.domain.user.dao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import seoultech.capstone.menjil.domain.user.domain.User;
 
+import java.util.List;
 import java.util.Optional;
 
 // CRUD 함수를 JpaRepository 가 가지고 있다.
@@ -11,13 +12,11 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findUserById(String id);
 
-    Optional<User> findUserByEmailAndNameAndProvider(String email, String name, String provider);
+    List<User> findUserByEmailAndNameAndProvider(String email, String name, String provider);
 
-    Optional<User> findUserByEmailAndProvider(String email, String provider);
+    List<User> findUserByNickname(String nickname);
 
-    Optional<User> findUserByNickname(String nickname);
-
-    User save(User user);
+    List<User> findAllByNickname(String nickname);
 
     void deleteUserByNickname(String nickname);
 }
