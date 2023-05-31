@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.domain.user.application.UserService;
@@ -20,7 +24,7 @@ import seoultech.capstone.menjil.domain.user.domain.UserRole;
 import seoultech.capstone.menjil.domain.user.dto.request.UserRequestDto;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,10 +35,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
 
 @MockBean(JpaMetamodelMappingContext.class)
 @WebMvcTest(controllers = UserController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@TestPropertySource(locations = "classpath:application-jwt.properties")
 class UserControllerTest {
 
     @Autowired
@@ -51,9 +55,18 @@ class UserControllerTest {
 
     private String jwtDataA;    // 정상적인 토큰 생성
 
+    @Autowired
+    private Environment env;
+
     @BeforeEach
     public void initGenerateJwtData() {
-        Key key = getJwtSecretKey();
+        // import application-jwt.properties
+        String jwtSecret = env.getProperty("jwt.secret");
+
+        // encode
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        SecretKey JWT_SECRET_KEY = Keys.hmacShaKeyFor(keyBytes);
+
         Date now = new Date();
         long expireTime = Duration.ofDays(360).toMillis();    // 만료날짜 360일 이후.
 
@@ -74,7 +87,7 @@ class UserControllerTest {
                 .setSubject("UserControllerTest")
                 .setIssuedAt(now)   // token 발급 시간
                 .setExpiration(new Date(now.getTime() + expireTime))
-                .signWith(key, SignatureAlgorithm.HS512)
+                .signWith(JWT_SECRET_KEY, SignatureAlgorithm.HS512)
                 .compact();
     }
 
