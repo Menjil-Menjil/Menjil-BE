@@ -1,11 +1,16 @@
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
 
 spring:
   config:
     import:
-    - classpath:/application-database.yml # for AWS RES(MySQL)
-#    - classpath:/application-oauth.yml    # for Google OAuth
+      - classpath:/application-database.yml # for AWS RES(MySQL)
+      - classpath:/application-security.yml    # for OAuth2: google, kakao
+      - classpath:/application-jwt.properties
 
   jpa:
     open-in-view: false
@@ -13,8 +18,9 @@ spring:
       ddl-auto: none  # only validate or none
     properties:
       hibernate:
-#        show_sql: true
+        #        show_sql: true
         format_sql: true
+    database: mysql
 
 logging.level:
   org.hibernate.SQL: debug
