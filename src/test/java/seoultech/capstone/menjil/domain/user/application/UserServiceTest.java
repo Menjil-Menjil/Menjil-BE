@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.user.dao.UserRepository;
 import seoultech.capstone.menjil.domain.user.domain.User;
@@ -28,7 +29,7 @@ import static seoultech.capstone.menjil.global.common.JwtUtils.getJwtSecretKey;
 @SpringBootTest(properties = "spring.config.location=" +
         "classpath:/application.yml" +
         ",classpath:/application-security.yml" +
-        ",classpath:/application-database.yml" +
+        ",classpath:/application-database-test.yml" +
         ",classpath:/application-jwt.properties")
 @Transactional
 class UserServiceTest {
@@ -93,7 +94,7 @@ class UserServiceTest {
     public void signUp() {
         // given
         UserRequestDto userRequestDtoA = new UserRequestDto(jwtDataA, "testUserA", UserRole.MENTEE,
-                1999, 3, "경북대학교", 4, "초반", 2023,
+                1999, 3, "경북대학교", 4, "초반", 2023, 3,
                 "컴퓨터공학과", null, null, "백엔드", "Spring, AWS", null, null, null, null);
 
         userService.signUp(userRequestDtoA);
@@ -120,11 +121,11 @@ class UserServiceTest {
     public void duplicateUser() {
         // given
         UserRequestDto userRequestDtoA = new UserRequestDto(jwtDataA, "testUserA", UserRole.MENTEE,
-                1999, 3, "경북대학교", 4, "초반", 2023,
+                1999, 3, "경북대학교", 4, "초반", 2023, 3,
                 "컴퓨터공학과", null, null, "백엔드", "Spring, AWS", null, null, null, null);
 
         UserRequestDto userRequestDtoB = new UserRequestDto(jwtDataB, "testUserA", UserRole.MENTEE,
-                1995, 9, "영남대학교", 3, "중반", 2022,
+                1995, 9, "영남대학교", 3, "중반", 2022, 3,
                 "컴퓨터공학과", null, null, "DevOps", "Docker", null, null, null, null);
 
         // when

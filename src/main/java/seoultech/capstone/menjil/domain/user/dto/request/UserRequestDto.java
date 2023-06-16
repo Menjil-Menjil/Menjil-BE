@@ -47,6 +47,9 @@ public class UserRequestDto {
     private String scoreRange;  // 초반, 중반, 후반; 학점과 연관됨
     @NotNull(message = "졸업 년도는 정수를 입력해주세요")
     private Integer graduateDate;
+    @NotNull(message = "졸업 월은 정수를 입력해주세요")
+    private Integer graduateMonth;
+
     @NotBlank
     private String major;
     private String subMajor;
@@ -78,6 +81,7 @@ public class UserRequestDto {
                 .score(score)
                 .scoreRange(scoreRange)
                 .graduateDate(graduateDate)
+                .graduateMonth(graduateMonth)
                 .major(major)
                 .subMajor(subMajor)
                 .minor(minor)

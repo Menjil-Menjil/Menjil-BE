@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.user.domain.User;
 import seoultech.capstone.menjil.domain.user.domain.UserRole;
@@ -13,12 +14,12 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-@Transactional
 @SpringBootTest(properties = "spring.config.location=" +
         "classpath:/application.yml" +
         ",classpath:/application-security.yml" +
-        ",classpath:/application-database.yml" +
+        ",classpath:/application-database-test.yml" +
         ",classpath:/application-jwt.properties")
+@Transactional
 class UserRepositoryTest {
 
     @Autowired
@@ -58,7 +59,8 @@ class UserRepositoryTest {
                 .id(id).email(email).name(name).provider(provider).nickname(nickname)
                 .role(UserRole.MENTEE).birthYear(2000).birthMonth(3)
                 .school("고려대학교").score(3).scoreRange("중반")
-                .graduateDate(2021).major("경제학과").subMajor(null)
+                .graduateDate(2021).graduateMonth(3)
+                .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
                 .optionInfo(null)
                 .build();
