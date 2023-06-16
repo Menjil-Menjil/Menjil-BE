@@ -47,6 +47,8 @@ public class UserDto {
     private String scoreRange;  // 초반, 중반, 후반; 학점과 연관됨
     @NotNull
     private Integer graduateDate;
+    @NotNull
+    private Integer graduateMonth;
     @NotBlank
     private String major;
     private String subMajor;
@@ -67,7 +69,7 @@ public class UserDto {
     @Builder
     public UserDto(String id, String email, String name, String provider, String nickname,
                    UserRole role, Integer birthYear, Integer birthMonth, String school,
-                   Integer score, String scoreRange, Integer graduateDate, String major,
+                   Integer score, String scoreRange, Integer graduateDate, Integer graduateMonth, String major,
                    String subMajor, String minor, String field, String techStack,
                    String career, String certificate, String awards, String activity) {
         this.id = id;
@@ -82,6 +84,7 @@ public class UserDto {
         this.score = score;
         this.scoreRange = scoreRange;
         this.graduateDate = graduateDate;
+        this.graduateMonth = graduateMonth;
         this.major = major;
         this.subMajor = subMajor;
         this.minor = minor;
@@ -107,6 +110,7 @@ public class UserDto {
                 .score(score)
                 .scoreRange(scoreRange)
                 .graduateDate(graduateDate)
+                .graduateMonth(graduateMonth)
                 .major(major)
                 .subMajor(subMajor)
                 .minor(minor)

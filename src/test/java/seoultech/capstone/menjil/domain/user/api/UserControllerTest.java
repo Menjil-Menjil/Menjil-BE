@@ -219,7 +219,8 @@ class UserControllerTest {
                 .birthYear(birthYear).birthMonth(birthMonth)
                 .school(school)
                 .score(score).scoreRange("중반")
-                .graduateDate(2021).major("경제학과").subMajor(null)
+                .graduateDate(2021).graduateMonth(3)
+                .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
                 .career(null).certificate(null).awards(null).activity(null)
                 .build();

@@ -59,6 +59,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "graduate_date", nullable = false)
     private Integer graduateDate; // 졸업 년도
 
+    @Column(name = "graduate_month", nullable = false)
+    private Integer graduateMonth; // 졸업 월
+
     @Column(length = 20, nullable = false)
     private String major;       // 본전공
 
@@ -84,7 +87,7 @@ public class User extends BaseTimeEntity {
     @Builder
     private User(String id, String email, String name, String provider, String nickname,
                  UserRole role, Integer birthYear, Integer birthMonth, String school,
-                 Integer score, String scoreRange, Integer graduateDate, String major,
+                 Integer score, String scoreRange, Integer graduateDate, Integer graduateMonth, String major,
                  String subMajor, String minor, String field, String techStack, OptionInfo optionInfo) {
         this.id = id;
         this.email = email;
@@ -98,6 +101,7 @@ public class User extends BaseTimeEntity {
         this.score = score;
         this.scoreRange = scoreRange;
         this.graduateDate = graduateDate;
+        this.graduateMonth = graduateMonth;
         this.major = major;
         this.subMajor = subMajor;
         this.minor = minor;
