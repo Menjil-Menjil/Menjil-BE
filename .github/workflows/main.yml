@@ -24,25 +24,25 @@ jobs:
           distribution: 'temurin' # jdk를 제공하는 vender사 이름 ex. zulu, adopt, microsoft
 
       ## Create secret yml and properties files
-      - name: make empty application-database.yml
+      - name: create application-database.yml
         shell: bash
         run: |
           touch ./src/main/resources/application-database.yml 
           echo "${{secrets.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
 
-      - name: make application-security.yml
+      - name: create application-security.yml
         shell: bash
         run: |
           touch ./src/main/resources/application-security.yml 
           echo "${{secrets.APPLICATION_SECURITY}}" > ./src/main/resources/application-security.yml
 
-      - name: make application-jwt.properties
+      - name: create application-jwt.properties
         shell: bash
         run: |
           touch ./src/main/resources/application-jwt.properties
           echo "${{secrets.APPLICATION_JWT_PROPERTIES}}" > ./src/main/resources/application-jwt.properties
 
-      - name: make application-database-test.yml
+      - name: create application-database-test.yml
         shell: bash
         run: |
           touch ./src/test/resources/application-database-test.yml 
@@ -88,6 +88,13 @@ jobs:
     needs: build  # build 이후에 실행되도록 설정
     runs-on: ubuntu-latest
     steps:
+      - name: Get Github Action's ip address
+        id: ip
+        uses: haythem/public-ip@v1.3
+
+      - name: Add Github Action's ip address to Security Group
+        run: aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
       - name: connect EC2 instance and deploy docker images to Dev server
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -105,3 +112,5 @@ jobs:
             sudo docker pull ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
             sudo docker run -d --name ${{ secrets.PROJECT_NAME }} -p ${{ secrets.APPLICATION_PORT }}:8080 ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
 
+      - name: Remove Github Action's ip address from Security Group
+        run: aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
