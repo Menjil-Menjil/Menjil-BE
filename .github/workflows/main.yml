@@ -1,6 +1,5 @@
 name: Java CI with Gradle, CD with Docker Hub and AWS EC2 in main branch
 
-
 on:
   push:
     branches: [ "main" ]
@@ -91,6 +90,14 @@ jobs:
       - name: Get Github Action's ip address
         id: ip
         uses: haythem/public-ip@v1.3
+        
+      # access-key-id, secret-access-key의 경우 AWS IAM User의 정보 사용
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
 
       - name: Add Github Action's ip address to Security Group
         run: aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
