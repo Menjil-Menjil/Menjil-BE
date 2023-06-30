@@ -15,7 +15,6 @@ import seoultech.capstone.menjil.global.filter.CustomCorsFilter;
 //import seoultech.capstone.menjil.global.filter.CorsFilter;
 
 @RequiredArgsConstructor
-@Configuration
 @EnableWebSecurity              // Spring Security Filter 가 Spring Filter Chain 에 등록이 된다.
 public class SecurityConfig {   // WebSecurityConfigurerAdapter is deprecated
 
