@@ -7,16 +7,19 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.NicknameAvailableDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
-import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+
+import static seoultech.capstone.menjil.global.exception.ErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,10 +51,10 @@ public class AuthController {
         String pattern1 = "^[가-힣a-zA-Z0-9]*$";    // 특수문자, 공백 모두 체크 가능
 
         if (nickname.replaceAll(" ", "").equals("")) { // 먼저 공백 확인
-            throw new CustomException(ErrorCode.NICKNAME_CONTAINS_BLANK);
+            throw new CustomException(NICKNAME_CONTAINS_BLANK);
         }
         if (!Pattern.matches(pattern1, nickname)) {
-            throw new CustomException(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER);
+            throw new CustomException(NICKNAME_CONTAINS_SPECIAL_CHARACTER);
         }
 
         return NicknameAvailableDto
@@ -79,7 +82,7 @@ public class AuthController {
                         i.getAndIncrement();
                     });
 
-            CustomException exception = new CustomException(ErrorCode.SIGNUP_INPUT_INVALID);
+            CustomException exception = new CustomException(SIGNUP_INPUT_INVALID);
             exception.getErrorCode().setMessage(sb.toString()); // 필드 오류를 메시지로 설정
             throw exception;
         } else {
@@ -87,4 +90,22 @@ public class AuthController {
         }
     }
 
+    /**
+     * 로그인 로직. NextAuth.js 에서 플랫폼 서버 인증 후 유저 정보를 가져오면,
+     * 서버로 전송해서 유저가 db 에도 등록이 되어 있는지를 검증한다.
+     * email, provider 로 검증
+     * 기존에 가입된 유저가 있으면, access & refresh token 전달
+     * 가입된 유저가 없으면, CustomException 처리
+     */
+    @PostMapping(value = "/signin/{socialType}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public SignInResponseDto signIn(@PathVariable(name = "socialType") String socialType,
+                                    @RequestBody SignInRequestDto dto) {
+
+        String provider = dto.getProvider();
+
+        if (!provider.equals("google") && !provider.equals("kakao")) {
+            throw new CustomException(PROVIDER_NOT_ALLOWED);
+        }
+        return authService.signIn(dto.getEmail(), dto.getProvider());
+    }
 }

@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -86,6 +87,25 @@ public class AuthService {
 
         // User Entity -> UserSignupResponseDto
         return new SignUpResponseDto(user);
+    }
+
+    /**
+     * 로그인 처리
+     */
+    @Transactional
+    public SignInResponseDto signIn(String email, String provider) {
+        List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
+
+        if (userInDb.size() > 0) {
+            // Created 응답과 함께 Access, Refresh token 발급
+            return SignInResponseDto.builder()
+                    .status(201)
+                    .accessToken("test1")
+                    .refreshToken("test2")
+                    .build();
+        } else {
+            throw new CustomException(ErrorCode.USER_NOT_EXISTED);
+        }
     }
 
 }
