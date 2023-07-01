@@ -1,6 +1,6 @@
-package seoultech.capstone.menjil.domain.user.validation.customAnnotation;
+package seoultech.capstone.menjil.domain.auth.validation.customAnnotation;
 
-import seoultech.capstone.menjil.domain.user.validation.validator.JwtExpiredValidator;
+import seoultech.capstone.menjil.domain.auth.validation.validator.JwtExpiredValidator;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

@@ -8,7 +8,6 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
-import seoultech.capstone.menjil.domain.auth.exception.CustomAuthException;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
@@ -34,7 +33,7 @@ public class AuthService {
         List<User> userInDb = userRepository.findUserByEmailAndProvider(email, socialType);
 
         if (userInDb.size() > 0) {
-            throw new CustomAuthException(ErrorCode.USER_DUPLICATED);
+            throw new CustomException(ErrorCode.USER_DUPLICATED);
         } else {
             try {
                 response.sendRedirect(redirectUrl);
@@ -49,8 +48,9 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public String checkNicknameDuplication(String nickname) {
-        List<User> NicknameExistsInDb = userRepository.findUserByNickname(nickname);
-        if (NicknameExistsInDb.size() > 0) {
+        User nicknameExistsInDb = userRepository.findUserByNickname(nickname)
+                .orElse(null);
+        if (nicknameExistsInDb != null) {
             throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
         return "Nickname is available";
@@ -65,13 +65,19 @@ public class AuthService {
         User user = requestDto.toUser();
 
         // 기존에 중복된 유저가 있는 지 조회
+        // 이 부분은 현재는 필요없다.
+        /*
         List<User> userInDb = userRepository.findUserByEmailAndProvider(user.getEmail(), user.getProvider());
-        List<User> nicknameExistsInDb = userRepository.findUserByNickname(user.getNickname());
-
         if (userInDb.size() > 0) {
             throw new CustomException(ErrorCode.USER_DUPLICATED);
         }
-        if (nicknameExistsInDb.size() > 0) {
+         */
+
+        // 혹시 클라이언트에서 닉네임 중복 검증을 놓친 경우 확인
+        User nicknameExistsInDb = userRepository.findUserByNickname(user.getNickname())
+                .orElse(null);
+
+        if (nicknameExistsInDb != null) {
             throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
 
