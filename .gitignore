@@ -28,7 +28,6 @@ out/
 
 ### private info ### 
 src/main/resources/application-database.yml
-src/main/resources/application-security.yml
 src/main/resources/application-jwt.properties
 
 src/test/resources/application-database-test.yml

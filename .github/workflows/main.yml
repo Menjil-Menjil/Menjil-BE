@@ -29,12 +29,6 @@ jobs:
           touch ./src/main/resources/application-database.yml 
           echo "${{secrets.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
 
-      - name: create application-security.yml
-        shell: bash
-        run: |
-          touch ./src/main/resources/application-security.yml 
-          echo "${{secrets.APPLICATION_SECURITY}}" > ./src/main/resources/application-security.yml
-
       - name: create application-jwt.properties
         shell: bash
         run: |
@@ -90,7 +84,7 @@ jobs:
       - name: Get Github Action's ip address
         id: ip
         uses: haythem/public-ip@v1.3
-        
+
       # access-key-id, secret-access-key의 경우 AWS IAM User의 정보 사용
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
