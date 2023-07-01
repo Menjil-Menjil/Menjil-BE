@@ -9,7 +9,6 @@ spring:
   config:
     import:
       - classpath:/application-database.yml # for AWS RES(MySQL)
-      - classpath:/application-security.yml    # for OAuth2: google, kakao
       - classpath:/application-jwt.properties
 
   jpa:
