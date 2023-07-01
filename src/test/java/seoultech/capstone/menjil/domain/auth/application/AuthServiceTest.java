@@ -1,6 +1,5 @@
 package seoultech.capstone.menjil.domain.auth.application;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,10 +10,13 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(properties = "spring.config.location=" +
@@ -58,25 +60,31 @@ class AuthServiceTest {
         });
 
         // 닉네임 중복이 아닐 시 정상적으로 String 결과 반환
-        Assertions.assertThat(authService.checkNicknameDuplication("testB"))
+        assertThat(authService.checkNicknameDuplication("testB"))
                 .isEqualTo("Nickname is available");
     }
 
     @Test
     @DisplayName("정상적으로 회원가입이 동작하는 지 확인")
     void signUp() {
-        SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "test@kakao.com",
+        SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
 
-        authService.signUp(signUpRequestDtoA);
+        SignUpResponseDto responseDto = authService.signUp(signUpRequestDtoA);
 
+        // db 에 잘 저장되는지 검증
         List<User> userList = userRepository.findAll();
-        Assertions.assertThat(userList.size()).isEqualTo(2);
+        assertThat(userList.size()).isEqualTo(2);
+
+        // UserSignupResponseDto 검증
+        assertThat(responseDto.getStatus()).isEqualTo(201);
+        assertThat(responseDto.getEmail()).isEqualTo("tes33t@kakao.com");
+        assertThat(responseDto.getMessage()).isEqualTo("가입 요청이 정상적으로 처리되었습니다");
     }
 
     @Test
     @DisplayName("회원가입 시 닉네임이 중복인 경우 CustomException 발생")
-    void test() {
+    void signUpNicknameDuplicate() {
         // given
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "test@kakao.com",
                 "kakao", "testA");
@@ -84,6 +92,30 @@ class AuthServiceTest {
         assertThrows(CustomException.class, () -> {
             authService.signUp(signUpRequestDtoA);
         });
+    }
+
+    /**
+     * 로그인
+     */
+    @Test
+    @DisplayName("로그인 시 db에 사용자 정보가 없는 경우 CustomException")
+    void signInUserNotExist() {
+        // given
+        User userB = createUser("kakao_4237", "userA@kakao.com", "kakao", "testA");
+
+        // when
+        assertThrows(CustomException.class, () -> {
+            authService.signIn(userB.getEmail(), userB.getProvider());
+        });
+    }
+
+    @Test
+    @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 정상 응답")
+    void signIn() {
+
+        // dto 검증
+        SignInResponseDto responseDto = authService.signIn("userA@gmail.com", "google");
+        assertThat(responseDto.getStatus()).isEqualTo(201);
     }
 
     private User createUser(String id, String email, String provider, String nickname) {
