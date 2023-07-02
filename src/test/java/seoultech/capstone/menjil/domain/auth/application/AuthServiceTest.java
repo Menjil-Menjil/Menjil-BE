@@ -1,10 +1,14 @@
 package seoultech.capstone.menjil.domain.auth.application;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
@@ -12,8 +16,10 @@ import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
+import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
+import javax.crypto.SecretKey;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +36,11 @@ class AuthServiceTest {
     private AuthService authService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+    @Value("${jwt.secret.token}")
+    private String secretKey;
+    private SecretKey TEST_JWT_SECRET_TOKEN_KEY;
 
     @BeforeEach
     void init() {
@@ -37,12 +48,14 @@ class AuthServiceTest {
         // 각 테스트 메서드 전에 실행된다.
         User userA = createUser("google_1", "userA@gmail.com", "google", "testA");
         userRepository.save(userA);
+
+        byte[] accessKeyBytes = Decoders.BASE64.decode(secretKey);
+        TEST_JWT_SECRET_TOKEN_KEY = Keys.hmacShaKeyFor(accessKeyBytes);
     }
 
     @Test
     @DisplayName("회원가입: 플랫폼 서버(google, kakao)에서 인증 받은 뒤, 추가정보 입력 전 유저 조회")
     void checkUserExistsInDb() {
-
         // email, provider 가 같은 유저를 확인하면, CustomException 오류 발생
         assertThrows(CustomException.class, () -> {
             authService.checkUserExistsInDb("userA@gmail.com", "google");
@@ -65,7 +78,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("정상적으로 회원가입이 동작하는 지 확인")
+    @DisplayName("정상적으로 회원가입이 동작하는지 확인")
     void signUp() {
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
@@ -112,6 +125,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 정상 응답")
     void signIn() {
+        ReflectionTestUtils.setField(jwtTokenProvider, "JWT_SECRET_TOKEN_KEY", TEST_JWT_SECRET_TOKEN_KEY);
 
         // dto 검증
         SignInResponseDto responseDto = authService.signIn("userA@gmail.com", "google");
