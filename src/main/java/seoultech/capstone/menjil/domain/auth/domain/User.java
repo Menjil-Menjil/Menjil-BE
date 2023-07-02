@@ -15,7 +15,7 @@ import javax.persistence.*;
 public class User extends BaseTimeEntity {
 
     @Id // 식별자 지정
-    @Column(name = "provider_id", length = 50)
+    @Column(name = "user_id", length = 50)
     private String id;  // ex) google_3214321
 
     @Column(nullable = false, length = 50)
