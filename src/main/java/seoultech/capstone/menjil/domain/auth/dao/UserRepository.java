@@ -15,5 +15,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     // Nickname 은 중복이 되지 않으므로, List 가 아닌 Optional 로 조회
     Optional<User> findUserByNickname(String nickname);
 
+    Optional<User> findUserById(String id);
+
 }
 

@@ -9,11 +9,14 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
+import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -22,6 +25,7 @@ import java.util.List;
 public class AuthService {
     private final HttpServletResponse response;
     private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
     private final String redirectUrl = "https://www.menjil-menjil.com/register";
 
     /**
@@ -66,7 +70,7 @@ public class AuthService {
         User user = requestDto.toUser();
 
         // 기존에 중복된 유저가 있는 지 조회
-        // 이 부분은 현재는 필요없다.
+        // 이 부분은 의미없다. 처음 가입할 때 유저 확인 후 redirect 처리 하므로.
         /*
         List<User> userInDb = userRepository.findUserByEmailAndProvider(user.getEmail(), user.getProvider());
         if (userInDb.size() > 0) {
@@ -100,8 +104,8 @@ public class AuthService {
             // Created 응답과 함께 Access, Refresh token 발급
             return SignInResponseDto.builder()
                     .status(201)
-                    .accessToken("test1")
-                    .refreshToken("test2")
+                    .accessToken(jwtTokenProvider.generateAccessToken(userInDb.get(0).getId(), LocalDate.now()))
+                    .refreshToken(jwtTokenProvider.generateRefreshToken(userInDb.get(0).getId(), LocalDate.now()))
                     .build();
         } else {
             throw new CustomException(ErrorCode.USER_NOT_EXISTED);
