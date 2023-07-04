@@ -1,5 +1,6 @@
 package seoultech.capstone.menjil.global.config;
 
+/*
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +33,7 @@ public class SecurityConfig {   // WebSecurityConfigurerAdapter is deprecated
         // 3. UsernamePasswordAuthenticationFilter 비활성화
         http.formLogin().disable();
 
-        /* 오류가 발생하면 4번부터 제거 */
+         오류가 발생하면 4번부터 제거
         // 4. 로그인 인증창이 뜨지 않게 비활성화
         http.httpBasic().disable();
 
@@ -56,3 +57,4 @@ public class SecurityConfig {   // WebSecurityConfigurerAdapter is deprecated
         return source;
     }
 }
+*/
