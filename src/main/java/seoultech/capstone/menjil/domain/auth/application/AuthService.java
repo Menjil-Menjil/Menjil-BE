@@ -32,10 +32,10 @@ public class AuthService {
      * 회원가입 전, 유저가 이미 db에 존재하는지 조회.
      *
      * @param email
-     * @param socialType
+     * @param provider
      */
-    public void checkUserExistsInDb(String email, String socialType) throws IOException {
-        List<User> userInDb = userRepository.findUserByEmailAndProvider(email, socialType);
+    public void checkUserExistsInDb(String email, String provider) throws IOException {
+        List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
 
         if (userInDb.size() > 0) {
             throw new CustomException(ErrorCode.USER_DUPLICATED);

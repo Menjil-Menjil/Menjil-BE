@@ -161,16 +161,7 @@ class AuthControllerTest {
         // given
         SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "naver");
 
-        // url: google
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin/google")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonToString(requestDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", is("가입 양식이 잘못되었습니다. 구글이나 카카오로 가입 요청을 해주세요")))
-                .andDo(print());
-
-        // url: kakao
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin/kakao")
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonToString(requestDto)))
                 .andExpect(status().isBadRequest())

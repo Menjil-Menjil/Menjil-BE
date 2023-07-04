@@ -32,15 +32,13 @@ public class AuthController {
     /**
      * 사용자의 SNS 회원가입 요청을 받은 뒤, db와 조회한 뒤 사용자가 있으면 Exception
      * 사용자가 없으면 register 페이지로 redirect 처리
-     *
-     * @param socialType
      */
-    @GetMapping(value = "/signup/{socialType}")
+    @GetMapping(value = "/signup")
     @ResponseBody
-    public void socialSignUpType(@PathVariable(name = "socialType") String socialType,
-                                 @RequestParam("email") String email) throws IOException {
-        log.info(">> 사용자로부터 {} 유저가 {} SNS 회원가입 요청을 받음", email, socialType);
-        authService.checkUserExistsInDb(email, socialType);
+    public void socialSignUpType(@RequestParam("email") String email,
+                                 @RequestParam("provider") String provider) throws IOException {
+        log.info(">> 사용자로부터 {} 유저가 {} SNS 회원가입 요청을 받음", email, provider);
+        authService.checkUserExistsInDb(email, provider);
     }
 
     /**
@@ -97,9 +95,8 @@ public class AuthController {
      * 기존에 가입된 유저가 있으면, access & refresh token 전달
      * 가입된 유저가 없으면, CustomException 처리
      */
-    @PostMapping(value = "/signin/{socialType}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public SignInResponseDto signIn(@PathVariable(name = "socialType") String socialType,
-                                    @RequestBody SignInRequestDto dto) {
+    @PostMapping(value = "/signin", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public SignInResponseDto signIn(@RequestBody SignInRequestDto dto) {
 
         String provider = dto.getProvider();
 
