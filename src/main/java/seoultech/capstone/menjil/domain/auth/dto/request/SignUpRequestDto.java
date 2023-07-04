@@ -16,7 +16,7 @@ import javax.validation.constraints.*;
 public class SignUpRequestDto {
 
     @NotBlank
-    private String providerId;
+    private String userId;
     @NotBlank
     private String email;
     @NotBlank
@@ -67,7 +67,7 @@ public class SignUpRequestDto {
     @Builder
     public User toUser() {
         return User.builder()
-                .id(providerId)
+                .id(userId)
                 .email(email)
                 .provider(provider)
                 .nickname(nickname)

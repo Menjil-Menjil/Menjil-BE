@@ -8,13 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
+import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import static org.hamcrest.Matchers.is;
@@ -24,7 +28,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @MockBean(JpaMetamodelMappingContext.class)
-@WebMvcTest(controllers = AuthController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@WebMvcTest(controllers = AuthController.class,
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class},
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebConfig.class)
+        })
 class AuthControllerTest {
 
     @Autowired
@@ -64,7 +72,7 @@ class AuthControllerTest {
     }
 
     /**
-     * 아래부터 회원가입 검증
+     * 회원가입 요청 검증
      */
     @Test
     @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 공백이 포함된 경우 CustomException 발생")
@@ -141,6 +149,32 @@ class AuthControllerTest {
                         .content(jsonToString(signUpReqDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("1. 학점은 4보다 클 수 없습니다 ")))
+                .andDo(print());
+    }
+
+    /**
+     * 로그인(signIn) 검증
+     */
+    @Test
+    @DisplayName("로그인 시 google, kakao 외에 다른 플랫폼이 온 경우 오류처리")
+    void signInProvider() throws Exception {
+        // given
+        SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "naver");
+
+        // url: google
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonToString(requestDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("가입 양식이 잘못되었습니다. 구글이나 카카오로 가입 요청을 해주세요")))
+                .andDo(print());
+
+        // url: kakao
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin/kakao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonToString(requestDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("가입 양식이 잘못되었습니다. 구글이나 카카오로 가입 요청을 해주세요")))
                 .andDo(print());
     }
 

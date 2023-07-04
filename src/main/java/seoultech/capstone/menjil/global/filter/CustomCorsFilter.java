@@ -1,7 +1,6 @@
 package seoultech.capstone.menjil.global.filter;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -13,14 +12,16 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Slf4j
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class CustomCorsFilter extends OncePerRequestFilter {
     // CorsFilter 가 이미 Spring Security 에 존재하므로, 구분하기 위해 'Custom' 을 붙임
+
+    public CustomCorsFilter() {
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        log.info(">> CustomCorsFilter is called");
+        log.info(">> Enter the CustomCorsFilter");
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE");
