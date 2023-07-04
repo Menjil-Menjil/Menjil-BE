@@ -8,6 +8,7 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignUpCheckUserDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
@@ -34,17 +35,16 @@ public class AuthService {
      * @param email
      * @param provider
      */
-    public void checkUserExistsInDb(String email, String provider) throws IOException {
+    public SignUpCheckUserDto checkUserExistsInDb(String email, String provider) throws IOException {
         List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
 
         if (userInDb.size() > 0) {
             throw new CustomException(ErrorCode.USER_DUPLICATED);
         } else {
-            try {
-                response.sendRedirect(redirectUrl);
-            } catch (IOException e) {
-                log.error(">> redirect url is wrong :", e);
-            }
+            return SignUpCheckUserDto.builder()
+                    .status(200)
+                    .message("회원가입이 가능한 이메일입니다")
+                    .build();
         }
     }
 

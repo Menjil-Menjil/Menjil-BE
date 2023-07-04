@@ -11,6 +11,7 @@ import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.NicknameAvailableDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignUpCheckUserDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -35,10 +36,10 @@ public class AuthController {
      */
     @GetMapping(value = "/signup")
     @ResponseBody
-    public void socialSignUpType(@RequestParam("email") String email,
-                                 @RequestParam("provider") String provider) throws IOException {
+    public SignUpCheckUserDto socialSignUpType(@RequestParam("email") String email,
+                                               @RequestParam("provider") String provider) throws IOException {
         log.info(">> 사용자로부터 {} 유저가 {} SNS 회원가입 요청을 받음", email, provider);
-        authService.checkUserExistsInDb(email, provider);
+        return authService.checkUserExistsInDb(email, provider);
     }
 
     /**
