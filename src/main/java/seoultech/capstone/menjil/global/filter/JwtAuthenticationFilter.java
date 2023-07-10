@@ -13,7 +13,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,15 +70,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // access token 이 유효하지 않은 경우, refresh token 도 검증 필요
                 Map<String, Object> valiDateRefreshTokenMap = jwtTokenProvider.validateRefreshToken(refreshToken);
 
-                if (Boolean.parseBoolean(valiDateRefreshTokenMap.get("tokenStatus").toString())) {
+                if (Boolean.parseBoolean(valiDateRefreshTokenMap.get("tokenStatus").toString())
+                        && !Boolean.parseBoolean(valiDateRefreshTokenMap.get("refreshStatus").toString())) {
                     // 1. refresh token 이 유효하고, 만료 기간이 4일보다 많이 남은 경우
-                    // access token 을 재발급해서 클라이언트로 응답
+                    // access token 만 재발급해서 클라이언트로 응답
                     log.info(">> Access Token 재발급 진행! in JwtAuthenticationFilter");
 
                     // 응답 시 필요없는 key-value 제거
                     valiDateRefreshTokenMap.remove("tokenStatus");
                     valiDateRefreshTokenMap.remove("refreshStatus");
-                    valiDateRefreshTokenMap.put("status", 201);
 
                     response.setStatus(HttpStatus.CREATED.value());
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -95,7 +94,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // 응답 시 필요없는 key-value 제거
                     valiDateRefreshTokenMap.remove("tokenStatus");
                     valiDateRefreshTokenMap.remove("refreshStatus");
-                    valiDateRefreshTokenMap.put("status", 201);
 
                     response.setStatus(HttpStatus.CREATED.value());
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -103,17 +101,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     objectMapper.writeValue(response.getWriter(), valiDateRefreshTokenMap);
                     return;
                 } else {
-                    // 3. refresh token 이 변조된 경우: 강제 로그아웃 처리를 한다.
-                    // 3-1. refresh token 역시 만료된 경우: 마찬가지로 로그아웃 처리를 한다.
+                    // 3. refresh token 이 만료된 경우: 클라이언트에서 로그아웃 처리를 수행하도록 요청한다.
+                    // 3-1. refresh token 변조된 경우: 클라이언트에서 로그아웃 처리를 수행하도록 요청한다.
 
                     // 응답 시 필요없는 key-value 제거
                     valiDateRefreshTokenMap.remove("tokenStatus");
                     valiDateRefreshTokenMap.remove("refreshStatus");
                     valiDateRefreshTokenMap.remove("accessToken");
                     valiDateRefreshTokenMap.remove("refreshToken");
-                    valiDateRefreshTokenMap.put("status", 403); // 403 Forbidden
 
-                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
                     objectMapper.writeValue(response.getWriter(), valiDateRefreshTokenMap);
