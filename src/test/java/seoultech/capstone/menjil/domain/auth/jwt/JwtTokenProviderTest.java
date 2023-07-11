@@ -1,6 +1,5 @@
 package seoultech.capstone.menjil.domain.auth.jwt;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -11,17 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.crypto.SecretKey;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = "spring.config.location=" +
         "classpath:/application.yml" +
@@ -43,20 +38,20 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("access token, refresh token 이 올바르게 생성된다")
+    @DisplayName("Access Token, Refresh Token 이 올바르게 생성된다")
     void generateTokens() {
-        ReflectionTestUtils.setField(jwtTokenProvider, "JWT_SECRET_TOKEN_KEY", TEST_JWT_SECRET_TOKEN_KEY);
+        //ReflectionTestUtils.setField(jwtTokenProvider, "JWT_SECRET_TOKEN_KEY", TEST_JWT_SECRET_TOKEN_KEY);
 
-        String accessToken = jwtTokenProvider.generateAccessToken(userId, LocalDate.now());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(userId, LocalDate.now());
+        String accessToken = jwtTokenProvider.generateAccessToken(userId, LocalDateTime.now());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(userId, LocalDateTime.now());
 
         assertThat(accessToken).isNotNull();
         assertThat(refreshToken).isNotNull();
     }
 
     @Test
-    @DisplayName("access token이 만료시간이 지났을 시 false 값을 반환하는지 확인")
-    void validateToken() throws InterruptedException {
+    @DisplayName("Access Token 이 만료시간이 지났을 시 false 값을 반환하는지 확인")
+    void validateAccessToken() throws InterruptedException {
         // Set the token expiration time to 1 second
         int expirationSeconds = 1;
 
