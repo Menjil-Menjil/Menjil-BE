@@ -1,10 +1,41 @@
-# Menzil-BE
+# Menjil-Menjil Server
 
-## 🧵 Commit Convention
+
+
+## 1. Tech Stack
+
+
+
+### BackEnd
+
+| 역할                 | 종류                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| Programming Language | <img alt="RED" src ="https://img.shields.io/badge/JAVA-004027.svg?&style=for-the-badge&logo=Jameson&logoColor=white"/> |
+| Server Framework     | <img alt="RED" src ="https://img.shields.io/badge/SPRING Boot-6DB33F.svg?&style=for-the-badge&logo=SpringBoot&logoColor=white"/> |
+| Database             | <img alt="RED" src ="https://img.shields.io/badge/Mysql-003545.svg?&style=for-the-badge&logo=Mysql&logoColor=white"/>  <img src="https://img.shields.io/badge/mongoDB-47A248?style=for-the-badge&logo=MongoDB&logoColor=white"> |
+| Version Control      | ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white) |
+| CI/CD                |  <img src="https://img.shields.io/badge/GitHub Action-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">|
+| Testing                | <img src="https://img.shields.io/badge/junit5-25A162?style=for-the-badge&logo=junit5&logoColor=white"> |
+
+
+
+### Infra
+
+| 역할                 | 종류                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| Web Application Server   | <img src="https://img.shields.io/badge/amazon ec2-FF9900?style=for-the-badge&logo=amazonec2&logoColor=white"> |
+| Database Service     | <img alt="RED" src ="https://img.shields.io/badge/Amazon Rds-527FFF.svg?&style=for-the-badge&logo=AmazonRds&logoColor=white"/> <img src="https://img.shields.io/badge/amazondynamodb-4053D6?style=for-the-badge&logo=amazondynamodb&logoColor=white"> |
+| Domain               | AWS Route53 |
+
+
+
+
+
+
+## 2. Commit Convention
 
 <aside>
 📍  git commit message convention
-
 `ex) feat(변경한 파일) : 변경 내용 (/#issue num)`
 
 ```plain
