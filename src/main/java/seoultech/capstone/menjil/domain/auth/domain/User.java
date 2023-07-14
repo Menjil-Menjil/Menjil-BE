@@ -21,18 +21,18 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 50)
     private String email;   // kakao 의 경우, 구글 이메일로 가입할 수 있으므로 column=unique 는 적합하지 않다.
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 15)
     private String provider; // google, kakao
 
     /**
      * 아래 부터는 사용자에게 추가적으로 입력받는 정보
      * 여기부터는 필수적으로 입력 받는 정보
      */
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String nickname;    // 고유 유저를 식별할 정보
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 15)
     private UserRole role;    // Mentor or Mentee
 
     @Column(name = "birth_year", nullable = false)
@@ -41,13 +41,13 @@ public class User extends BaseTimeEntity {
     @Column(name = "birth_month", nullable = false)
     private Integer birthMonth;
 
-    @Column(length = 30, nullable = false)
+    @Column(nullable = false, length = 30)
     private String school;      // 교육 기관
 
     @Column(nullable = false)
     private Integer score;
 
-    @Column(name = "score_range", nullable = false)
+    @Column(name = "score_range", nullable = false, length = 15)
     private String scoreRange;
 
     @Column(name = "graduate_date", nullable = false)
@@ -56,13 +56,13 @@ public class User extends BaseTimeEntity {
     @Column(name = "graduate_month", nullable = false)
     private Integer graduateMonth; // 졸업 월
 
-    @Column(length = 20, nullable = false)
+    @Column(nullable = false, length = 50)
     private String major;       // 본전공
 
-    @Column(name = "sub_major", length = 20)
+    @Column(name = "sub_major", length = 50)
     private String subMajor;    // 복수전공
 
-    @Column(length = 20)
+    @Column(length = 50)
     private String minor;       // 부전공
 
     @Column(nullable = false)
