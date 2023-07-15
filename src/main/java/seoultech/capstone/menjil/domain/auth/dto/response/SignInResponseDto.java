@@ -8,7 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Builder
 public class SignInResponseDto {
-    private int status;
+    private int code;
     private String accessToken;
     private String refreshToken;
 }

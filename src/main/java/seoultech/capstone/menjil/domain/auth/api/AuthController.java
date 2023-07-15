@@ -4,15 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.NicknameAvailableDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignUpCheckUserDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
+import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import javax.validation.Valid;
@@ -20,7 +19,10 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import static seoultech.capstone.menjil.global.common.dto.ApiResponse.success;
 import static seoultech.capstone.menjil.global.exception.ErrorCode.*;
+import static seoultech.capstone.menjil.global.exception.SuccessCode.NICKNAME_AVAILABLE;
+import static seoultech.capstone.menjil.global.exception.SuccessCode.SIGNUP_AVAILABLE;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -34,19 +36,26 @@ public class AuthController {
      * 사용자의 SNS 회원가입 요청을 받은 뒤, db와 조회한 뒤 사용자가 있으면 Exception
      * 사용자가 없으면 register 페이지로 redirect 처리
      */
-    @GetMapping(value = "/signup")
+    @GetMapping(value = "/signup", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public SignUpCheckUserDto socialSignUpType(@RequestParam("email") String email,
-                                               @RequestParam("provider") String provider) throws IOException {
-        log.info(">> 사용자로부터 {} 유저가 {} SNS 회원가입 요청을 받음", email, provider);
-        return authService.checkUserExistsInDb(email, provider);
+    public ResponseEntity<ApiResponse<?>> checkSignupIsAvailable(@RequestParam("email") String email,
+                                                                 @RequestParam("provider") String provider) throws IOException {
+        log.info(">> 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
+        int httpStatusValue = authService.checkUserExistsInDb(email, provider);
+        if (httpStatusValue == HttpStatus.OK.value()) {
+            return ResponseEntity.status(HttpStatus.OK).body(success(SIGNUP_AVAILABLE));
+//            return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE),
+//                    HttpStatus.OK);
+        } else {
+            throw new CustomException(USER_DUPLICATED);
+        }
     }
 
     /**
      * 닉네임 중복 확인
      */
     @GetMapping(value = "/check-nickname")
-    public NicknameAvailableDto checkNicknameDuplicate(@RequestParam("nickname") String nickname) {
+    public ResponseEntity<ApiResponse<?>> checkNicknameDuplicate(@RequestParam("nickname") String nickname) {
         String pattern1 = "^[가-힣a-zA-Z0-9]*$";    // 특수문자, 공백 모두 체크 가능
 
         if (nickname.replaceAll(" ", "").equals("")) { // 먼저 공백 확인
@@ -55,21 +64,23 @@ public class AuthController {
         if (!Pattern.matches(pattern1, nickname)) {
             throw new CustomException(NICKNAME_CONTAINS_SPECIAL_CHARACTER);
         }
+        int httpStatusValue = authService.checkNicknameDuplication(nickname);
 
-        return NicknameAvailableDto
-                .builder()
-                .status(HttpStatus.OK.value())
-                .message(authService.checkNicknameDuplication(nickname))
-                .build();
+        if (httpStatusValue == HttpStatus.OK.value()) {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(success(NICKNAME_AVAILABLE));
+        } else {
+            throw new CustomException(NICKNAME_DUPLICATED);
+        }
     }
 
     /**
      * 회원가입 로직
      * 사용자가 입력한 데이터를 클라이언트로부터 전달 받는다.
      */
-    @PostMapping(value = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public SignUpResponseDto signUp(@Valid @RequestBody final SignUpRequestDto signUpRequestDto,
-                                    BindingResult bindingResult) {
+    @PostMapping(value = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody final SignUpRequestDto signUpRequestDto,
+                                                      BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             // 특정 field error 의 값을 담는다.
@@ -84,9 +95,10 @@ public class AuthController {
             CustomException exception = new CustomException(SIGNUP_INPUT_INVALID);
             exception.getErrorCode().setMessage(sb.toString()); // 필드 오류를 메시지로 설정
             throw exception;
-        } else {
-            return authService.signUp(signUpRequestDto);
         }
+
+        return ResponseEntity.status(authService.signUp(signUpRequestDto))
+                .body(success(NICKNAME_AVAILABLE, signUpRequestDto.getEmail()));
     }
 
     /**
@@ -97,13 +109,14 @@ public class AuthController {
      * 가입된 유저가 없으면, CustomException 처리
      */
     @PostMapping(value = "/signin", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public SignInResponseDto signIn(@RequestBody SignInRequestDto dto) {
+    public ResponseEntity<SignInResponseDto> signIn(@RequestBody SignInRequestDto dto) {
 
         String provider = dto.getProvider();
 
         if (!provider.equals("google") && !provider.equals("kakao")) {
             throw new CustomException(PROVIDER_NOT_ALLOWED);
         }
-        return authService.signIn(dto.getEmail(), dto.getProvider());
+        return ResponseEntity.status(HttpStatus.CREATED.value())
+                .body(authService.signIn(dto.getEmail(), dto.getProvider()));
     }
 }

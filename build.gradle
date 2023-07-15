@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'application'
     id 'org.springframework.boot' version '2.7.10'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
 }
@@ -27,9 +28,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-
-    // Redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // parse json
+    implementation 'com.google.code.gson:gson:2.9.0'
 
     // Security and OAuth
 //    implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -39,6 +39,11 @@ dependencies {
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+
+    // chat-bot
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.webjars:sockjs-client:1.1.2'
+    implementation 'org.webjars:stomp-websocket:2.3.3-1'
 
     // lombok
     compileOnly 'org.projectlombok:lombok'
@@ -52,3 +57,5 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+mainClassName = 'seoultech.capstone.menjil.MenjilApplication'

@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
         FilterRegistrationBean<JwtAuthenticationFilter> registrationBean
                 = new FilterRegistrationBean<>();
         registrationBean.setFilter(new JwtAuthenticationFilter(jwtTokenProvider, objectMapper));
-        registrationBean.addUrlPatterns("/api/user/*", "/api/chat/*");
+        registrationBean.addUrlPatterns("/api/user/*");
         registrationBean.setOrder(2);
         registrationBean.setName("Second-JwtAuthenticationFilter");
         return registrationBean;
