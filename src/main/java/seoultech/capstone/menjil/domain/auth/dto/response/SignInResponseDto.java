@@ -5,10 +5,15 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 @Builder
 public class SignInResponseDto {
-    private int code;
     private String accessToken;
     private String refreshToken;
+
+    @Builder
+
+    public SignInResponseDto(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+    }
 }

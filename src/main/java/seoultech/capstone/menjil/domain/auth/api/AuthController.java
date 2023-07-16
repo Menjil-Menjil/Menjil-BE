@@ -13,6 +13,7 @@ import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
+import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import javax.validation.Valid;
 import java.io.IOException;
@@ -109,14 +110,18 @@ public class AuthController {
      * 가입된 유저가 없으면, CustomException 처리
      */
     @PostMapping(value = "/signin", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SignInResponseDto> signIn(@RequestBody SignInRequestDto dto) {
+    public ResponseEntity<ApiResponse<SignInResponseDto>> signIn(@RequestBody SignInRequestDto dto) {
 
         String provider = dto.getProvider();
 
         if (!provider.equals("google") && !provider.equals("kakao")) {
             throw new CustomException(PROVIDER_NOT_ALLOWED);
         }
-        return ResponseEntity.status(HttpStatus.CREATED.value())
-                .body(authService.signIn(dto.getEmail(), dto.getProvider()));
+
+        SignInResponseDto signInResponseDto = authService.signIn(dto.getEmail(),
+                dto.getProvider());
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponseDto));
     }
 }

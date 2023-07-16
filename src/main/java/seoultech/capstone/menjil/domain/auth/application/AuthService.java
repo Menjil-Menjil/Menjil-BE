@@ -122,7 +122,6 @@ public class AuthService {
 
             // Created 응답과 함께 Access, Refresh token 발급
             return SignInResponseDto.builder()
-                    .code(201)
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
                     .build();
