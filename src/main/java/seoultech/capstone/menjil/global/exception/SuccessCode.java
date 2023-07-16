@@ -20,7 +20,8 @@ public enum SuccessCode {
     /**
      * 201 CREATED
      */
-    SIGNUP_SUCCESS(HttpStatus.CREATED.value(), "회원가입이 정상적으로 완료됐습니다");
+    SIGNUP_SUCCESS(HttpStatus.CREATED.value(), "회원가입이 정상적으로 완료됐습니다"),
+    ROOM_CREATED(HttpStatus.CREATED.value(), "채팅방이 정상적으로 생성되었습니다");
 
     private final int code;
     private final String message;
