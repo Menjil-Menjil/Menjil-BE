@@ -125,7 +125,8 @@ class AuthServiceTest {
 
         // dto 검증
         SignInResponseDto responseDto = authService.signIn("userA@gmail.com", "google");
-        assertThat(responseDto.getCode()).isEqualTo(HttpStatus.CREATED.value());
+        assertThat(responseDto.getAccessToken()).isNotNull();
+        assertThat(responseDto.getRefreshToken()).isNotNull();
     }
 
     private User createUser(String id, String email, String provider, String nickname) {
