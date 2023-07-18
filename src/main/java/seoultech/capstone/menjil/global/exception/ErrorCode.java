@@ -20,7 +20,10 @@ public enum ErrorCode {
     NICKNAME_CONTAINS_SPECIAL_CHARACTER(HttpStatus.BAD_REQUEST, "A004", "닉네임에 특수 문자를 사용할 수 없습니다"),
     SIGNUP_INPUT_INVALID(HttpStatus.BAD_REQUEST, "A005", "Input type is invalid"),
     PROVIDER_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "A006", "가입 양식이 잘못되었습니다. 구글이나 카카오로 가입 요청을 해주세요"),
-    USER_NOT_EXISTED(HttpStatus.BAD_REQUEST, "A007", "가입된 사용자가 존재하지 않습니다");
+    USER_NOT_EXISTED(HttpStatus.BAD_REQUEST, "A007", "가입된 사용자가 존재하지 않습니다"),
+
+    // chat
+    ROOM_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH01", "채팅방의 정보를 가져올 수 없습니다. 채팅방 아이디를 다시 확인해주세요");
 
     private final HttpStatus httpStatus;
     private final String type;

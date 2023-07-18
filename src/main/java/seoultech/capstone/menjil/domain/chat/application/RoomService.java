@@ -10,6 +10,8 @@ import seoultech.capstone.menjil.domain.chat.domain.Message;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
+import seoultech.capstone.menjil.global.exception.CustomException;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.servlet.http.HttpSession;
 
@@ -48,7 +50,12 @@ public class RoomService {
     public MessageDto enterTheRoom(String roomId) {
 
         // db 접근해서 mentor_id, mentor_nickname (sender 정보)를 가져온다.
-        Room room = roomRepository.findRoomByRoomId(roomId);
+        Room room;
+        try {
+            room = roomRepository.findRoomByRoomId(roomId);
+        } catch (NullPointerException e) {
+            throw new CustomException(ErrorCode.ROOM_NOT_EXISTED);
+        }
 
         // Room -> RoomDto
         RoomDto roomDto = RoomDto.fromRoom(room);
