@@ -1,8 +1,8 @@
-name: Java CI with Gradle, CD with Docker Hub and AWS EC2 in main branch
+name: Java CI with Gradle, CD with Docker Hub and AWS EC2 in develop branch, use port 8081
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
 
 permissions:
   contents: read
@@ -75,7 +75,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_REPO }}:latest
+          tags: ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
 
   deploy:
     needs: build  # Run after build
@@ -96,7 +96,7 @@ jobs:
       - name: Add Github Action's ip address to Security Group
         run: aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
 
-      - name: connect EC2 instance and deploy docker images to main server
+      - name: connect EC2 instance and deploy docker images to develop server
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.AWS_EC2_HOST_IP }}
@@ -106,12 +106,12 @@ jobs:
 
           # kill container -> remove container -> remove image -> pull new image -> run
           script: |
-            sudo docker kill ${{ secrets.PROJECT_NAME }}  
-            sudo docker rm ${{ secrets.PROJECT_NAME }} 
-            sudo docker rmi ${{ secrets.DOCKERHUB_REPO }}
+            sudo docker kill ${{ secrets.PROJECT_NAME_DEV }}  
+            sudo docker rm ${{ secrets.PROJECT_NAME_DEV }} 
+            sudo docker rmi ${{ secrets.DOCKERHUB_REPO_DEV }}
 
-            sudo docker pull ${{ secrets.DOCKERHUB_REPO }}:latest
-            sudo docker run -d --name ${{ secrets.PROJECT_NAME }} -p 80:8080 ${{ secrets.DOCKERHUB_REPO }}:latest
+            sudo docker pull ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
+            sudo docker run -d --name ${{ secrets.PROJECT_NAME_DEV }} -p 8081:8080 ${{ secrets.DOCKERHUB_REPO_DEV }}:latest
 
       - name: Remove Github Action's ip address from Security Group
         run: aws ec2 revoke-security-group-ingress --group-id ${{ secrets.AWS_SECURITY_GROUP_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
