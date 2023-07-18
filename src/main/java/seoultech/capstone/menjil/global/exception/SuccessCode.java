@@ -22,7 +22,8 @@ public enum SuccessCode {
      */
     SIGNUP_SUCCESS(HttpStatus.CREATED.value(), "회원가입이 정상적으로 완료됐습니다"),
     ROOM_CREATED(HttpStatus.CREATED.value(), "채팅방이 정상적으로 생성되었습니다"),
-    TOKEN_CREATED(HttpStatus.CREATED.value(), "Access Token, Refresh Token이 정상적으로 생성되었습니다");
+    TOKEN_CREATED(HttpStatus.CREATED.value(), "Access Token, Refresh Token이 정상적으로 생성되었습니다"),
+    MESSAGE_CREATED(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 생성되었습니다");
 
     private final int code;
     private final String message;

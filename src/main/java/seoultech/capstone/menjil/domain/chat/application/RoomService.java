@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.Message;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
+import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 
 import javax.servlet.http.HttpSession;
-import java.time.LocalDateTime;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class RoomService {
 
     private final RoomRepository roomRepository;
+    private final MessageService messageService;
     private final HttpSession httpSession;
 
     /* 채팅방 생성 */
@@ -44,19 +45,17 @@ public class RoomService {
     }
 
     /* 채팅방 입장(생성한 뒤) */
-    public String enterTheRoom(String roomId) {
-        String message = "원하시는 기능을 선택해 주세요. \n1. AI에게 질문하고 바로 답변받기\n2. 멘토에게 질문하기\n3. 종료하기";
+    public MessageDto enterTheRoom(String roomId) {
 
         // db 접근해서 mentor_id, mentor_nickname (sender 정보)를 가져온다.
         Room room = roomRepository.findRoomByRoomId(roomId);
 
-        // Room -> Message, and save db
+        // Room -> RoomDto
+        RoomDto roomDto = RoomDto.fromRoom(room);
 
+        // use roomDto in MessageService, and save message.
+        MessageDto messageDto = messageService.saveWelcomeMessage(roomDto);
 
-        // Message -> MessageDto
-
-
-        return null;
+        return messageDto;
     }
-
 }

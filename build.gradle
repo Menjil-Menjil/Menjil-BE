@@ -49,7 +49,10 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    // database
     runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+//    testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

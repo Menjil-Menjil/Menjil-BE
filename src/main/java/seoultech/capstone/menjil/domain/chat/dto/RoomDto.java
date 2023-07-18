@@ -10,7 +10,6 @@ import javax.validation.constraints.NotBlank;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class RoomDto {
 
     @NotBlank
@@ -19,6 +18,13 @@ public class RoomDto {
     private String menteeNickname;
     @NotBlank
     private String mentorNickname;
+
+    @Builder(builderMethodName = "roomDtoConstructor")
+    public RoomDto(String roomId, String menteeNickname, String mentorNickname) {
+        this.roomId = roomId;
+        this.menteeNickname = menteeNickname;
+        this.mentorNickname = mentorNickname;
+    }
 
     @Builder
     public Room toRoom() {
@@ -29,4 +35,11 @@ public class RoomDto {
                 .build();
     }
 
+    public static RoomDto fromRoom(Room room) {
+        return RoomDto.roomDtoConstructor()
+                .roomId(room.getRoomId())
+                .menteeNickname(room.getMenteeNickname())
+                .mentorNickname(room.getMentorNickname())
+                .build();
+    }
 }
