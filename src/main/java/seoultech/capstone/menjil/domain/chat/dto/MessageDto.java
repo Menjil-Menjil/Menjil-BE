@@ -2,13 +2,9 @@ package seoultech.capstone.menjil.domain.chat.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Field;
-import seoultech.capstone.menjil.domain.chat.domain.Message;
+import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
-
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -32,17 +28,17 @@ public class MessageDto {
         this.time = time;
     }
 
-    public static MessageDto fromMessage(Message message) {
+    public static MessageDto fromMessage(ChatMessage chatMessage) {
 
         // remove nano seconds
-        String time = message.getTime().withNano(0).toString();
+        String time = chatMessage.getTime().withNano(0).toString();
         time = time.replace("T", " ");
 
         return MessageDto.builder()
-                .roomId(message.getRoomId())
-                .senderNickname(message.getSenderNickname())
-                .message(message.getMessage())
-                .messageType(message.getMessageType())
+                .roomId(chatMessage.getRoomId())
+                .senderNickname(chatMessage.getSenderNickname())
+                .message(chatMessage.getMessage())
+                .messageType(chatMessage.getMessageType())
                 .time(time)
                 .build();
     }

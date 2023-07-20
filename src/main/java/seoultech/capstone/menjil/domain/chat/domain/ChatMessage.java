@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Document(collection = "chat_message")
-public class Message {
+public class ChatMessage {
 
 //    @Transient
 //    public static final String SEQUENCE_NAME = "chat_message_sequence";

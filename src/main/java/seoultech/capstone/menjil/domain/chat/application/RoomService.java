@@ -6,7 +6,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
-import seoultech.capstone.menjil.domain.chat.domain.Message;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
@@ -61,7 +60,7 @@ public class RoomService {
         RoomDto roomDto = RoomDto.fromRoom(room);
 
         // use roomDto in MessageService, and save message.
-        MessageDto messageDto = messageService.saveWelcomeMessage(roomDto);
+        MessageDto messageDto = messageService.sendWelcomeMessage(roomDto);
 
         return messageDto;
     }
