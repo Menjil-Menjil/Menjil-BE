@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignUpResponseDto;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -54,26 +54,26 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("회원가입: 플랫폼 서버(google, kakao)에서 인증 받은 뒤, 추가정보 입력 전 유저 조회")
-    void checkUserExistsInDb() {
-        // email, provider 가 같은 유저를 확인하면, CustomException 오류 발생
-        assertThrows(CustomException.class, () -> {
-            authService.checkUserExistsInDb("userA@gmail.com", "google");
-        });
+    void checkUserAlreadyExistsInDb() {
+        // email, provider 가 같은 유저가 db에 이미 존재하면, 409 CONFLICT
+        int result = authService.checkUserExistsInDb("userA@gmail.com", "google");
+        assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
+
+        // email, provider 가 같은 유저가 db에 없다면, 200 OK
+        int result2 = authService.checkUserExistsInDb("userA@gmail.com", "kakao");
+        assertThat(result2).isEqualTo(HttpStatus.OK.value());
     }
 
     @Test
     @DisplayName("회원가입 시에 닉네임 중복 검사")
     void checkNicknameDuplication() {
-
-        // when
         // 닉네임 중복 시 CustomException 발생
-        assertThrows(CustomException.class, () -> {
-            authService.checkNicknameDuplication("testA");
-        });
+        int result = authService.checkNicknameDuplication("testA");
+        assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
 
         // 닉네임 중복이 아닐 시 정상적으로 String 결과 반환
-        assertThat(authService.checkNicknameDuplication("testB"))
-                .isEqualTo("Nickname is available");
+        int result2 = authService.checkNicknameDuplication("testB");
+        assertThat(result2).isEqualTo(HttpStatus.OK.value());
     }
 
     @Test
@@ -82,20 +82,17 @@ class AuthServiceTest {
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
 
-        SignUpResponseDto responseDto = authService.signUp(signUpRequestDtoA);
+        int result = authService.signUp(signUpRequestDtoA);
 
         // db 에 잘 저장되는지 검증
         List<User> userList = userRepository.findAll();
         assertThat(userList.size()).isEqualTo(2);
 
-        // UserSignupResponseDto 검증
-        assertThat(responseDto.getStatus()).isEqualTo(201);
-        assertThat(responseDto.getEmail()).isEqualTo("tes33t@kakao.com");
-        assertThat(responseDto.getMessage()).isEqualTo("가입 요청이 정상적으로 처리되었습니다");
+        assertThat(result).isEqualTo(HttpStatus.CREATED.value());
     }
 
     @Test
-    @DisplayName("회원가입 시 닉네임이 중복인 경우 CustomException 발생")
+    @DisplayName("회원가입 시 닉네임이 db에 이미 존재하는 경우 CustomException 발생")
     void signUpNicknameDuplicate() {
         // given
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "test@kakao.com",
@@ -128,7 +125,8 @@ class AuthServiceTest {
 
         // dto 검증
         SignInResponseDto responseDto = authService.signIn("userA@gmail.com", "google");
-        assertThat(responseDto.getStatus()).isEqualTo(201);
+        assertThat(responseDto.getAccessToken()).isNotNull();
+        assertThat(responseDto.getRefreshToken()).isNotNull();
     }
 
     private User createUser(String id, String email, String provider, String nickname) {

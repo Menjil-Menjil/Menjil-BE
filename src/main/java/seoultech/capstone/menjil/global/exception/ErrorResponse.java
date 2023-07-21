@@ -7,15 +7,13 @@ import lombok.Getter;
 public class ErrorResponse {
 
     private int status;
-    private String errorName;
     private String message; // exception message
-    private String code;
+    private String type;
 
     @Builder
-    public ErrorResponse(int status, String errorName, String message, String code) {
+    public ErrorResponse(int status, String message, String type) {
         this.status = status;
-        this.errorName = errorName;
         this.message = message;
-        this.code = code;
+        this.type = type;
     }
 }
