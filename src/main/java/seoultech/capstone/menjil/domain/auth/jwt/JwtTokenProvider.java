@@ -13,25 +13,23 @@ import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 
 import javax.crypto.SecretKey;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Transactional
 @Component
 public class JwtTokenProvider {
     /**
-     * Using: AuthService -> generate access, refresh token
+     * Using: AuthService -> generate Access Token, Refresh Token
      */
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final SecretKey JWT_SECRET_TOKEN_KEY;
-    private static final long accessTokenExpiresIn = Duration.ofMinutes(60).toMillis();    // 만료시간 1시간
+    private static final long accessTokenExpiresIn = Duration.ofMinutes(3).toMillis();    // 만료시간 1시간 -> 3분 수정
     private static final long refreshTokenExpiresIn = 14L;    // 만료시간 14일
 
     public JwtTokenProvider(@Value("${jwt.secret.token}") String tokenKey,
@@ -71,121 +69,84 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // access token 검증
+    /* Access Token 검증 */
     @Transactional
-    public boolean validateAccessToken(String accessToken) {
+    public TokenStatus validateAccessToken(String accessToken) {
         try {
-            log.info(">> validate access token <<");
+            log.info(">> validate Access Token <<");
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(this.JWT_SECRET_TOKEN_KEY)
                     .build()
                     .parseClaimsJws(accessToken);
 
-            return true;
-            //return !claims.getBody().getExpiration().before(new Date());
+            /* case 2: Check if Access Token has expired */
+            String userIdInToken = claims.getBody().get("user_id").toString();
+            User user = userRepository.findUserById(userIdInToken)
+                    .orElse(null);
+            if (user == null) {
+                return TokenStatus.USER_ID_NOT_EXIST;
+            }
+
+            /* case 3 : Other Exception */
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             //log.info(">> Invalid JWT Access Token", e);
-        } catch (ExpiredJwtException e) {
-            //log.info(">> Expired JWT Access Token", e);
+            return TokenStatus.OTHER_EXCEPTION;
+        }
+        /* case 1: Check if Access Token has expired */ catch (ExpiredJwtException e) {
+            return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
             //log.info(">> Unsupported JWT Access Token", e);
+            return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
             // log.info(">> JWT Access Token claims string is empty.", e);
+            return TokenStatus.OTHER_EXCEPTION;
         }
-        return false;
+        return TokenStatus.RELIABLE;
     }
 
-    // refresh token 검증
-    public ConcurrentHashMap<String, Object> validateRefreshToken(String refreshToken) {
-
-        ConcurrentHashMap<String, Object> result = new ConcurrentHashMap<>();
-        result.put("tokenStatus", false);
-        result.put("refreshStatus", false); // 갱신 필요한 여부. 만료 일자 4일 이내인 경우, 값을 true 로 설정.
-        result.put("accessToken", "");
-        result.put("refreshToken", "");
-        result.put("message", "");
-
+    /* Refresh Token 검증 */
+    @Transactional
+    public TokenStatus validateRefreshToken(String refreshToken) {
         try {
-            log.info(">> validate refresh token <<");
+            log.info(">> validate Refresh Token <<");
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(this.JWT_SECRET_TOKEN_KEY)
                     .build()
                     .parseClaimsJws(refreshToken);
 
-            /* 1. db 조회해서 refresh token 값이 존재하는지 확인(최우선)
+            /* case 1: db 조회해서 Refresh Token 값이 존재하는지 확인
              존재하지 않는다면, 2, 3번을 수행할 필요없이 바로 로그아웃 처리 */
             Optional<RefreshToken> findTokenInDb = tokenRepository.findRefreshTokenByToken(refreshToken);
             if (findTokenInDb.isEmpty()) {
-                result.put("status", 401);  // 권한 없음
-                result.put("message", "권한이 없습니다. 재로그인 해 주세요");
-                return result;
+                return TokenStatus.REFRESH_TOKEN_NOT_EXIST;
             }
 
-            /* 2. 토큰이 변조되었는지 파악하기 위해, db 에서 user_id 값을 가져와서 조회 */
+            /* case 2: 토큰이 변조되었는지 파악하기 위해, db 에서 user_id 값을 가져와서 조회 */
             String userIdInToken = claims.getBody().get("user_id").toString();
             User user = userRepository.findUserById(userIdInToken)
                     .orElse(null);
-
             if (user == null) {
-                result.put("status", 401);  // 권한 없음
-                result.put("message", "권한이 없습니다. 재로그인 해 주세요");
-            } else {
-                // 토큰이 변조되지 않은 경우
-                // 3. refresh token 의 만료 일자가 얼마 남았는지 확인
-                // 만료 일자가 4일 이내라면, refresh token 도 새로 발급하도록
-                // 만료된 토큰의 경우 Body 를 조회할 수 없다: 이 경우 1번에서 체크하므로 여기서는 체크할 필요 없음.
-                long expirationTimeMillis = claims.getBody().getExpiration().getTime(); // 토큰의 만료 시간(ms)
-                long currentTimeMillis = System.currentTimeMillis(); // 현재 시간(ms)
-                long remainingTimeMillis = expirationTimeMillis - currentTimeMillis; // 남은 유효 시간(ms)
-                long remainingTimeDays = ((((remainingTimeMillis / 1000) / 60) / 60) / 24); // 남은 유효 시간(일)
-
-                String newAccessToken = generateAccessToken(userIdInToken, LocalDateTime.now());
-
-                if (remainingTimeDays <= 4) {
-                    // access, refresh token 새로 발급
-                    LocalDateTime currentDateTime = LocalDateTime.now();
-                    String newRefreshToken = generateRefreshToken(userIdInToken, currentDateTime);
-                    result.put("tokenStatus", true);
-                    result.put("refreshStatus", true); // 갱신 필요한 여부. 만료 일자 4일 이내인 경우, 값을 true 로 설정.
-                    result.put("accessToken", newAccessToken);
-                    result.put("refreshToken", newRefreshToken);
-                    result.put("status", 201);
-                    result.put("message", "Access Token, Refresh Token 모두 재발급");
-
-                    Timestamp expiryDate = Timestamp.valueOf(currentDateTime.plusDays(14)); // 만료 날짜는 +14일
-
-                    // db 접근해서 Refresh Token 만료 일자 update
-                    int updDb = tokenRepository.updateRefreshToken(user, newRefreshToken,
-                            expiryDate);
-
-                } else {
-                    // access token 만 새로 발급
-                    result.put("tokenStatus", true);
-                    result.put("accessToken", newAccessToken);
-                    result.put("refreshToken", refreshToken);
-                    result.put("status", 201);
-                    result.put("message", "Access Token만 재발급");
-                }
+                return TokenStatus.USER_ID_NOT_EXIST;
             }
-            return result;
-            //return !claims.getBody().getExpiration().before(new Date());
 
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             //log.info(">> Invalid JWT Refresh Token", e);
             //result.put("message", "Access Token이 만료되었습니다. 그리고 유효하지 않은 JWT Refresh Token입니다");
-        } catch (ExpiredJwtException e) {
-            //log.info(">> Expired JWT Refresh Token", e);
+            return TokenStatus.OTHER_EXCEPTION;
+        }
+        /* case 3: AWS Lambda 로 처리하겠지만, 만약 토큰 유효 기간이 만료된 경우 검증 */ catch (ExpiredJwtException e) {
             //result.put("message", "Access Token이 만료되었습니다. 그리고 만료된 JWT Refresh Token입니다");
+            return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
             //log.info(">> Unsupported JWT Refresh Token", e);
             //result.put("message", "Access Token이 만료되었습니다. 그리고 지원되지 않는 JWT Refresh Token입니다");
+            return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
             //log.info(">> JWT Refresh Token claims string is empty", e);
             //result.put("message", "Access Token이 만료되었습니다. 그리고 Refresh Token의 payload 혹은 signature 값이 올바르지 않습니다");
+            return TokenStatus.OTHER_EXCEPTION;
         }
-        result.put("status", 401);
-        result.put("message", "Access Token, Refresh Token 모두 유효하지 않습니다. 재로그인 해 주세요");
-        return result;
+        return TokenStatus.RELIABLE;
     }
 
 }
