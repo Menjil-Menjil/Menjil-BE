@@ -47,6 +47,7 @@ public class JwtTokenProvider {
         Date date = Date.from(currentDateTime.atZone(zoneId).toInstant()); // Convert LocalDateTime to Date
         return Jwts.builder()
                 .claim("user_id", userId)
+                .setHeaderParam("typ", "JWT")
                 .setSubject("Access_Token")
                 .setIssuedAt(date)   // token 발급 시간
                 .setExpiration(new Date(date.getTime() + accessTokenExpiresIn))
@@ -62,6 +63,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .claim("user_id", userId)
+                .setHeaderParam("typ", "JWT")
                 .setSubject("Refresh_Token")
                 .setIssuedAt(date)   // token 발급 시간
                 .setExpiration(new Date(date.getTime() + refreshTokenExpiresIn))
