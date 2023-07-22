@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
@@ -18,10 +19,8 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(properties = "spring.config.location=" +
-        "classpath:/application.yml" +
-        ",classpath:/application-database-test.yml" +
-        ",classpath:/application-jwt.properties")
+@SpringBootTest
+@ActiveProfiles("test")
 class JwtTokenProviderTest {
 
     @Autowired

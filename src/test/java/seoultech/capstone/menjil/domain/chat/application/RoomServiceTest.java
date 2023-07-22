@@ -5,17 +5,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(properties = "spring.config.location=" +
-        "classpath:/application.yml" +
-        ",classpath:/application-database-test.yml" +
-        ",classpath:/application-jwt.properties")
+@SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class RoomServiceTest {
 
     @Autowired

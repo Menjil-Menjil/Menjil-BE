@@ -69,9 +69,9 @@ class RoomControllerTest {
                 .andExpect(jsonPath("$.code", is(201)))
                 .andExpect(jsonPath("$.message", is("채팅방이 정상적으로 생성되었습니다")))
                 .andExpect(jsonPath("$.data", is("testroom1")))
-                .andDo(print());*/
+                .andDo(print());
 
-        verify(roomService, times(1)).createRoom(roomDto);
+        verify(roomService, times(1)).createRoom(roomDto);*/
     }
 
 }
