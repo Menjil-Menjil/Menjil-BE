@@ -39,7 +39,8 @@ public class MessageController {
             Message message = chatGptService.sendRequestToGpt(messageDto.getMessage());
 
 
-            // 3.
+            // 3. 세 줄 요약 메시지, 멘티 닉네임, 멘토 닉네임을 Flask 서버로 전달한다.
+
 
         }
 
