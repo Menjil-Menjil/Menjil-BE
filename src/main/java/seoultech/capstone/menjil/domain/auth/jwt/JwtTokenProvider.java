@@ -115,18 +115,10 @@ public class JwtTokenProvider {
                     .parseClaimsJws(refreshToken);
 
             /* case 1: db 조회해서 Refresh Token 값이 존재하는지 확인
-             존재하지 않는다면, 2, 3번을 수행할 필요없이 바로 로그아웃 처리 */
+             존재하지 않는다면, 바로 로그아웃 처리 */
             Optional<RefreshToken> findTokenInDb = tokenRepository.findRefreshTokenByToken(refreshToken);
             if (findTokenInDb.isEmpty()) {
                 return TokenStatus.REFRESH_TOKEN_NOT_EXIST;
-            }
-
-            /* case 2: 토큰이 변조되었는지 파악하기 위해, db 에서 user_id 값을 가져와서 조회 */
-            String userIdInToken = claims.getBody().get("user_id").toString();
-            User user = userRepository.findUserById(userIdInToken)
-                    .orElse(null);
-            if (user == null) {
-                return TokenStatus.USER_ID_NOT_EXIST;
             }
 
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
@@ -134,7 +126,7 @@ public class JwtTokenProvider {
             //result.put("message", "Access Token이 만료되었습니다. 그리고 유효하지 않은 JWT Refresh Token입니다");
             return TokenStatus.OTHER_EXCEPTION;
         }
-        /* case 3: AWS Lambda 로 처리하겠지만, 만약 토큰 유효 기간이 만료된 경우 검증 */ catch (ExpiredJwtException e) {
+        /* case 3: AWS Lambda 로 처리하겠지만, 토큰 유효 기간이 만료된 경우 검증 */ catch (ExpiredJwtException e) {
             //result.put("message", "Access Token이 만료되었습니다. 그리고 만료된 JWT Refresh Token입니다");
             return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
