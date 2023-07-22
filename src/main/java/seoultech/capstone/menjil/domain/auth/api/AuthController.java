@@ -16,7 +16,6 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import javax.validation.Valid;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -40,13 +39,12 @@ public class AuthController {
     @GetMapping(value = "/signup", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<?>> checkSignupIsAvailable(@RequestParam("email") String email,
-                                                                 @RequestParam("provider") String provider) throws IOException {
+                                                                 @RequestParam("provider") String provider) {
         log.info(">> 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
         int httpStatusValue = authService.checkUserExistsInDb(email, provider);
         if (httpStatusValue == HttpStatus.OK.value()) {
             return ResponseEntity.status(HttpStatus.OK).body(success(SIGNUP_AVAILABLE));
-//            return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE),
-//                    HttpStatus.OK);
+//          return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE), HttpStatus.OK);
         } else {
             throw new CustomException(USER_DUPLICATED);
         }

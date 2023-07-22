@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 public class ErrorResponse {
 
-    private int status;
-    private String message; // exception message
-    private String type;
+    private final int status;
+    private final String message; // exception message
+    private final String type;
 
     @Builder
     public ErrorResponse(int status, String message, String type) {
