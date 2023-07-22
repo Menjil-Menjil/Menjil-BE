@@ -21,8 +21,7 @@ import java.util.regex.Pattern;
 
 import static seoultech.capstone.menjil.global.common.dto.ApiResponse.success;
 import static seoultech.capstone.menjil.global.exception.ErrorCode.*;
-import static seoultech.capstone.menjil.global.exception.SuccessCode.NICKNAME_AVAILABLE;
-import static seoultech.capstone.menjil.global.exception.SuccessCode.SIGNUP_AVAILABLE;
+import static seoultech.capstone.menjil.global.exception.SuccessCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -97,7 +96,7 @@ public class AuthController {
         }
 
         return ResponseEntity.status(authService.signUp(signUpRequestDto))
-                .body(success(NICKNAME_AVAILABLE, signUpRequestDto.getEmail()));
+                .body(success(SIGNUP_SUCCESS, signUpRequestDto.getEmail()));
     }
 
     /**
