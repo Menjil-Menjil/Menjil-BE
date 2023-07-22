@@ -3,6 +3,8 @@ package seoultech.capstone.menjil.domain.auth.api;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -19,10 +21,13 @@ import seoultech.capstone.menjil.domain.auth.application.AuthService;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
+import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -46,9 +51,14 @@ class AuthControllerTest {
     @MockBean
     private AuthService authService;
 
+    /*
+     * @WebMvcTest 에서는, db 조회는 힘들 것으로 생각하였으나,
+     * Mockito.when().thenReturn() 을 통해 예상되는 동작을 미리 지정해준 뒤,
+     * 그에 해당하는 응답값이 반환되는지 검증할 수 있다.
+     */
     @Test
     @DisplayName("회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다. " +
-            "하지만 db 조회까지는 여기서 힘드므로, 그냥 200 OK 응답만 검증")
+            "기존에 가입되어있는 사용자가 아니라면, SuccessCode.SIGNUP_AVAILABLE 리턴 ")
     void checkSignupIsAvailable() throws Exception {
         String email = "Junit-test@gmail.com";
         String provider = "google";
@@ -59,7 +69,30 @@ class AuthControllerTest {
                         .queryParam("email", email)
                         .queryParam("provider", provider))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(200)))
+                .andExpect(jsonPath("$.code", is(SuccessCode.SIGNUP_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.SIGNUP_AVAILABLE.getMessage())))
+                .andDo(print());
+
+        verify(authService).checkUserExistsInDb(email, provider);
+    }
+
+    @Test
+    @DisplayName("회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다. " +
+            "기존에 가입되어있는 사용자이면, ErrorCode.USER_DUPLICATED 리턴 ")
+    void checkSignupIsNotAvailable() throws Exception {
+        String email = "Junit-test@gmail.com";
+        String provider = "google";
+
+        Mockito.when(authService.checkUserExistsInDb(email, provider)).thenReturn(409);
+
+        mvc.perform(get("/api/auth/signup")
+                        .queryParam("email", email)
+                        .queryParam("provider", provider))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code",
+                        is(ErrorCode.USER_DUPLICATED.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message",
+                        is(ErrorCode.USER_DUPLICATED.getMessage())))
                 .andDo(print());
 
         verify(authService).checkUserExistsInDb(email, provider);
@@ -71,8 +104,10 @@ class AuthControllerTest {
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", "  "))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is(ErrorCode.NICKNAME_CONTAINS_BLANK.getMessage())))
+                .andExpect(jsonPath("$.code",
+                        is(ErrorCode.NICKNAME_CONTAINS_BLANK.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message",
+                        is(ErrorCode.NICKNAME_CONTAINS_BLANK.getMessage())))
                 .andDo(print());
     }
 
@@ -82,13 +117,15 @@ class AuthControllerTest {
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", "*ea3sf"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getMessage())))
+                .andExpect(jsonPath("$.code",
+                        is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message",
+                        is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getMessage())))
                 .andDo(print());
     }
 
     @Test
-    @DisplayName("닉네임 검증; 공백과 특수문자가 없는경우 정상적인 동작이 수행된다.")
+    @DisplayName("닉네임 검증; 공백과 특수문자가 없는경우 SuccessCode.NICKNAME_AVAILABLE 리턴")
     public void nicknameIsAvailable() throws Exception {
         String nickname = "test33AA가나마";
         int httpOkValue = HttpStatus.OK.value();
@@ -98,8 +135,26 @@ class AuthControllerTest {
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", nickname))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(200)))
-                .andExpect(jsonPath("$.message", is("사용 가능한 닉네임입니다")))
+                .andExpect(jsonPath("$.code", is(SuccessCode.NICKNAME_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.NICKNAME_AVAILABLE.getMessage())))
+                .andDo(print());
+
+        verify(authService).checkNicknameDuplication(nickname);
+    }
+
+    @Test
+    @DisplayName("닉네임 검증; 닉네임이 db에 이미 존재하는 경우 ErrorCode.NICKNAME_DUPLICATED 리턴")
+    public void nicknameIsExistsInDB() throws Exception {
+        String nickname = "NicknameExistsInDB";
+        int httpConflictValue = HttpStatus.CONFLICT.value();
+
+        Mockito.when(authService.checkNicknameDuplication(nickname)).thenReturn(httpConflictValue);
+
+        mvc.perform(get("/api/auth/check-nickname")
+                        .queryParam("nickname", nickname))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code", is(ErrorCode.NICKNAME_DUPLICATED.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message", is(ErrorCode.NICKNAME_DUPLICATED.getMessage())))
                 .andDo(print());
 
         verify(authService).checkNicknameDuplication(nickname);
@@ -195,11 +250,32 @@ class AuthControllerTest {
                 .andDo(print());
     }
 
+    @Test
+    @DisplayName("회원가입 요청이 정상적으로 된 경우 SuccessCode.SIGNUP_SUCCESS 리턴")
+    public void signUpIsComplete() throws Exception {
+        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+                "hi", 1999, 3, "서울시립대", 3);
+        String content = gson.toJson(signUpReqDto);
+
+        int httpCreatedValue = HttpStatus.CREATED.value();
+        Mockito.when(authService.signUp(signUpReqDto)).thenReturn(httpCreatedValue);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code", is(SuccessCode.SIGNUP_SUCCESS.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.SIGNUP_SUCCESS.getMessage())))
+                .andDo(print());
+
+        verify(authService).signUp(signUpReqDto);
+    }
+
     /**
      * 로그인(signIn) 검증
      */
     @Test
-    @DisplayName("로그인 시 google, kakao 외에 다른 플랫폼이 온 경우 오류처리")
+    @DisplayName("로그인 시 google, kakao 외에 다른 플랫폼이 온 경우 ErrorCode.PROVIDER_NOT_ALLOWED 리턴")
     void signInProvider() throws Exception {
         // given
         SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "naver");
@@ -209,8 +285,42 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", is("가입 양식이 잘못되었습니다. 구글이나 카카오로 가입 요청을 해주세요")))
+                .andExpect(jsonPath("$.code",
+                        is(ErrorCode.PROVIDER_NOT_ALLOWED.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message",
+                        is(ErrorCode.PROVIDER_NOT_ALLOWED.getMessage())))
                 .andDo(print());
+    }
+
+    @Test
+    @DisplayName("로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
+    void signInComplete() throws Exception {
+        // given
+        SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "kakao");
+        String content = gson.toJson(requestDto);
+
+        SignInResponseDto signInResponseDto = SignInResponseDto.builder()
+                .accessToken("test_access_token")
+                .refreshToken("test_refresh_token")
+                .build();
+
+        Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponseDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code",
+                        is(SuccessCode.TOKEN_CREATED.getCode())))
+                .andExpect(jsonPath("$.message",
+                        is(SuccessCode.TOKEN_CREATED.getMessage())))
+                .andExpect(jsonPath("$.data.accessToken",
+                        is(signInResponseDto.getAccessToken())))
+                .andExpect(jsonPath("$.data.refreshToken",
+                        is(signInResponseDto.getRefreshToken())))
+                .andDo(print());
+
+        verify(authService, times(1)).signIn(requestDto.getEmail(), requestDto.getProvider());
     }
 
     private SignUpRequestDto createSignUpReqDto(String id, String email, String provider, String nickname,

@@ -9,6 +9,7 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 
 import javax.validation.constraints.*;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -86,5 +87,41 @@ public class SignUpRequestDto {
                 .techStack(techStack)
                 .optionInfo(new OptionInfo(career, certificate, awards, activity))  // use Embedded type
                 .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SignUpRequestDto that = (SignUpRequestDto) o;
+        return Objects.equals(userId, that.userId)
+                && Objects.equals(email, that.email)
+                && Objects.equals(provider, that.provider)
+                && Objects.equals(nickname, that.nickname)
+                && role == that.role
+                && Objects.equals(birthYear, that.birthYear)
+                && Objects.equals(birthMonth, that.birthMonth)
+                && Objects.equals(school, that.school)
+                && Objects.equals(score, that.score)
+                && Objects.equals(scoreRange, that.scoreRange)
+                && Objects.equals(graduateDate, that.graduateDate)
+                && Objects.equals(graduateMonth, that.graduateMonth)
+                && Objects.equals(major, that.major)
+                && Objects.equals(subMajor, that.subMajor)
+                && Objects.equals(minor, that.minor)
+                && Objects.equals(field, that.field)
+                && Objects.equals(techStack, that.techStack)
+                && Objects.equals(career, that.career)
+                && Objects.equals(certificate, that.certificate)
+                && Objects.equals(awards, that.awards)
+                && Objects.equals(activity, that.activity);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, email, provider, nickname,
+                role, birthYear, birthMonth, school, score,
+                scoreRange, graduateDate, graduateMonth, major,
+                subMajor, minor, field, techStack, career, certificate, awards, activity);
     }
 }
