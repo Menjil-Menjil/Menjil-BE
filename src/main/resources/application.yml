@@ -1,3 +1,4 @@
+# default
 server:
   port: 8080
   servlet:
@@ -5,22 +6,38 @@ server:
       charset: UTF-8
       force: true
 
+# 기본적으로 활성화할 profile을 local로 설정
+spring:
+  profiles:
+    active:
+      - local
+    group:
+      local:
+        - local
+        - common
+      prod:
+        - prod
+        - common
+      test:
+        - test
+        - common
+
+
+---
 spring:
   config:
-    import:
-      - classpath:/application-database.yml # for AWS RES(MySQL)
-      - classpath:/application-jwt.properties
+    activate:
+      on-profile: prod
 
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: none  # only validate or none
-    properties:
-      hibernate:
-        #        show_sql: true
-        format_sql: true
-    database: mysql
 
-logging.level:
-  org.hibernate.SQL: debug
-  org.hibernate.type: trace
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test

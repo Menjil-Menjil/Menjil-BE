@@ -22,24 +22,30 @@ jobs:
           java-version: '11'
           distribution: 'temurin' # jdk를 제공하는 vender사 이름 ex. zulu, adopt, microsoft
 
-      ## Create secret yml and properties files
-      - name: create application-database.yml
+      ## Create secret yml files
+      - name: create application-common.yml
         shell: bash
         run: |
-          touch ./src/main/resources/application-database.yml 
-          echo "${{secrets.APPLICATION_DATABASE}}" > ./src/main/resources/application-database.yml
+          touch ./src/main/resources/application-common.yml 
+          echo "${{secrets.APPLICATION_COMMON}}" > ./src/main/resources/application-common.yml
 
-      - name: create application-jwt.properties
+      - name: create application-local.yml
         shell: bash
         run: |
-          touch ./src/main/resources/application-jwt.properties
-          echo "${{secrets.APPLICATION_JWT_PROPERTIES}}" > ./src/main/resources/application-jwt.properties
+          touch ./src/main/resources/application-local.yml
+          echo "${{secrets.APPLICATION_LOCAL}}" > ./src/main/resources/application-local.yml
 
-      - name: create application-database-test.yml
+      - name: create application-prod.yml
         shell: bash
         run: |
-          touch ./src/test/resources/application-database-test.yml 
-          echo "${{secrets.APPLICATION_DATABASE_TEST}}" > ./src/test/resources/application-database-test.yml
+          touch ./src/main/resources/application-prod.yml
+          echo "${{secrets.APPLICATION_PROD}}" > ./src/main/resources/application-prod.yml
+
+      - name: create application-test.yml
+        shell: bash
+        run: |
+          touch ./src/main/resources/application-test.yml
+          echo "${{secrets.APPLICATION_TEST}}" > ./src/main/resources/application-test.yml
 
       ## Gradle
       - name: Cache gradle packages
@@ -55,10 +61,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle, ignore test
+      - name: Build with Gradle
         run: |
-          ./gradlew clean 
-          ./gradlew build -x test
+          ./gradlew clean build
 
       ## Docker
       - name: Login to Docker Hub

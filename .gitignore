@@ -26,10 +26,10 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### private info ### 
-src/main/resources/application-database.yml
-src/main/resources/application-jwt.properties
-
-src/test/resources/application-database-test.yml
+### private info ###
+src/main/resources/application-test.yml
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+src/main/resources/application-common.yml
 
 

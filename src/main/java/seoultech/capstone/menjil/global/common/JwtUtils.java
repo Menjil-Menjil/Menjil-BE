@@ -28,7 +28,7 @@ public class JwtUtils {
     private static SecretKey JWT_SECRET_KEY;
 
     /* setSignKey() 에 Secret Key 를 직접 넣는 방법의 경우 deprecated 되어서 byte[] 형으로 받아야 한다 */
-    public JwtUtils(@Value("${jwt.secret}") String secretKey) {
+    public JwtUtils(@Value("${jwt.secret.value}") String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         JWT_SECRET_KEY = Keys.hmacShaKeyFor(keyBytes);
     }

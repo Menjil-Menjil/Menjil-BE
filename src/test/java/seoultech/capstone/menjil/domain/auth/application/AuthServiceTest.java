@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
@@ -24,11 +25,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(properties = "spring.config.location=" +
-        "classpath:/application.yml" +
-        ",classpath:/application-database-test.yml" +
-        ",classpath:/application-jwt.properties")
+@SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class AuthServiceTest {
 
     @Autowired
@@ -39,7 +38,6 @@ class AuthServiceTest {
     private JwtTokenProvider jwtTokenProvider;
     @Value("${jwt.secret.token}")
     private String secretKey;
-    private SecretKey TEST_JWT_SECRET_TOKEN_KEY;
 
     @BeforeEach
     void init() {
@@ -47,9 +45,6 @@ class AuthServiceTest {
         // 각 테스트 메서드 전에 실행된다.
         User userA = createUser("google_1", "userA@gmail.com", "google", "testA");
         userRepository.save(userA);
-
-        byte[] accessKeyBytes = Decoders.BASE64.decode(secretKey);
-        TEST_JWT_SECRET_TOKEN_KEY = Keys.hmacShaKeyFor(accessKeyBytes);
     }
 
     @Test

@@ -31,9 +31,6 @@ public class AuthService {
 
     /**
      * 회원가입 전, 유저가 이미 db에 존재하는지 조회.
-     *
-     * @param email
-     * @param provider
      */
     public int checkUserExistsInDb(String email, String provider) {
         List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);

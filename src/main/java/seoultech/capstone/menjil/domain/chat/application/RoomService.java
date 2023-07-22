@@ -21,7 +21,6 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final MessageService messageService;
-    private final HttpSession httpSession;
 
     /* 채팅방 생성 */
     public int createRoom(RoomDto roomDto) {
