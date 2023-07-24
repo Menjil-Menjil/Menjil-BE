@@ -1,12 +1,9 @@
 package seoultech.capstone.menjil.domain.auth.application;
 
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,10 +13,8 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
-import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
-import javax.crypto.SecretKey;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,10 +29,6 @@ class AuthServiceTest {
     private AuthService authService;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-    @Value("${jwt.secret.token}")
-    private String secretKey;
 
     @BeforeEach
     void init() {
