@@ -10,8 +10,7 @@ public class SignInResponseDto {
     private String refreshToken;
 
     @Builder
-
-    public SignInResponseDto(String accessToken, String refreshToken) {
+    private SignInResponseDto(String accessToken, String refreshToken) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }

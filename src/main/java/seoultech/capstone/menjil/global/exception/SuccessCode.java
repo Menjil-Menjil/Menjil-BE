@@ -16,6 +16,7 @@ public enum SuccessCode {
      */
     SIGNUP_AVAILABLE(HttpStatus.OK.value(), "회원가입이 가능한 이메일입니다"),
     NICKNAME_AVAILABLE(HttpStatus.OK.value(), "사용 가능한 닉네임입니다"),
+    REQUEST_AVAILABLE(HttpStatus.OK.value(), "정상적으로 요청이 들어왔습니다"),
 
     /**
      * 201 CREATED
