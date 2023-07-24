@@ -37,6 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        response.setCharacterEncoding("UTF-8");
+
         log.info(">> Enter the JwtAuthenticationFilter");
         String[] jwtTokenArr = resolveAuthorizationBearer(request);
         String accessToken;
@@ -103,7 +105,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
                 objectMapper.writeValue(response.getWriter(), detailsMap);
-                return;
             } else {
                 /* 재로그인 요청 */
                 ConcurrentHashMap<String, Object> detailsMap = responseJson(403,
@@ -112,8 +113,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
                 objectMapper.writeValue(response.getWriter(), detailsMap);
-                return;
             }
+            return;
         }
     }
 

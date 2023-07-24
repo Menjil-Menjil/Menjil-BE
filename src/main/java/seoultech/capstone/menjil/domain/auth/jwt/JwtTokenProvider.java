@@ -91,7 +91,6 @@ public class JwtTokenProvider {
             if (user == null) {
                 return TokenStatus.USER_ID_NOT_EXIST;
             }
-            System.out.println("here");
 
             /* case 3 : Other Exception */
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
