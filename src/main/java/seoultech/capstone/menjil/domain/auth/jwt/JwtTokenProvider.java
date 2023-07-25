@@ -137,7 +137,7 @@ public class JwtTokenProvider {
             log.error("[Error] Unsupported JWT Refresh Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
-            log.error("[Error] JWT Refresh Token claims string is empty.", e);
+            log.error("[Error] JWT Refresh Token claims string is empty", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         return TokenStatus.RELIABLE;
