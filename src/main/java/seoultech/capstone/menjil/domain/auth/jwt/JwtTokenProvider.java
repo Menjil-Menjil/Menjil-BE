@@ -30,7 +30,7 @@ public class JwtTokenProvider {
     private final TokenRepository tokenRepository;
     private final SecretKey JWT_SECRET_TOKEN_KEY;
     private static final long accessTokenExpiresIn = Duration.ofMinutes(3).toMillis();    // 만료시간 1시간 -> 3분 수정
-    private static final long refreshTokenExpiresIn = 14L;    // 만료시간 14일
+    private static final long refreshTokenExpiresIn = Duration.ofDays(14).toMillis();;    // 만료시간 14일
 
     public JwtTokenProvider(@Value("${jwt.secret.token}") String tokenKey,
                             UserRepository userRepository, TokenRepository tokenRepository) {
