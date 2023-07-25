@@ -94,16 +94,16 @@ public class JwtTokenProvider {
 
             /* case 3 : Other Exception */
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-//            log.info(">> Invalid JWT Access Token", e);
+            log.error("[Error] Invalid JWT Access Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         /* case 1: Check if Access Token has expired */ catch (ExpiredJwtException e) {
             return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
-//            log.info(">> Unsupported JWT Access Token", e);
+            log.error("[Error] Unsupported JWT Access Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
-//            log.info(">> JWT Access Token claims string is empty.", e);
+            log.error("[Error] JWT Access Token claims string is empty.", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         return TokenStatus.RELIABLE;
@@ -127,16 +127,17 @@ public class JwtTokenProvider {
             }
 
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-//            log.info(">> Invalid JWT Refresh Token", e);
+            log.error("[Error] Invalid JWT Refresh Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         /* 토큰 유효 기간이 만료된 경우 검증 */ catch (ExpiredJwtException e) {
+            log.error("[Error] Expired JWT Refresh Token", e);
             return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
-//            log.info(">> Unsupported JWT Refresh Token", e);
+            log.error("[Error] Unsupported JWT Refresh Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
-//            log.info(">> JWT Refresh Token claims string is empty.", e);
+            log.error("[Error] JWT Refresh Token claims string is empty.", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         return TokenStatus.RELIABLE;
