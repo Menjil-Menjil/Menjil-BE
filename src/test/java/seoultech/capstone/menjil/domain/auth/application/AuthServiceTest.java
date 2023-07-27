@@ -8,7 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
+import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
@@ -29,12 +31,18 @@ class AuthServiceTest {
     private AuthService authService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private TokenRepository tokenRepository;
+
+    private final String TEST_USER_EMAIL = "testUserA@gmail.com";
+    private final String TEST_USER_NICKNAME = "testUserA";
+    private final String TEST_USER_PROVIDER = "google";
 
     @BeforeEach
     void init() {
         // @Test , @RepeatedTest , @ParameterizedTest , @TestFactory 가 붙은 테스트 메소드가 실행하기 전에 실행된다.
         // 각 테스트 메서드 전에 실행된다.
-        User userA = createUser("google_1", "userA@gmail.com", "google", "testA");
+        User userA = createUser("google_1", TEST_USER_EMAIL, TEST_USER_PROVIDER, TEST_USER_NICKNAME);
         userRepository.save(userA);
     }
 
@@ -42,7 +50,7 @@ class AuthServiceTest {
     @DisplayName("회원가입: 플랫폼 서버(google, kakao)에서 인증 받은 뒤, 추가정보 입력 전 유저 조회")
     void checkUserAlreadyExistsInDb() {
         // email, provider 가 같은 유저가 db에 이미 존재하면, 409 CONFLICT
-        int result = authService.checkUserExistsInDb("userA@gmail.com", "google");
+        int result = authService.checkUserExistsInDb(TEST_USER_EMAIL, TEST_USER_PROVIDER);
         assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
 
         // email, provider 가 같은 유저가 db에 없다면, 200 OK
@@ -54,7 +62,7 @@ class AuthServiceTest {
     @DisplayName("회원가입 시에 닉네임 중복 검사")
     void checkNicknameDuplication() {
         // 닉네임 중복 시 CustomException 발생
-        int result = authService.checkNicknameDuplication("testA");
+        int result = authService.checkNicknameDuplication(TEST_USER_NICKNAME);
         assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
 
         // 닉네임 중복이 아닐 시 정상적으로 String 결과 반환
@@ -78,11 +86,11 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("회원가입 시 닉네임이 db에 이미 존재하는 경우 CustomException 발생")
+    @DisplayName("회원가입 시 닉네임이 db에 이미 존재하는 경우 CustomException 리턴")
     void signUpNicknameDuplicate() {
         // given
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "test@kakao.com",
-                "kakao", "testA");
+                "kakao", TEST_USER_NICKNAME);
 
         assertThrows(CustomException.class, () -> {
             authService.signUp(signUpRequestDtoA);
@@ -93,7 +101,7 @@ class AuthServiceTest {
      * 로그인
      */
     @Test
-    @DisplayName("로그인 시 db에 사용자 정보가 없는 경우 CustomException")
+    @DisplayName("로그인 시 db에 사용자 정보가 없는 경우 CustomException 리턴")
     void signInUserNotExist() {
         // given
         User userB = createUser("kakao_4237", "userA@kakao.com", "kakao", "testA");
@@ -105,14 +113,38 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 정상 응답")
+    @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 Access Token 과 Refresh Token 이 생성된다.")
     void signIn() {
-        //ReflectionTestUtils.setField(jwtTokenProvider, "JWT_SECRET_TOKEN_KEY", TEST_JWT_SECRET_TOKEN_KEY);
-
         // dto 검증
-        SignInResponseDto responseDto = authService.signIn("userA@gmail.com", "google");
+        SignInResponseDto responseDto = authService.signIn(TEST_USER_EMAIL, "google");
+
         assertThat(responseDto.getAccessToken()).isNotNull();
         assertThat(responseDto.getRefreshToken()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("로그인 시 TokenRepository 에 이미 RefreshToken 정보가 있는 경우, Token 값이 update 된다")
+    void updateRefreshToken() throws InterruptedException {
+        // First Login
+        SignInResponseDto responseDto = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
+        String firstRT = responseDto.getRefreshToken();
+
+        Thread.sleep(3000);
+
+        // Second Login: Update RefreshToken in TokenRepository: firstRT -> secondRT
+        SignInResponseDto responseDto2 = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
+        String secondRT = responseDto2.getRefreshToken();
+        assertThat(firstRT).isNotEqualTo(secondRT);
+
+        // Not Exists: Because of Update
+        RefreshToken findFirstRt = tokenRepository.findRefreshTokenByToken(firstRT)
+                .orElse(null);
+        assertThat(findFirstRt).isNull();
+
+        // Exists
+        RefreshToken findSecondRt = tokenRepository.findRefreshTokenByToken(secondRT)
+                .orElse(null);
+        assertThat(findSecondRt).isNotNull();
     }
 
     private User createUser(String id, String email, String provider, String nickname) {
