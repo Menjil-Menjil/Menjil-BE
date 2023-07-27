@@ -291,10 +291,41 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
-    void signInComplete() throws Exception {
+    @DisplayName("kakao 로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
+    void signInKakao() throws Exception {
         // given
         SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "kakao");
+        String content = gson.toJson(requestDto);
+
+        SignInResponseDto signInResponseDto = SignInResponseDto.builder()
+                .accessToken("test_access_token")
+                .refreshToken("test_refresh_token")
+                .build();
+
+        Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponseDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code",
+                        is(SuccessCode.TOKEN_CREATED.getCode())))
+                .andExpect(jsonPath("$.message",
+                        is(SuccessCode.TOKEN_CREATED.getMessage())))
+                .andExpect(jsonPath("$.data.accessToken",
+                        is(signInResponseDto.getAccessToken())))
+                .andExpect(jsonPath("$.data.refreshToken",
+                        is(signInResponseDto.getRefreshToken())))
+                .andDo(print());
+
+        verify(authService, times(1)).signIn(requestDto.getEmail(), requestDto.getProvider());
+    }
+
+    @Test
+    @DisplayName("google 로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
+    void signInGoogle() throws Exception {
+        // given
+        SignInRequestDto requestDto = new SignInRequestDto("testUser@google.com", "google");
         String content = gson.toJson(requestDto);
 
         SignInResponseDto signInResponseDto = SignInResponseDto.builder()
