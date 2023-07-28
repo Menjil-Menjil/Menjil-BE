@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 
 import javax.validation.constraints.NotBlank;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -40,5 +41,20 @@ public class RoomDto {
                 .menteeNickname(room.getMenteeNickname())
                 .mentorNickname(room.getMentorNickname())
                 .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RoomDto roomDto = (RoomDto) o;
+        return Objects.equals(roomId, roomDto.roomId)
+                && Objects.equals(menteeNickname, roomDto.menteeNickname)
+                && Objects.equals(mentorNickname, roomDto.mentorNickname);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(roomId, menteeNickname, mentorNickname);
     }
 }

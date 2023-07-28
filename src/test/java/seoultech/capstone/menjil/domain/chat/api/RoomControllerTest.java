@@ -1,6 +1,7 @@
 package seoultech.capstone.menjil.domain.chat.api;
 
 import com.google.gson.Gson;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,6 +23,8 @@ import org.springframework.web.context.WebApplicationContext;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.global.config.WebConfig;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
+import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.times;
@@ -54,24 +58,51 @@ class RoomControllerTest {
 //        MockitoAnnotations.openMocks(this);
     }
 
+    /**
+     * createRoom()
+     */
     @Test
     @DisplayName("채팅방 생성이 정상적으로 진행되었을 때, 201 응답과 그에 해당하는 메시지가 DTO 객체로 리턴된다.")
     void createRoom() throws Exception {
-        RoomDto roomDto = new RoomDto("testroom1", "testmentee1", "testmentor1");
+        RoomDto roomDto = new RoomDto("test_room1", "test_mentee1", "test_mentor1");
         String content = gson.toJson(roomDto);
 
-        Mockito.when(roomService.createRoom(roomDto)).thenReturn(201);
+        Mockito.when(roomService.createRoom(roomDto)).thenReturn(HttpStatus.CREATED.value());
 
-       /* mvc.perform(MockMvcRequestBuilders.post("/api/chat/room")
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code", is(201)))
                 .andExpect(jsonPath("$.message", is("채팅방이 정상적으로 생성되었습니다")))
-                .andExpect(jsonPath("$.data", is("testroom1")))
+                .andExpect(jsonPath("$.data", is("test_room1")))
                 .andDo(print());
 
-        verify(roomService, times(1)).createRoom(roomDto);*/
+        verify(roomService, times(1)).createRoom(roomDto);
     }
+
+    @Test
+    @DisplayName("채팅방 생성시 RoomService 에서 오류가 발생하면, CustomException 리턴")
+    void createRoomError() throws Exception {
+        RoomDto roomDto = new RoomDto("test_room2", "test_mentee2", "test_mentor2");
+        String content = gson.toJson(roomDto);
+
+        Mockito.when(roomService.createRoom(roomDto)).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.value());
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.code", is(ErrorCode.SERVER_ERROR.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
+                .andExpect(jsonPath("$.data").value(Matchers.nullValue()))  // data is null
+                .andDo(print());
+
+        verify(roomService, times(1)).createRoom(roomDto);
+    }
+
+    /**
+     * enterTheRoom()
+     */
 
 }
