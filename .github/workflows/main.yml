@@ -1,4 +1,4 @@
-name: [ main ] Java CI with Gradle, CD with Docker Hub and AWS EC2 in main branch
+name: Java CI with Gradle, CD with Docker Hub and AWS EC2 in main branch
 
 on:
   push:
