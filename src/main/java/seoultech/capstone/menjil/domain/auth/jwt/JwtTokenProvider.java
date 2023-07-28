@@ -2,6 +2,7 @@ package seoultech.capstone.menjil.domain.auth.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.IOException;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,8 @@ import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.global.exception.CustomException;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import javax.crypto.SecretKey;
 import java.time.Duration;
@@ -29,7 +32,7 @@ public class JwtTokenProvider {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final SecretKey JWT_SECRET_TOKEN_KEY;
-    private static final long accessTokenExpiresIn = Duration.ofMinutes(3).toMillis();    // 만료시간 1시간 -> 3분 수정
+    private static final long accessTokenExpiresIn = Duration.ofMinutes(60).toMillis();    // 만료시간 1시간
     private static final long refreshTokenExpiresIn = Duration.ofDays(14).toMillis();;    // 만료시간 14일
 
     public JwtTokenProvider(@Value("${jwt.secret.token}") String tokenKey,
@@ -47,6 +50,7 @@ public class JwtTokenProvider {
         Date date = Date.from(currentDateTime.atZone(zoneId).toInstant()); // Convert LocalDateTime to Date
         return Jwts.builder()
                 .claim("user_id", userId)
+                .setHeaderParam("typ", "JWT")
                 .setSubject("Access_Token")
                 .setIssuedAt(date)   // token 발급 시간
                 .setExpiration(new Date(date.getTime() + accessTokenExpiresIn))
@@ -62,6 +66,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .claim("user_id", userId)
+                .setHeaderParam("typ", "JWT")
                 .setSubject("Refresh_Token")
                 .setIssuedAt(date)   // token 발급 시간
                 .setExpiration(new Date(date.getTime() + refreshTokenExpiresIn))
@@ -79,7 +84,7 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(accessToken);
 
-            /* case 2: Check if Access Token has expired */
+            /* case 2: Check if user id in Access Token is not exists */
             String userIdInToken = claims.getBody().get("user_id").toString();
             User user = userRepository.findUserById(userIdInToken)
                     .orElse(null);
@@ -89,16 +94,16 @@ public class JwtTokenProvider {
 
             /* case 3 : Other Exception */
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            //log.info(">> Invalid JWT Access Token", e);
+            log.error("[Error] Invalid JWT Access Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         /* case 1: Check if Access Token has expired */ catch (ExpiredJwtException e) {
             return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
-            //log.info(">> Unsupported JWT Access Token", e);
+            log.error("[Error] Unsupported JWT Access Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
-            // log.info(">> JWT Access Token claims string is empty.", e);
+            log.error("[Error] JWT Access Token claims string is empty.", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         return TokenStatus.RELIABLE;
@@ -115,38 +120,39 @@ public class JwtTokenProvider {
                     .parseClaimsJws(refreshToken);
 
             /* case 1: db 조회해서 Refresh Token 값이 존재하는지 확인
-             존재하지 않는다면, 2, 3번을 수행할 필요없이 바로 로그아웃 처리 */
+             존재하지 않는다면, 바로 로그아웃 처리 */
             Optional<RefreshToken> findTokenInDb = tokenRepository.findRefreshTokenByToken(refreshToken);
             if (findTokenInDb.isEmpty()) {
                 return TokenStatus.REFRESH_TOKEN_NOT_EXIST;
             }
 
-            /* case 2: 토큰이 변조되었는지 파악하기 위해, db 에서 user_id 값을 가져와서 조회 */
-            String userIdInToken = claims.getBody().get("user_id").toString();
-            User user = userRepository.findUserById(userIdInToken)
-                    .orElse(null);
-            if (user == null) {
-                return TokenStatus.USER_ID_NOT_EXIST;
-            }
-
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            //log.info(">> Invalid JWT Refresh Token", e);
-            //result.put("message", "Access Token이 만료되었습니다. 그리고 유효하지 않은 JWT Refresh Token입니다");
+            log.error("[Error] Invalid JWT Refresh Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
-        /* case 3: AWS Lambda 로 처리하겠지만, 만약 토큰 유효 기간이 만료된 경우 검증 */ catch (ExpiredJwtException e) {
-            //result.put("message", "Access Token이 만료되었습니다. 그리고 만료된 JWT Refresh Token입니다");
+        /* 토큰 유효 기간이 만료된 경우 검증 */ catch (ExpiredJwtException e) {
+            log.error("[Error] Expired JWT Refresh Token", e);
             return TokenStatus.EXPIRED;
         } catch (UnsupportedJwtException e) {
-            //log.info(">> Unsupported JWT Refresh Token", e);
-            //result.put("message", "Access Token이 만료되었습니다. 그리고 지원되지 않는 JWT Refresh Token입니다");
+            log.error("[Error] Unsupported JWT Refresh Token", e);
             return TokenStatus.OTHER_EXCEPTION;
         } catch (IllegalArgumentException e) {
-            //log.info(">> JWT Refresh Token claims string is empty", e);
-            //result.put("message", "Access Token이 만료되었습니다. 그리고 Refresh Token의 payload 혹은 signature 값이 올바르지 않습니다");
+            log.error("[Error] JWT Refresh Token claims string is empty", e);
             return TokenStatus.OTHER_EXCEPTION;
         }
         return TokenStatus.RELIABLE;
+    }
+
+    public String getUserId(String token) {
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(this.JWT_SECRET_TOKEN_KEY)
+                    .build()
+                    .parseClaimsJws(token);
+            return claims.getBody().get("user_id").toString();
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.SERVER_ERROR);
+        }
     }
 
 }

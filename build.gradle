@@ -3,6 +3,79 @@ plugins {
     id 'application'
     id 'org.springframework.boot' version '2.7.10'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id 'jacoco' // add jacoco plugin
+}
+
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+jacocoTestReport {
+    reports {
+        html.required.set(true)
+        // To use codecov, enable xml.
+        // reference link: https://docs.codecov.com/docs/supported-report-formats
+        xml.required.set(true)
+        csv.required.set(false)
+
+        // path where result is saved
+        html.destination file("jacoco/")
+    }
+
+    // Ignore classes: Application, DTO, Config, etc
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "seoultech/capstone/menjil/**/*Application*",
+                    "seoultech/capstone/menjil/**/*Dto*",
+                    "seoultech/capstone/menjil/**/*Request*",
+                    "seoultech/capstone/menjil/**/*Response*",
+//                    "seoultech/capstone/menjil/chat/dto/Message*",
+                    "**/*Config*",
+                    "**/*Exception*",
+                    "**/TokenTestController*"
+            ])
+        }))
+    }
+
+    finalizedBy 'jacocoTestCoverageVerification'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            limit {
+                value = 'COVEREDRATIO'
+                minimum = 0.50
+            }
+            excludes = [
+                    "**.*Application*",
+                    "**.*Dto*",
+                    "**.*Request*",
+                    "**.*Response*",
+                    "**.*Config*",
+                    "**.*Exception*",
+                    "**.TokenTestController*"
+            ]
+        }
+
+        rule {
+            enabled = false
+            element = 'CLASS'
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.20
+            }
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.20
+            }
+        }
+
+    }
 }
 
 jar {
@@ -59,6 +132,7 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy 'jacocoTestReport'
 }
 
 mainClassName = 'seoultech.capstone.menjil.MenjilApplication'
