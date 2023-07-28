@@ -1,5 +1,5 @@
 ## Use codecov, and not Continuous Deployment & Delivery
-name: [ Code Coverage in main, develop branch ]
+name: Code Coverage in main, develop branch
 
 on:
   pull_request:
