@@ -1,4 +1,4 @@
-name: Java CI with Gradle, CD with Docker Hub and AWS EC2 in develop branch, use port 8081
+name: [ develop ] Java CI with Gradle, CD with Docker Hub and AWS EC2, using 8081 port
 
 on:
   push:
