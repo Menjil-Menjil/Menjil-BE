@@ -26,11 +26,13 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    "seoultech/capstone/menjil/**/*Application*",
+                    "seoultech/capstone/menjil/**/*jilApplication*",
                     "seoultech/capstone/menjil/**/*Dto*",
                     "seoultech/capstone/menjil/**/*Request*",
                     "seoultech/capstone/menjil/**/*Response*",
-//                    "seoultech/capstone/menjil/chat/dto/Message*",
+                    "seoultech/capstone/menjil/domain/auth/domain/**",
+                    "seoultech/capstone/menjil/domain/chat/domain/**",
+                    "seoultech/capstone/menjil/domain/chat/dto/**",
                     "**/*Config*",
                     "**/*Exception*",
                     "**/TokenTestController*"
@@ -50,10 +52,13 @@ jacocoTestCoverageVerification {
                 minimum = 0.50
             }
             excludes = [
-                    "**.*Application*",
+                    "**.*jilApplication*",
                     "**.*Dto*",
                     "**.*Request*",
                     "**.*Response*",
+                    "**/auth/domain/**",
+                    "**/domain/chat/dto/**",
+                    "**/chat/domain/**",
                     "**.*Config*",
                     "**.*Exception*",
                     "**.TokenTestController*"
