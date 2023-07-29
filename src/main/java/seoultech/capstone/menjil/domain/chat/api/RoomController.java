@@ -9,8 +9,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
-import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -50,11 +50,16 @@ public class RoomController {
     /* room Id를 통해 방으로 입장한다 */
     @GetMapping("/room/enter/{roomId}")
     public void enterTheRoom(@PathVariable("roomId") String roomId) {
-        List<MessageDto> messageDto = roomService.enterTheRoom(roomId);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomId);
 
-        ResponseEntity<ApiResponse<List<MessageDto>>> messageResponse =
-                ResponseEntity.status(HttpStatus.CREATED)
-                        .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageDto));
+        ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
+        if (messageList.size() == 1) {
+            messageResponse = ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
+        } else {
+            messageResponse = ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
+        }
 
         // /queue/chat/room/{room id}로 메세지 보냄
         simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, messageResponse);

@@ -1,5 +1,6 @@
 package seoultech.capstone.menjil.domain.chat.domain;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -13,16 +14,14 @@ import java.time.LocalDateTime;
 @Document(collection = "chat_message")
 public class ChatMessage {
 
-//    @Transient
-//    public static final String SEQUENCE_NAME = "chat_message_sequence";
-
     @Id
     private String _id;
 
-    // private Long seq;   // Auto Increment 를 위해 사용
-
     @Field("room_id")
     private String roomId;
+
+    @Field("sender_type")
+    private SenderType senderType;
 
     @Field("sender_nickname")
     private String senderNickname;
@@ -36,9 +35,23 @@ public class ChatMessage {
     @Field("time")
     private LocalDateTime time;
 
-    public void setWelcomeMessage(String roomId, String senderNickname,
+    public void setWelcomeMessage(String roomId, SenderType senderType, String senderNickname,
                                   String message, MessageType messageType, LocalDateTime time) {
         this.roomId = roomId;
+        this.senderType = senderType;
+        this.senderNickname = senderNickname;
+        this.message = message;
+        this.messageType = messageType;
+        this.time = time;
+    }
+
+    @Builder
+    private ChatMessage(String _id, String roomId,
+                        SenderType senderType, String senderNickname,
+                        String message, MessageType messageType, LocalDateTime time) {
+        this._id = _id;
+        this.roomId = roomId;
+        this.senderType = senderType;
         this.senderNickname = senderNickname;
         this.message = message;
         this.messageType = messageType;
