@@ -54,7 +54,7 @@ public class RoomController {
 
         ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
         if (messageList.size() == 1) {
-            messageResponse = ResponseEntity.status(HttpStatus.CREATED)
+            messageResponse = ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
         } else {
             messageResponse = ResponseEntity.status(HttpStatus.CREATED)
