@@ -56,7 +56,15 @@ class RoomServiceTest {
         RoomDto roomDto = new RoomDto(TEST_ROOM_ID, "test_mentee_2", "test_mentor_2");
 
         int success = roomService.createRoom(roomDto);
+        assertThat(success).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
 
+    @Test
+    @DisplayName("방 생성시 멘토-멘티 간에 이미 생성된 대화방이 있다면,HttpStatus 500 값이 리턴된다.")
+    void roomMentorAndMenteeAlreadyExists() {
+        RoomDto roomDto = new RoomDto("test_room_2", TEST_MENTEE_NICKNAME, TEST_MENTOR_NICKNAME);
+
+        int success = roomService.createRoom(roomDto);
         assertThat(success).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 

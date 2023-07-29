@@ -14,8 +14,6 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
-import javax.servlet.http.HttpSession;
-import javax.validation.constraints.Null;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,15 +32,21 @@ public class RoomService {
         // Dto -> Entity
         Room room = roomDto.toRoom();
 
+        // case 1: Mentee <-> Mentor 간에 이미 채팅방이 생성되어 있는 경우, 중복으로 생성될 수 없다.
+        Room existsRoomInDb = roomRepository.findRoomByMenteeNicknameAndMentorNickname(
+                roomDto.getMenteeNickname(), roomDto.getMentorNickname());
+        if (existsRoomInDb != null) {
+            return HttpStatus.INTERNAL_SERVER_ERROR.value();
+        }
+
         // save db
         try {
-            // room.setRoomId(roomDto.getRoomId()); // Assign a value to the ID field manually
             roomRepository.save(room);
         } catch (DataIntegrityViolationException de) {
-            // room Entity의 room_id 가 중복되는 경우
-            // UUID를 사용하기 때문에 중복될 가능성이 매우 낮지만, 혹시 모르니 예외처리
+            // case 2: UUID 로 생성된 roomId 가 중복된 값인 경우
             return HttpStatus.INTERNAL_SERVER_ERROR.value();
         } catch (Exception e) {
+            // case 3: 그 외
             return HttpStatus.INTERNAL_SERVER_ERROR.value();
         }
 
