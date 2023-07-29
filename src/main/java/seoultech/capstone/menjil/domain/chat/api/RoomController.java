@@ -31,11 +31,10 @@ public class RoomController {
 
     private final RoomService roomService;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final int PAGE = 10;
 
     /* 새로운 방을 생성한다 */
     @PostMapping(value = "/room", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<String>> createRoom(@Valid @RequestBody RoomDto roomDto) {
+    public ResponseEntity<ApiResponse<?>> createRoom(@Valid @RequestBody RoomDto roomDto) {
 
         int result = roomService.createRoom(roomDto);
         String roomId = roomDto.getRoomId();
@@ -51,9 +50,9 @@ public class RoomController {
     /* room Id를 통해 방으로 입장한다 */
     @GetMapping("/room/enter/{roomId}")
     public void enterTheRoom(@PathVariable("roomId") String roomId) {
-        MessageDto messageDto = roomService.enterTheRoom(roomId);
+        List<MessageDto> messageDto = roomService.enterTheRoom(roomId);
 
-        ResponseEntity<ApiResponse<MessageDto>> messageResponse =
+        ResponseEntity<ApiResponse<List<MessageDto>>> messageResponse =
                 ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageDto));
 
@@ -64,7 +63,7 @@ public class RoomController {
 
     /* room Id를 통해 방의 데이터를 조회한다 */
     @GetMapping("/room/{roomId}")
-    public RoomDto infoTheChatRoom(@PathVariable("roomId") String roomId) {
+    public RoomDto getRoomInfo(@PathVariable("roomId") String roomId) {
 
         return null;
     }

@@ -42,8 +42,8 @@ class RoomRepositoryTest {
         roomRepository.save(room2);
 
         // when
-        Room roomA = roomRepository.findRoomByRoomId("room1");
-        Room roomB = roomRepository.findRoomByRoomId("room2");
+        Room roomA = roomRepository.findRoomById("room1");
+        Room roomB = roomRepository.findRoomById("room2");
 
         // then
         assertThat(roomB.getMenteeNickname()).isEqualTo("mentee2");

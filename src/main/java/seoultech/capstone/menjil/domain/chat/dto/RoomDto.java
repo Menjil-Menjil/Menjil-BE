@@ -37,7 +37,7 @@ public class RoomDto {
 
     public static RoomDto fromRoom(Room room) {
         return RoomDto.roomDtoConstructor()
-                .roomId(room.getRoomId())
+                .roomId(room.getId())
                 .menteeNickname(room.getMenteeNickname())
                 .mentorNickname(room.getMentorNickname())
                 .build();
