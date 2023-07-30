@@ -7,6 +7,8 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor
 public class MessageDto {
@@ -29,5 +31,16 @@ public class MessageDto {
         this.message = message;
         this.messageType = messageType;
         this.time = time;
+    }
+
+    public static ChatMessage fromMessageDto(MessageDto messageDto) {
+        return ChatMessage.builder()
+                .roomId(messageDto.getRoomId())
+                .senderType(messageDto.getSenderType())
+                .senderNickname(messageDto.getSenderNickname())
+                .message(messageDto.getMessage())
+                .messageType(messageDto.getMessageType())
+                .time(LocalDateTime.parse(messageDto.getTime()))    // convert String -> LocalDateTime
+                .build();
     }
 }

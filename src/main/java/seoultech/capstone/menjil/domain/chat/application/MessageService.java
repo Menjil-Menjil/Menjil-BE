@@ -2,6 +2,7 @@ package seoultech.capstone.menjil.domain.chat.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
@@ -10,6 +11,8 @@ import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.global.exception.CustomException;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
 
@@ -30,24 +33,28 @@ public class MessageService {
                 roomDto.getMentorNickname(), welcomeMessage, MessageType.ENTER,
                 LocalDateTime.now());
 
-        // save Entity
-        messageRepository.save(welcomeMsg);
+        // save entity to mongoDB
+        try {
+            messageRepository.save(welcomeMsg);
+        } catch (DataAccessException e) {
+            throw new CustomException(ErrorCode.SERVER_ERROR);
+        }
 
         // Entity -> Dto
-        MessagesResponse messagesResponse = MessagesResponse.fromMessage(welcomeMsg, null);
-
-        return messagesResponse;
+        return MessagesResponse.fromMessage(welcomeMsg, null);
     }
 
     public boolean saveChatMessage(MessageDto messageDto) {
-        // MessageDto -> Message(Entity) 변환
+        // MessageDto -> ChatMessage(Entity) 변환
+        ChatMessage chatMessage = MessageDto.fromMessageDto(messageDto);
 
-        // MongoDB 에 저장
-
-
+        // save entity to mongoDB
         // 저장이 잘된 경우 true, 그렇지 않은 경우 false 리턴
-
-
+        try {
+            messageRepository.save(chatMessage);
+        } catch (DataAccessException e) {
+            return false;
+        }
         return true;
     }
 }
