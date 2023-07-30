@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Getter
 @NoArgsConstructor
@@ -42,7 +43,7 @@ public class ChatMessage {
         this.senderNickname = senderNickname;
         this.message = message;
         this.messageType = messageType;
-        this.time = time;
+        this.time = time.truncatedTo(ChronoUnit.SECONDS);   // truncate milliseconds
     }
 
     @Builder

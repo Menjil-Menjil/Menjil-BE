@@ -33,6 +33,7 @@ jacocoTestReport {
                     "seoultech/capstone/menjil/domain/auth/domain/**",
                     "seoultech/capstone/menjil/domain/chat/domain/**",
                     "seoultech/capstone/menjil/domain/chat/dto/**",
+                    "seoultech/capstone/menjil/global/filter/*CustomCors*",
                     "**/*Config*",
                     "**/*Exception*",
                     "**/TokenTestController*"
@@ -60,6 +61,7 @@ jacocoTestCoverageVerification {
                     "**/domain/chat/dto/**",
                     "**/chat/domain/**",
                     "**.*Config*",
+                    "**.*CustomCors*",
                     "**.*Exception*",
                     "**.TokenTestController*"
             ]

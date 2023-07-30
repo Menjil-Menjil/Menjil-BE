@@ -118,6 +118,7 @@ class RoomControllerTest {
         List<MessagesResponse> messageList = Collections.singletonList(MessagesResponse
                 .builder()
                 ._id("test_uuid_3")
+                .order(null)
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
                 .senderNickname("test_mentor_nickname")
@@ -153,6 +154,7 @@ class RoomControllerTest {
         List<MessagesResponse> messageList = Arrays.asList(
                 MessagesResponse.builder()
                         ._id("test_uuid_1")
+                        .order(1)
                         .roomId(roomId)
                         .senderType(SenderType.MENTOR)
                         .senderNickname("test_mentor_nickname")
@@ -163,6 +165,7 @@ class RoomControllerTest {
                 MessagesResponse.builder()
                         ._id("test_uuid_2")
                         .roomId(roomId)
+                        .order(2)
                         .senderType(SenderType.MENTEE)
                         .senderNickname("test_mentee_nickname")
                         .message("test message 2")
@@ -172,6 +175,7 @@ class RoomControllerTest {
                 MessagesResponse.builder()
                         ._id("test_uuid_3")
                         .roomId(roomId)
+                        .order(3)
                         .senderType(SenderType.MENTOR)
                         .senderNickname("test_mentor_nickname")
                         .message("mentor's response")

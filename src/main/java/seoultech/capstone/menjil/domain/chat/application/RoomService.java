@@ -88,14 +88,17 @@ public class RoomService {
             // 그리고 채팅 내역은 Time 기준 최신 메시지를 보내준다.(혹은 _id 로도 정렬이 가능하다)
 
             Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+            Sort sort = Sort.by(
+                    Sort.Order.desc("time"),
+                    Sort.Order.desc("_id")  // Ignore milliseconds, so order _id if time is same
+            );
 
-            Query query = new Query().with(pageable);
-            query.with(Sort.by(Sort.Direction.DESC, "time")); // "_id" 로도 정렬 가능
+            Query query = new Query().with(pageable).with(sort);
             query.addCriteria(Criteria.where("room_id").is(roomId));
             List<ChatMessage> messageList = mongoTemplate.find(query, ChatMessage.class);
 
-            for (ChatMessage message : messageList) {
-                MessagesResponse dto = MessagesResponse.fromMessage(message);
+            for (int i = 0; i < messageList.size(); i++) {
+                MessagesResponse dto = MessagesResponse.fromMessage(messageList.get(i), messageList.size() - i);
                 result.add(dto);
             }
         }

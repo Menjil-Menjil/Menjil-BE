@@ -34,7 +34,7 @@ public class MessageService {
         messageRepository.save(welcomeMsg);
 
         // Entity -> Dto
-        MessagesResponse messagesResponse = MessagesResponse.fromMessage(welcomeMsg);
+        MessagesResponse messagesResponse = MessagesResponse.fromMessage(welcomeMsg, null);
 
         return messagesResponse;
     }
