@@ -54,7 +54,7 @@ class RoomServiceTest {
     }
 
     @AfterEach
-    void end() {
+    void resetData() {
         // delete mongodb manually
         messageRepository.deleteAll();
     }
