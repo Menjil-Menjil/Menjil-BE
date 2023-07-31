@@ -9,8 +9,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
-import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -31,11 +31,10 @@ public class RoomController {
 
     private final RoomService roomService;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final int PAGE = 10;
 
     /* 새로운 방을 생성한다 */
     @PostMapping(value = "/room", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<String>> createRoom(@Valid @RequestBody RoomDto roomDto) {
+    public ResponseEntity<ApiResponse<?>> createRoom(@Valid @RequestBody RoomDto roomDto) {
 
         int result = roomService.createRoom(roomDto);
         String roomId = roomDto.getRoomId();
@@ -51,11 +50,16 @@ public class RoomController {
     /* room Id를 통해 방으로 입장한다 */
     @GetMapping("/room/enter/{roomId}")
     public void enterTheRoom(@PathVariable("roomId") String roomId) {
-        MessageDto messageDto = roomService.enterTheRoom(roomId);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomId);
 
-        ResponseEntity<ApiResponse<MessageDto>> messageResponse =
-                ResponseEntity.status(HttpStatus.CREATED)
-                        .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageDto));
+        ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
+        if (messageList.size() == 1) {
+            messageResponse = ResponseEntity.status(HttpStatus.OK)
+                    .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
+        } else {
+            messageResponse = ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
+        }
 
         // /queue/chat/room/{room id}로 메세지 보냄
         simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, messageResponse);
@@ -64,7 +68,7 @@ public class RoomController {
 
     /* room Id를 통해 방의 데이터를 조회한다 */
     @GetMapping("/room/{roomId}")
-    public RoomDto infoTheChatRoom(@PathVariable("roomId") String roomId) {
+    public RoomDto getRoomInfo(@PathVariable("roomId") String roomId) {
 
         return null;
     }
