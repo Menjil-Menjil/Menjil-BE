@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
@@ -23,7 +22,6 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -64,62 +62,80 @@ class RoomServiceTest {
     }
 
     /**
-     * createRoom()
+     * createUUID()
      */
     @Test
-    @DisplayName("방 생성이 정상적으로 완료되면, HttpStatus 201 값이 리턴된다.")
-    void createRoomSuccess() {
-        RoomDto roomDto = new RoomDto("test_room_2", "test_mentee_2", "test_mentor_2");
+    @DisplayName("UUID가 정상적으로 생성이 된다.")
+    void createUUID() {
+        // given
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .build();
 
-        int success = roomService.createRoom(roomDto);
-        assertThat(success).isEqualTo(HttpStatus.CREATED.value());
+        // when
+        String result = roomService.createUUID(roomDto);
+
+        // then
+        assertThat(result).isNotNull();
     }
 
     @Test
-    @DisplayName("case 1: 방 생성시 멘토-멘티 간에 이미 생성된 대화방이 있다면, HttpStatus 500 값이 리턴된다.")
-    void createRoomFail1() {
-        RoomDto roomDto = new RoomDto("test_room_2", TEST_MENTEE_NICKNAME, TEST_MENTOR_NICKNAME);
+    @DisplayName("멘티와 멘토가 같은 경우, 생성되는 UUID 값은 동일하다 ")
+    void checkUUIDIsEqual() {
+        // given
+        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .build();
 
-        int success = roomService.createRoom(roomDto);
-        assertThat(success).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
-    }
+        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_mentee_1")
+                .build();
 
-    @Test
-    @DisplayName("case 2: 방 생성시 room_id가 중복되면, HttpStatus 500 값이 리턴된다.")
-    void createRoomFail2() {
-        RoomDto roomDto = new RoomDto(TEST_ROOM_ID, "test_mentee_2", "test_mentor_2");
+        // when
+        String result1 = roomService.createUUID(roomDto1);
+        String result2 = roomService.createUUID(roomDto2);
 
-        int success = roomService.createRoom(roomDto);
-        assertThat(success).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        // then
+        assertThat(result1).isEqualTo(result2);
     }
 
     /**
      * enterTheRoom()
      */
     @Test
-    @DisplayName("방 입장시 room_id가 db에 존재하지 않는 경우 CustomException 리턴")
-    void enterTheRoomFail1() {
-        String roomIdNotInDb = "test_room_2";
+    @DisplayName("방 입장시 채팅방이 db에 존재하지 않는 경우, Welcome Message를 보내준다")
+    void roomNotExists() {
+        // given
+        String menteeNickname = TEST_MENTEE_NICKNAME + "no";
+        String mentorNickname = TEST_MENTOR_NICKNAME + "no";
+        String roomId = TEST_ROOM_ID + "no";
 
-        assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomIdNotInDb));
-    }
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname(mentorNickname)
+                .menteeNickname(menteeNickname)
+                .build();
 
-    @Test
-    @DisplayName("방 입장시 채팅 내역이 존재하지 않는 경우, Welcome Message를 보내준다")
-    void enterTheRoomInNoChatMessage() {
-        List<MessagesResponse> messageList = roomService.enterTheRoom(TEST_ROOM_ID);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, roomId);
         assertThat(messageList.size()).isEqualTo(1);
 
         MessagesResponse response = messageList.get(0);
 
-        assertThat(response.getRoomId()).isEqualTo(TEST_ROOM_ID);
+        assertThat(response.getRoomId()).isEqualTo(roomId);
+        assertThat(response.getSenderNickname()).isEqualTo(mentorNickname); // Welcome Message is sent by mentor
         assertThat(response.getSenderType()).isEqualTo(SenderType.MENTOR);
         assertThat(response.getMessageType()).isEqualTo(MessageType.ENTER);
     }
 
     @Test
-    @DisplayName("방 입장시 채팅 내역이 이미 존재하는 경우, 기존 메시지들을 응답으로 보낸다")
+    @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다")
     void enterTheRoomInChatMessage() {
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .build();
         LocalDateTime now = LocalDateTime.now();
 
         List<ChatMessage> saveThreeMessages = Arrays.asList(
@@ -153,7 +169,7 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(TEST_ROOM_ID);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, TEST_ROOM_ID);
         assertThat(messageList.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.

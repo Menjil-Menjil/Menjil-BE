@@ -7,7 +7,5 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 @Repository
 public interface MessageRepository extends MongoRepository<ChatMessage, String> {
 
-    boolean existsChatMessageByRoomId(String roomId);
-
 
 }

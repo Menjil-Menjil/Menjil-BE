@@ -24,12 +24,12 @@ public class MessageService {
     private final MessageRepository messageRepository;
 
     /* 사용자에게 처음 응답 메시지를 보내준다 */
-    public MessagesResponse sendWelcomeMessage(RoomDto roomDto) {
+    public MessagesResponse sendWelcomeMessage(RoomDto roomDto, String roomId) {
         ChatMessage welcomeMsg = new ChatMessage();
         String welcomeMessage = "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
                 + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
 
-        welcomeMsg.setWelcomeMessage(roomDto.getRoomId(), SenderType.MENTOR,
+        welcomeMsg.setWelcomeMessage(roomId, SenderType.MENTOR,
                 roomDto.getMentorNickname(), welcomeMessage, MessageType.ENTER,
                 LocalDateTime.now());
 
