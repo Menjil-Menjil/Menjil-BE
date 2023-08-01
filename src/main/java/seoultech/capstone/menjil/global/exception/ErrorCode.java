@@ -23,7 +23,8 @@ public enum ErrorCode {
     USER_NOT_EXISTED(HttpStatus.BAD_REQUEST, "A007", "가입된 사용자가 존재하지 않습니다"),
 
     // chat
-    ROOM_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH01", "채팅방의 정보를 가져올 수 없습니다. 채팅방 아이디를 다시 확인해주세요");
+    ROOM_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH01", "채팅방의 정보를 가져올 수 없습니다. 채팅방 아이디를 다시 확인해주세요"),
+    TYPE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CH02", "사용자의 타입이 \"MENTEE\" 또는 \"MENTOR\" 가 아닙니다");
 
     private final HttpStatus httpStatus;
     private final String type;

@@ -2,11 +2,9 @@ package seoultech.capstone.menjil.domain.chat.api;
 
 import com.google.gson.Gson;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -26,6 +24,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomListResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -201,6 +200,44 @@ class RoomControllerTest {
         assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode());
         assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage());
         assertThat(capturedResponseEntity.getBody().getData()).isEqualTo(messageList);
+    }
+
+    /**
+     * getAllRooms()
+     */
+    @Test
+    @DisplayName("사용자의 전체 방 목록을 불러온다")
+    void getAllRoomsSucceed() throws Exception {
+        // given
+        String targetNickname = "test_HOHO";
+        String nickname2 = "서울과기대2123";
+        String nickname3 = "서울시립1873";
+        String type = "MENTEE";
+
+        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
+                RoomListResponse.builder()
+                        .nickname(nickname2)
+                        .lastMessage("hello here~~")
+                        .build(),
+                RoomListResponse.builder()
+                        .nickname(nickname3)
+                        .lastMessage("hello there~~")
+                        .build()
+        ));
+
+        // Act
+        mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
+                        .queryParam("nickname", targetNickname)
+                        .queryParam("type", type))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.data").exists())     // check data is not null
+                .andDo(print());
+
+        // Assert
+        verify(roomService, times(1)).getAllRooms(targetNickname, type);
+
     }
 
 }
