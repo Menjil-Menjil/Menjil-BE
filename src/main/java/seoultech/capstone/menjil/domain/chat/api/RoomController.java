@@ -54,14 +54,17 @@ public class RoomController {
 
         ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
         if (messageList.size() == 1) {
+            log.info(">>>>> here one is printed");
             messageResponse = ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
         } else {
+            log.info(">>>>> else case is worked");
             messageResponse = ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
         }
 
         // /queue/chat/room/{room id}로 메세지 보냄
+        log.info(">>>>> here two is printed");
         simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, messageResponse);
     }
 
