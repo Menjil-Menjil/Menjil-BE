@@ -81,7 +81,7 @@ class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("멘티와 멘토가 같은 경우, 생성되는 UUID 값은 동일하다 ")
+    @DisplayName("멘티와 멘토 닉네임이 같은 경우, 생성되는 UUID 값은 동일하다 ")
     void checkUUIDIsEqual() {
         // given
         RoomDto roomDto1 = RoomDto.roomDtoConstructor()
@@ -100,6 +100,50 @@ class RoomServiceTest {
 
         // then
         assertThat(result1).isEqualTo(result2);
+    }
+
+    @Test
+    @DisplayName("멘티 닉네임이 다른 경우, 생성되는 UUID 값은 같지 않다")
+    void checkUUIDIsNotEqual() {
+        // given
+        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .build();
+
+        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_menteee_1")   // here is different
+                .build();
+
+        // when
+        String result1 = roomService.createUUID(roomDto1);
+        String result2 = roomService.createUUID(roomDto2);
+
+        // then
+        assertThat(result1).isNotEqualTo(result2);
+    }
+
+    @Test
+    @DisplayName("멘토와 멘티 닉네임 순서가 다른 경우, 생성되는 UUID 값은 같지 않다")
+    void checkUUIDNicknameOrderIsNotEqual() {
+        // given
+        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .build();
+
+        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
+                .mentorNickname("test_mentee_1")   // here is different
+                .menteeNickname("test_mentor_1")   // here is different
+                .build();
+
+        // when
+        String result1 = roomService.createUUID(roomDto1);
+        String result2 = roomService.createUUID(roomDto2);
+
+        // then
+        assertThat(result1).isNotEqualTo(result2);
     }
 
     /**
