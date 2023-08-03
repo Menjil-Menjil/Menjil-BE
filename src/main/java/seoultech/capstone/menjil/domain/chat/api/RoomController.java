@@ -36,14 +36,18 @@ public class RoomController {
         List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, getRoomId);
 
         ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
-        if (messageList.size() == 1) {
-            log.info(">>>>> here one is printed");
-            messageResponse = ResponseEntity.status(HttpStatus.OK)
-                    .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
-        } else {
-            log.info(">>>>> else case is worked");
+        if (messageList.size() != 1) {
             messageResponse = ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
+        } else {
+            if (messageList.get(0).getOrder() == null) {
+                // This case is when the user enters the room at the first time.
+                messageResponse = ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
+            } else {
+                messageResponse = ResponseEntity.status(HttpStatus.CREATED)
+                        .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
+            }
         }
 
         // /queue/chat/room/{room id}로 메세지 보냄

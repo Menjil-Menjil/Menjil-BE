@@ -109,7 +109,69 @@ class RoomControllerTest {
     }
 
     @Test
-    @DisplayName("방 입장시 기존에 채팅방이 존재하는 경우: 채팅방이 존재하면 채팅 메시지도 반드시 존재한다")
+    @DisplayName("방 입장 이후, 두 번째 입장하는 경우(db에 메시지가 하나만 존재하는 경우)")
+    void roomExistsAndMessageHasOne() throws Exception {
+        String roomId = "test_room_id_1";
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_mentee_1")
+                .build();
+        LocalDateTime now = LocalDateTime.now();
+        List<MessagesResponse> messageFirstList = Collections.singletonList(MessagesResponse
+                .builder()
+                ._id("test_uuid_3")
+                .order(null)    // Null
+                .roomId(roomId)
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now.toString())
+                .build());
+        List<MessagesResponse> messageSecondList = Collections.singletonList(MessagesResponse
+                .builder()
+                ._id("test_uuid_3")
+                .order(1)   // Not Null
+                .roomId(roomId)
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now.toString())
+                .build());
+
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        Mockito.when(roomService.createUUID(roomDto)).thenReturn(roomId);
+        Mockito.when(roomService.enterTheRoom(roomDto, roomId))
+                .thenReturn(messageFirstList) // the first time enterTheRoom() is called, return messageFirstList
+                .thenReturn(messageSecondList); // the second time enterTheRoom() is called, return messageSecondList
+
+        // Act
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON));
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Assert
+        verify(roomService, times(2)).enterTheRoom(roomDto, roomId);
+
+        // ArgumentCaptor setup
+        ArgumentCaptor<ResponseEntity> responseEntityCaptor = ArgumentCaptor.forClass(ResponseEntity.class);
+        verify(simpMessagingTemplate, times(2)).convertAndSend(eq("/queue/chat/room/" + roomId), responseEntityCaptor.capture());
+
+        ResponseEntity<ApiResponse<List<MessagesResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
+        assertThat(capturedResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode());
+        assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage());
+        assertThat(capturedResponseEntity.getBody().getData()).isEqualTo(messageSecondList);
+    }
+
+    @Test
+    @DisplayName("방 입장시 기존에 채팅방이 존재하며, 채팅 메시지가 1개 보다 많이 존재하는 경우")
     void enterTheRoom_multipleMessages() throws Exception {
         String roomId = "test_room_id_1";
         RoomDto roomDto = RoomDto.roomDtoConstructor()
