@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/gh/Menjil-Menjil/Menjil-BE/branch/main/graph/badge.svg?token=OHAY998TAN)](https://codecov.io/gh/Menjil-Menjil/Menjil-BE)
 # Menjil-Menjil Server
 
 
