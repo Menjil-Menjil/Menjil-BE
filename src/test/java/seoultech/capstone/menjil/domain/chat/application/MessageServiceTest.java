@@ -46,13 +46,12 @@ class MessageServiceTest {
         String mentorNickname = "test_mentor_one";
 
         RoomDto roomDto = RoomDto.roomDtoConstructor()
-                .roomId(roomId)
                 .menteeNickname(menteeNickname)
                 .mentorNickname(mentorNickname)
                 .build();
 
         // when
-        MessagesResponse result = messageService.sendWelcomeMessage(roomDto);
+        MessagesResponse result = messageService.sendWelcomeMessage(roomDto, roomId);
 
         // then
         assertThat(result.getRoomId()).isEqualTo(roomId);

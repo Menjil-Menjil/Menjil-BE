@@ -1,12 +1,9 @@
 package seoultech.capstone.menjil.domain.chat.api;
 
 import com.google.gson.Gson;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -26,12 +23,13 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomListResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
-import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -56,64 +54,22 @@ class RoomControllerTest {
     @Autowired
     private MockMvc mvc;
 
-    @Autowired
-    private Gson gson;
-
     @MockBean
     private SimpMessagingTemplate simpMessagingTemplate;
     @MockBean
     private RoomService roomService;
 
     /**
-     * createRoom()
-     */
-    @Test
-    @DisplayName("채팅방 생성이 정상적으로 진행되었을 때, 201 응답과 그에 해당하는 메시지가 DTO 객체로 리턴된다.")
-    void createRoom() throws Exception {
-        RoomDto roomDto = new RoomDto("test_room1", "test_mentee1", "test_mentor1");
-        String content = gson.toJson(roomDto);
-
-        Mockito.when(roomService.createRoom(roomDto)).thenReturn(HttpStatus.CREATED.value());
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.code", is(201)))
-                .andExpect(jsonPath("$.message", is("채팅방이 정상적으로 생성되었습니다")))
-                .andExpect(jsonPath("$.data", is("test_room1")))
-                .andDo(print());
-
-        verify(roomService, times(1)).createRoom(roomDto);
-    }
-
-    @Test
-    @DisplayName("채팅방 생성시 RoomService 에서 오류가 발생하면, CustomException 리턴")
-    void createRoom_error() throws Exception {
-        RoomDto roomDto = new RoomDto("test_room2", "test_mentee2", "test_mentor2");
-        String content = gson.toJson(roomDto);
-
-        Mockito.when(roomService.createRoom(roomDto)).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.value());
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().is5xxServerError())
-                .andExpect(jsonPath("$.code", is(ErrorCode.SERVER_ERROR.getHttpStatus().value())))
-                .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
-                .andExpect(jsonPath("$.data").value(Matchers.nullValue()))  // data is null
-                .andDo(print());
-
-        verify(roomService, times(1)).createRoom(roomDto);
-    }
-
-    /**
      * enterTheRoom()
      */
     @Test
-    @DisplayName("방 입장시 채팅 내역이 존재하지 않는 경우")
-    void enterTheRoom_singleMessage() throws Exception {
+    @DisplayName("방 입장시 기존에 채팅방이 존재하지 않는 경우")
+    void roomNotExists() throws Exception {
         String roomId = "test_room_id_1";
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_mentee_1")
+                .build();
         LocalDateTime now = LocalDateTime.now();
         List<MessagesResponse> messageList = Collections.singletonList(MessagesResponse
                 .builder()
@@ -127,13 +83,19 @@ class RoomControllerTest {
                 .time(now.toString())
                 .build());
 
-        Mockito.when(roomService.enterTheRoom(roomId)).thenReturn(messageList);
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        Mockito.when(roomService.createUUID(roomDto)).thenReturn(roomId);
+        Mockito.when(roomService.enterTheRoom(roomDto, roomId)).thenReturn(messageList);
 
         // Act
-        mvc.perform(MockMvcRequestBuilders.get("/api/chat/room/enter/" + roomId));
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON));
 
         // Assert
-        verify(roomService, times(1)).enterTheRoom(roomId);
+        verify(roomService, times(1)).enterTheRoom(roomDto, roomId);
 
         // ArgumentCaptor setup
         ArgumentCaptor<ResponseEntity> responseEntityCaptor = ArgumentCaptor.forClass(ResponseEntity.class);
@@ -147,9 +109,13 @@ class RoomControllerTest {
     }
 
     @Test
-    @DisplayName("방 입장시 채팅 내역이 존재하는 경우")
+    @DisplayName("방 입장시 기존에 채팅방이 존재하는 경우: 채팅방이 존재하면 채팅 메시지도 반드시 존재한다")
     void enterTheRoom_multipleMessages() throws Exception {
         String roomId = "test_room_id_1";
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_mentee_1")
+                .build();
         LocalDateTime now = LocalDateTime.now();
         List<MessagesResponse> messageList = Arrays.asList(
                 MessagesResponse.builder()
@@ -184,13 +150,19 @@ class RoomControllerTest {
                         .build()
         );
 
-        Mockito.when(roomService.enterTheRoom(roomId)).thenReturn(messageList);
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        Mockito.when(roomService.createUUID(roomDto)).thenReturn(roomId);
+        Mockito.when(roomService.enterTheRoom(roomDto, roomId)).thenReturn(messageList);
 
         // Act
-        mvc.perform(MockMvcRequestBuilders.get("/api/chat/room/enter/" + roomId));
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON));
 
         // Assert
-        verify(roomService, times(1)).enterTheRoom(roomId);
+        verify(roomService, times(1)).enterTheRoom(roomDto, roomId);
 
         // ArgumentCaptor setup
         ArgumentCaptor<ResponseEntity> responseEntityCaptor = ArgumentCaptor.forClass(ResponseEntity.class);
@@ -201,6 +173,67 @@ class RoomControllerTest {
         assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode());
         assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage());
         assertThat(capturedResponseEntity.getBody().getData()).isEqualTo(messageList);
+    }
+
+    /**
+     * getAllRooms()
+     */
+    @Test
+    @DisplayName("사용자의 전체 방 목록을 불러온다")
+    void getAllRoomsSucceed() throws Exception {
+        // given
+        String targetNickname = "test_HOHO";
+        String nickname2 = "서울과기대2123";
+        String nickname3 = "서울시립1873";
+        String type = "MENTEE";
+
+        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
+                RoomListResponse.builder()
+                        .nickname(nickname2)
+                        .lastMessage("hello here~~")
+                        .build(),
+                RoomListResponse.builder()
+                        .nickname(nickname3)
+                        .lastMessage("hello there~~")
+                        .build()
+        ));
+
+        // Act
+        mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
+                        .queryParam("nickname", targetNickname)
+                        .queryParam("type", type))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.data").exists())     // check data is not null
+                .andDo(print());
+
+        // Assert
+        verify(roomService, times(1)).getAllRooms(targetNickname, type);
+    }
+
+    @Test
+    @DisplayName("사용자의 전체 방 목록을 불러오는데, 방 목록이 존재하지 않는 경우")
+    void getAllRoomsNotExisted() throws Exception {
+        // given
+        String targetNickname = "test_HOHO";
+        String type = "MENTEE";
+        List<RoomListResponse> result = new ArrayList<>();
+
+        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(result);
+
+        // Act
+        mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
+                        .queryParam("nickname", targetNickname)
+                        .queryParam("type", type))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getMessage())))
+                .andExpect(jsonPath("$.data", is(result)))
+                .andDo(print());
+
+        // Assert
+        verify(roomService, times(1)).getAllRooms(targetNickname, type);
     }
 
 }

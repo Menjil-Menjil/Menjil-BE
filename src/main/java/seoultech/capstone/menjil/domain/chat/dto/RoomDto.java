@@ -13,21 +13,18 @@ import java.util.Objects;
 public class RoomDto {
 
     @NotBlank
-    private String roomId;
-    @NotBlank
     private String menteeNickname;
     @NotBlank
     private String mentorNickname;
 
     @Builder(builderMethodName = "roomDtoConstructor")
-    public RoomDto(String roomId, String menteeNickname, String mentorNickname) {
-        this.roomId = roomId;
+    private RoomDto(String menteeNickname, String mentorNickname) {
         this.menteeNickname = menteeNickname;
         this.mentorNickname = mentorNickname;
     }
 
     @Builder
-    public Room toRoom() {
+    public Room toRoom(String roomId) {
         return Room.builder()
                 .roomId(roomId)
                 .menteeNickname(menteeNickname)
@@ -37,7 +34,6 @@ public class RoomDto {
 
     public static RoomDto fromRoom(Room room) {
         return RoomDto.roomDtoConstructor()
-                .roomId(room.getId())
                 .menteeNickname(room.getMenteeNickname())
                 .mentorNickname(room.getMentorNickname())
                 .build();
@@ -48,13 +44,12 @@ public class RoomDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RoomDto roomDto = (RoomDto) o;
-        return Objects.equals(roomId, roomDto.roomId)
-                && Objects.equals(menteeNickname, roomDto.menteeNickname)
+        return Objects.equals(menteeNickname, roomDto.menteeNickname)
                 && Objects.equals(mentorNickname, roomDto.mentorNickname);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(roomId, menteeNickname, mentorNickname);
+        return Objects.hash(menteeNickname, mentorNickname);
     }
 }
