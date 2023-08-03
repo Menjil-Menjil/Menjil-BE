@@ -4,6 +4,7 @@ plugins {
     id 'org.springframework.boot' version '2.7.10'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id 'jacoco' // add jacoco plugin
+    id 'com.google.osdetector' version "1.7.1" // https://github.com/netty/netty/issues/11020
 }
 
 jacoco {
@@ -26,11 +27,14 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    "seoultech/capstone/menjil/**/*Application*",
+                    "seoultech/capstone/menjil/**/*jilApplication*",
                     "seoultech/capstone/menjil/**/*Dto*",
                     "seoultech/capstone/menjil/**/*Request*",
                     "seoultech/capstone/menjil/**/*Response*",
-//                    "seoultech/capstone/menjil/chat/dto/Message*",
+                    "seoultech/capstone/menjil/domain/auth/domain/**",
+                    "seoultech/capstone/menjil/domain/chat/domain/**",
+                    "seoultech/capstone/menjil/domain/chat/dto/**",
+                    "seoultech/capstone/menjil/global/filter/*CustomCors*",
                     "**/*Config*",
                     "**/*Exception*",
                     "**/TokenTestController*"
@@ -50,11 +54,15 @@ jacocoTestCoverageVerification {
                 minimum = 0.50
             }
             excludes = [
-                    "**.*Application*",
+                    "**.*jilApplication*",
                     "**.*Dto*",
                     "**.*Request*",
                     "**.*Response*",
+                    "**/auth/domain/**",
+                    "**/domain/chat/dto/**",
+                    "**/chat/domain/**",
                     "**.*Config*",
+                    "**.*CustomCors*",
                     "**.*Exception*",
                     "**.TokenTestController*"
             ]
@@ -97,6 +105,10 @@ repositories {
 }
 
 dependencies {
+    if (osdetector.classifier == "osx-aarch_64") {
+        runtimeOnly("io.netty:netty-resolver-dns-native-macos:4.1.77.Final:${osdetector.classifier}")
+    }
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -115,6 +127,7 @@ dependencies {
 
     // chat-bot
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.webjars:sockjs-client:1.1.2'
     implementation 'org.webjars:stomp-websocket:2.3.3-1'
 
@@ -128,6 +141,11 @@ dependencies {
 //    testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+
+    // WireMock
+    testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0"
+    testImplementation "org.assertj:assertj-core:3.24.2"
 }
 
 tasks.named('test') {
