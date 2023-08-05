@@ -2,7 +2,6 @@ package seoultech.capstone.menjil.domain.chat.application;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -50,7 +49,7 @@ public class MessageService {
         // save entity to mongoDB
         try {
             messageRepository.save(welcomeMsg);
-        } catch (DataAccessException e) {
+        } catch (RuntimeException e) {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
@@ -69,7 +68,7 @@ public class MessageService {
         // 저장이 잘된 경우 true, 그렇지 않은 경우 false 리턴
         try {
             messageRepository.save(chatMessage);
-        } catch (DataAccessException e) {
+        } catch (RuntimeException e) {
             return false;
         }
         return true;

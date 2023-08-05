@@ -73,7 +73,7 @@ public class RoomService {
                     .build();
             try {
                 roomRepository.save(newRoom);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 throw new CustomException(ErrorCode.SERVER_ERROR);
             }
 
@@ -101,7 +101,7 @@ public class RoomService {
 
         if (type.equals(TYPE_MENTOR)) {
             List<Room> roomList = roomRepository.findRoomsByMentorNickname(nickname);
-            if (roomList == null) {
+            if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
                 return result;
             }
@@ -122,7 +122,7 @@ public class RoomService {
 
         } else if (type.equals(TYPE_MENTEE)) {
             List<Room> roomList = roomRepository.findRoomsByMenteeNickname(nickname);
-            if (roomList == null) {
+            if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
                 return result;
             }
@@ -157,15 +157,5 @@ public class RoomService {
         query.addCriteria(Criteria.where("room_id").is(roomId));
         return mongoTemplate.find(query, ChatMessage.class);
     }
-
-    /* MessageController에서, mentor의 이름을 가져오는 메서드 */
-    public String getMentorNickname(String roomId, String menteeNickname) {
-        Room room = roomRepository.findRoomByIdAndAndMenteeNickname(roomId, menteeNickname);
-        if (room == null) {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
-        }
-        return room.getMentorNickname();
-    }
-
 
 }
