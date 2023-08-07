@@ -38,7 +38,7 @@ public class AuthServiceExceptionTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Test
-    void signUp_Should_ThrowCustomException_WhenSaveFails() {
+    void signUp_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
@@ -51,7 +51,7 @@ public class AuthServiceExceptionTest {
     }
 
     @Test
-    void signIn_Should_ThrowCustomException_When_Token_SaveFails() {
+    void signIn_Should_Throw_CustomException_When_Token_SaveFails() {
         // Arrange
         String testUserId = "google_1234123455";
         String testEmail = "testAA@google.com";

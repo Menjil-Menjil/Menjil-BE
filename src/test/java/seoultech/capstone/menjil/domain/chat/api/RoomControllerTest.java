@@ -64,7 +64,7 @@ class RoomControllerTest {
      */
     @Test
     @DisplayName("방 입장시 기존에 채팅방이 존재하지 않는 경우")
-    void roomNotExists() throws Exception {
+    void enterTheRoom_when_room_not_exists() throws Exception {
         String roomId = "test_room_id_1";
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname("test_mentor_1")
@@ -110,7 +110,7 @@ class RoomControllerTest {
 
     @Test
     @DisplayName("방 입장 이후, 두 번째 입장하는 경우(db에 메시지가 하나만 존재하는 경우)")
-    void roomExistsAndMessageHasOne() throws Exception {
+    void enterTheRoom_when_db_has_one_message() throws Exception {
         String roomId = "test_room_id_1";
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname("test_mentor_1")
@@ -172,7 +172,7 @@ class RoomControllerTest {
 
     @Test
     @DisplayName("방 입장시 기존에 채팅방이 존재하며, 채팅 메시지가 1개 보다 많이 존재하는 경우")
-    void enterTheRoom_multipleMessages() throws Exception {
+    void enterTheRoom_when_db_has_three_message() throws Exception {
         String roomId = "test_room_id_1";
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname("test_mentor_1")
@@ -242,7 +242,7 @@ class RoomControllerTest {
      */
     @Test
     @DisplayName("사용자의 전체 방 목록을 불러온다")
-    void getAllRoomsSucceed() throws Exception {
+    void getAllRooms() throws Exception {
         // given
         String targetNickname = "test_HOHO";
         String nickname2 = "서울과기대2123";
@@ -276,7 +276,7 @@ class RoomControllerTest {
 
     @Test
     @DisplayName("사용자의 전체 방 목록을 불러오는데, 방 목록이 존재하지 않는 경우")
-    void getAllRoomsNotExisted() throws Exception {
+    void getAllRooms_room_not_exists() throws Exception {
         // given
         String targetNickname = "test_HOHO";
         String type = "MENTEE";

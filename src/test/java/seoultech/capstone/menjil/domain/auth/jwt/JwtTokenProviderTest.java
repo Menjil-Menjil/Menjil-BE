@@ -67,7 +67,7 @@ class JwtTokenProviderTest {
 
     @Test
     @DisplayName("Access Token 이 만료시간이 지났을 시 TokenStatus.Expired 값을 반환하는지 확인")
-    void accessTokenIsExpired() throws InterruptedException {
+    void accessToken_is_expired() throws InterruptedException {
         // Set the token expiration time to 1 second
         int expirationSeconds = 1;
 
@@ -88,10 +88,6 @@ class JwtTokenProviderTest {
         // Sleep for more than the token expiration time
         Thread.sleep((expirationSeconds + 1) * 1000);
 
-        // when
-//        assertThrows(ExpiredJwtException.class, () -> {
-//            jwtTokenProvider.validateAccessToken(token);
-//        });
         assertThat(jwtTokenProvider.validateAccessToken(token)).isEqualTo(TokenStatus.EXPIRED);
     }
 

@@ -34,7 +34,7 @@ public class MessageServiceExceptionTest {
      * sendWelcomeMessage()
      */
     @Test
-    void sendWelcomeMessage_Should_ThrowCustomException_WhenSaveFails() {
+    void sendWelcomeMessage_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
         String roomId = "test_room_id";
         RoomDto roomDto = RoomDto.roomDtoConstructor()
@@ -53,7 +53,7 @@ public class MessageServiceExceptionTest {
      * saveChatMessage()
      */
     @Test
-    void saveChatMessage_Should_ThrowFalse_WhenSaveFails() {
+    void saveChatMessage_Should_Return_False_WhenSaveFails() {
         // Arrange
         MessageDto messageDto = MessageDto.builder()
                 .roomId("test1")
