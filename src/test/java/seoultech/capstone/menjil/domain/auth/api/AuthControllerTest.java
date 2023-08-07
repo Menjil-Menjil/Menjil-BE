@@ -54,6 +54,10 @@ class AuthControllerTest {
      * Mockito.when().thenReturn() 을 통해 예상되는 동작을 미리 지정해준 뒤,
      * 그에 해당하는 응답값이 반환되는지 검증할 수 있다.
      */
+
+    /**
+     * checkSignupIsAvailable()
+     */
     @Test
     @DisplayName("회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다. " +
             "기존에 가입되어있는 사용자가 아니라면, SuccessCode.SIGNUP_AVAILABLE 리턴 ")
@@ -77,7 +81,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다. " +
             "기존에 가입되어있는 사용자이면, ErrorCode.USER_DUPLICATED 리턴 ")
-    void checkSignupIsNotAvailable() throws Exception {
+    void checkSignupIsAvailable_user_already_existed() throws Exception {
         String email = "Junit-test@gmail.com";
         String provider = "google";
 
@@ -96,35 +100,12 @@ class AuthControllerTest {
         verify(authService).checkUserExistsInDb(email, provider);
     }
 
-    @Test
-    @DisplayName("닉네임 검증; 공백이 들어오면 CustomException 을 발생시킨다")
-    public void nicknameIsBlank() throws Exception {
-        mvc.perform(get("/api/auth/check-nickname")
-                        .queryParam("nickname", "  "))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code",
-                        is(ErrorCode.NICKNAME_CONTAINS_BLANK.getHttpStatus().value())))
-                .andExpect(jsonPath("$.message",
-                        is(ErrorCode.NICKNAME_CONTAINS_BLANK.getMessage())))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("닉네임 검증; 특수문자가 들어오면 CustomException 을 발생시킨다.")
-    public void nicknameHasSpecialChar() throws Exception {
-        mvc.perform(get("/api/auth/check-nickname")
-                        .queryParam("nickname", "*ea3sf"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code",
-                        is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getHttpStatus().value())))
-                .andExpect(jsonPath("$.message",
-                        is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getMessage())))
-                .andDo(print());
-    }
-
+    /**
+     * checkNicknameDuplicate()
+     */
     @Test
     @DisplayName("닉네임 검증; 공백과 특수문자가 없는경우 SuccessCode.NICKNAME_AVAILABLE 리턴")
-    public void nicknameIsAvailable() throws Exception {
+    void checkNicknameDuplicate() throws Exception {
         String nickname = "test33AA가나마";
         int httpOkValue = HttpStatus.OK.value();
 
@@ -141,8 +122,34 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("닉네임 검증; 공백이 들어오면 CustomException 을 발생시킨다")
+    void checkNicknameDuplicate_nickname_is_blank() throws Exception {
+        mvc.perform(get("/api/auth/check-nickname")
+                        .queryParam("nickname", "  "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code",
+                        is(ErrorCode.NICKNAME_CONTAINS_BLANK.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message",
+                        is(ErrorCode.NICKNAME_CONTAINS_BLANK.getMessage())))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("닉네임 검증; 특수문자가 들어오면 CustomException 을 발생시킨다.")
+    void checkNicknameDuplicate_nickname_has_special_char() throws Exception {
+        mvc.perform(get("/api/auth/check-nickname")
+                        .queryParam("nickname", "*ea3sf"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code",
+                        is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message",
+                        is(ErrorCode.NICKNAME_CONTAINS_SPECIAL_CHARACTER.getMessage())))
+                .andDo(print());
+    }
+
+    @Test
     @DisplayName("닉네임 검증; 닉네임이 db에 이미 존재하는 경우 ErrorCode.NICKNAME_DUPLICATED 리턴")
-    public void nicknameIsExistsInDB() throws Exception {
+    void checkNicknameDuplicate_nickname_already_existed() throws Exception {
         String nickname = "NicknameExistsInDB";
         int httpConflictValue = HttpStatus.CONFLICT.value();
 
@@ -162,95 +169,8 @@ class AuthControllerTest {
      * 회원가입 요청 검증
      */
     @Test
-    @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 공백이 포함된 경우 CustomException 발생")
-    void signUpNicknameHasBlank() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_2134", "test@kakao.com", "kakao",
-                "가나 다라마", 1999, 3, "서울과기대", 3);
-
-        String content = gson.toJson(signUpReqDto);
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is("1. 닉네임은 공백이나 특수문자가 들어갈 수 없습니다 ")))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 특수문자가 포함된 경우 CustomException 발생")
-    public void signUpNicknameHasCharacter() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
-                "가나@다라마", 1999, 3, "서울과기대", 3);
-
-        String content = gson.toJson(signUpReqDto);
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is("1. 닉네임은 공백이나 특수문자가 들어갈 수 없습니다 ")))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("회원가입 요청 시 닉네임 검증: 값이 null 인 경우 @NotBlank")
-    public void signUpNicknameIsNull() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
-                null, 1999, 3, "서울과기대", 3);
-
-        String content = gson.toJson(signUpReqDto);
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is("1. must not be blank ")))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("회원가입 요청 시 @NotBlank 여러 개 검증: null 값이 2개인 경우")
-    public void singUpNullIsMoreThanTwo() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
-                null, 1999, 3, null, 3);
-
-        String content = gson.toJson(signUpReqDto);
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is("1. must not be blank 2. must not be blank ")))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("회원가입 요청 시 @Max 검증: 학점이 4 이상인 경우")
-    public void signUpValidateMax() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
-                "hi", 1999, 3, "서울시립대", 6);
-
-        String content = gson.toJson(signUpReqDto);
-
-        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(content))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code", is(400)))
-                .andExpect(jsonPath("$.message", is("1. 학점은 4보다 클 수 없습니다 ")))
-                .andDo(print());
-    }
-
-    @Test
     @DisplayName("회원가입 요청이 정상적으로 된 경우 SuccessCode.SIGNUP_SUCCESS 리턴")
-    public void signUpIsComplete() throws Exception {
+    void signUp() throws Exception {
         SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 "hi", 1999, 3, "서울시립대", 3);
         String content = gson.toJson(signUpReqDto);
@@ -269,14 +189,103 @@ class AuthControllerTest {
         verify(authService).signUp(signUpReqDto);
     }
 
+    @Test
+    @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 공백이 포함된 경우 CustomException 발생")
+    void signUp_nickname_contains_blank() throws Exception {
+        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_2134", "test@kakao.com", "kakao",
+                "가나 다라마", 1999, 3, "서울과기대", 3);
+
+        String content = gson.toJson(signUpReqDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.message", is("1. 닉네임은 공백이나 특수문자가 들어갈 수 없습니다 ")))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 특수문자가 포함된 경우 CustomException 발생")
+    void signUp_nickname_contains_character() throws Exception {
+        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+                "가나@다라마", 1999, 3, "서울과기대", 3);
+
+        String content = gson.toJson(signUpReqDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.message", is("1. 닉네임은 공백이나 특수문자가 들어갈 수 없습니다 ")))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("회원가입 요청 시 닉네임 검증: 값이 null 인 경우 @NotBlank")
+    void signUp_nickname_is_Null() throws Exception {
+        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+                null, 1999, 3, "서울과기대", 3);
+
+        String content = gson.toJson(signUpReqDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.message", is("1. must not be blank ")))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("회원가입 요청 시 @NotBlank 여러 개 검증: null 값이 2개인 경우")
+    void signUp_Null_is_morethan_two() throws Exception {
+        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+                null, 1999, 3, null, 3);
+
+        String content = gson.toJson(signUpReqDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.message", is("1. must not be blank 2. must not be blank ")))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("회원가입 요청 시 @Max 검증: 학점이 4 이상인 경우")
+    void signUp_if_score_is_morethan_4() throws Exception {
+        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+                "hi", 1999, 3, "서울시립대", 6);
+
+        String content = gson.toJson(signUpReqDto);
+
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is(400)))
+                .andExpect(jsonPath("$.message", is("1. 학점은 4보다 클 수 없습니다 ")))
+                .andDo(print());
+    }
+
+
     /**
      * 로그인(signIn) 검증
      */
     @Test
     @DisplayName("로그인 시 google, kakao 외에 다른 플랫폼이 온 경우 ErrorCode.PROVIDER_NOT_ALLOWED 리턴")
-    void signInProvider() throws Exception {
+    void signIn_provider_type_mismatch() throws Exception {
         // given
-        SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "naver");
+        String typeMismatch = "naver";
+        SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", typeMismatch);
         String content = gson.toJson(requestDto);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
@@ -292,7 +301,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("kakao 로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
-    void signInKakao() throws Exception {
+    void signIn_kakao() throws Exception {
         // given
         SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "kakao");
         String content = gson.toJson(requestDto);
@@ -323,7 +332,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("google 로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
-    void signInGoogle() throws Exception {
+    void signIn_google() throws Exception {
         // given
         SignInRequestDto requestDto = new SignInRequestDto("testUser@google.com", "google");
         String content = gson.toJson(requestDto);

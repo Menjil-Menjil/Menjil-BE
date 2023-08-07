@@ -1,6 +1,5 @@
 package seoultech.capstone.menjil.domain.chat.application;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,7 +10,6 @@ import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
-import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +28,7 @@ public class RoomServiceExceptionTest {
      * enterTheRoom()
      */
     @Test
-    void enterTheRoom_Should_ThrowCustomException_WhenSaveFails() {
+    void enterTheRoom_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname("test_mentor")

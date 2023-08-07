@@ -66,7 +66,7 @@ class TokenRepositoryTest {
     @Test
     @DisplayName("updateRefreshToken 메소드의 jpql 구문이 의도한 대로 동작하는지 검증한다: " +
             "token 과 expiryDate 의 값이 변경되어야 한다. ")
-    void updateRefreshTokenInDb() {
+    void update_RefreshToken_In_Db() {
         // given
         User userA = createUser("google_1", "userA@gmail.com", "google", "g1");
         Timestamp timestampA = Timestamp.valueOf(LocalDateTime.now());
