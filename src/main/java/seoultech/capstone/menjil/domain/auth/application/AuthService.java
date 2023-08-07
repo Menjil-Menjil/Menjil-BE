@@ -82,7 +82,11 @@ public class AuthService {
         }
 
         // save in db
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (RuntimeException e) {
+            throw new CustomException(ErrorCode.SERVER_ERROR);
+        }
 
         // User Entity -> UserSignupResponseDto
         return HttpStatus.CREATED.value();
@@ -114,7 +118,12 @@ public class AuthService {
                 int status = tokenRepository.updateRefreshToken(user, refreshToken, expiryDate);
 
             } else {
-                tokenRepository.save(rfEntity);
+                // save in db
+                try {
+                    tokenRepository.save(rfEntity);
+                } catch (RuntimeException e) {
+                    throw new CustomException(ErrorCode.SERVER_ERROR);
+                }
             }
 
             // Created 응답과 함께 Access, Refresh token 발급
