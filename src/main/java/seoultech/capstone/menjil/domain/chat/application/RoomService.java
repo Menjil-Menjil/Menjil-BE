@@ -40,34 +40,19 @@ public class RoomService {
     private final String TYPE_MENTOR = "MENTOR";
 
     /**
-     * RoomId 생성: UUID
-     */
-    public String createUUID(RoomDto roomDto) {
-        String seed = SPECIAL_CHARACTER1 + roomDto.getMenteeNickname() +
-                roomDto.getMentorNickname() + SPECIAL_CHARACTER2;
-
-        // get the bytes of the string
-        byte[] bytes = seed.getBytes();
-
-        // create a UUID from the hash of the bytes
-        UUID uuid = UUID.nameUUIDFromBytes(bytes);
-        return uuid.toString();
-    }
-
-    /**
      * 채팅방 입장
      * case 1: 채팅 내역이 존재하지 않는 경우(처음 입장)
      * case 2: 채팅 내역이 존재하는 경우
      */
-    public List<MessagesResponse> enterTheRoom(RoomDto roomDto, String roomId) {
+    public List<MessagesResponse> enterTheRoom(RoomDto roomDto) {
         List<MessagesResponse> result = new ArrayList<>();
 
-        Room room = roomRepository.findRoomById(roomId);
+        Room room = roomRepository.findRoomById(roomDto.getRoomId());
         if (room == null) {
             // case 1: 채팅방이 존재하지 않는 경우
             // 먼저 채팅방을 저장한다.
             Room newRoom = Room.builder()
-                    .roomId(roomId)
+                    .roomId(roomDto.getRoomId())
                     .menteeNickname(roomDto.getMenteeNickname())
                     .mentorNickname(roomDto.getMentorNickname())
                     .build();
@@ -78,11 +63,11 @@ public class RoomService {
             }
 
             RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
-            MessagesResponse messagesResponse = messageService.sendWelcomeMessage(newRoomDto, roomId);
+            MessagesResponse messagesResponse = messageService.sendWelcomeMessage(newRoomDto);
             result.add(messagesResponse);
         } else {
             // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
-            List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(PAGE_SIZE, roomId);
+            List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(PAGE_SIZE, roomDto.getRoomId());
             for (int i = 0; i < messageList.size(); i++) {
                 MessagesResponse dto = MessagesResponse.fromMessage(messageList.get(i), messageList.size() - i);
                 result.add(dto);

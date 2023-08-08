@@ -31,9 +31,7 @@ public class RoomController {
      */
     @PostMapping("/room/enter")
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
-        String getRoomId = roomService.createUUID(roomDto);
-
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, getRoomId);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
 
         ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
         if (messageList.size() != 1) {
@@ -51,7 +49,7 @@ public class RoomController {
         }
 
         // /queue/chat/room/{room id}로 메세지 보냄
-        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + getRoomId, messageResponse);
+        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomDto.getRoomId(), messageResponse);
     }
 
     /**

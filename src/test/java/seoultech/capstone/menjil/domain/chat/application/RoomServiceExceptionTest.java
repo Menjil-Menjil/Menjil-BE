@@ -33,13 +33,13 @@ public class RoomServiceExceptionTest {
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname("test_mentor")
                 .menteeNickname("test_mentee")
+                .roomId("test_room_id")
                 .build();
-        String roomId = "test_room_id";
 
         // DataIntegrityViolationException
         doThrow(DataIntegrityViolationException.class).when(roomRepository).save(any(Room.class));
 
         // Act and Assert
-        assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto, roomId));
+        assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto));
     }
 }

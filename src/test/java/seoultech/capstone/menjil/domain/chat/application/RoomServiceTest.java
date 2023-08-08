@@ -62,91 +62,6 @@ class RoomServiceTest {
     }
 
     /**
-     * createUUID()
-     */
-    @Test
-    @DisplayName("UUID가 정상적으로 생성이 된다.")
-    void createUUID() {
-        // given
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        // when
-        String result = roomService.createUUID(roomDto);
-
-        // then
-        assertThat(result).isNotNull();
-    }
-
-    @Test
-    @DisplayName("멘티와 멘토 닉네임이 같은 경우, 생성되는 UUID 값은 동일하다 ")
-    void createUUID_When_Mentor_And_Mentee_Nickname_Is_Same() {
-        // given
-        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .build();
-
-        // when
-        String result1 = roomService.createUUID(roomDto1);
-        String result2 = roomService.createUUID(roomDto2);
-
-        // then
-        assertThat(result1).isEqualTo(result2);
-    }
-
-    @Test
-    @DisplayName("멘티 닉네임이 다른 경우, 생성되는 UUID 값은 같지 않다")
-    void createUUID_When_MENTEE_Nickname_Is_Not_Same() {
-        // given
-        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_menteee_1")   // here is different
-                .build();
-
-        // when
-        String result1 = roomService.createUUID(roomDto1);
-        String result2 = roomService.createUUID(roomDto2);
-
-        // then
-        assertThat(result1).isNotEqualTo(result2);
-    }
-
-    @Test
-    @DisplayName("멘토와 멘티 닉네임 순서가 다른 경우, 생성되는 UUID 값은 같지 않다")
-    void createUUID_Nickname_Order_Is_Reversed() {
-        // given
-        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentee_1")   // here is different
-                .menteeNickname("test_mentor_1")   // here is different
-                .build();
-
-        // when
-        String result1 = roomService.createUUID(roomDto1);
-        String result2 = roomService.createUUID(roomDto2);
-
-        // then
-        assertThat(result1).isNotEqualTo(result2);
-    }
-
-    /**
      * enterTheRoom()
      */
     @Test
@@ -160,9 +75,10 @@ class RoomServiceTest {
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname(mentorNickname)
                 .menteeNickname(menteeNickname)
+                .roomId(roomId)
                 .build();
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, roomId);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(1);
 
         MessagesResponse response = messageList.get(0);
@@ -179,6 +95,7 @@ class RoomServiceTest {
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
         LocalDateTime now = LocalDateTime.now();
 
@@ -213,7 +130,7 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, TEST_ROOM_ID);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.
