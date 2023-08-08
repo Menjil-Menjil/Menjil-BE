@@ -17,10 +17,14 @@ public class RoomDto {
     @NotBlank
     private String mentorNickname;
 
+    @NotBlank
+    private String roomId;
+
     @Builder(builderMethodName = "roomDtoConstructor")
-    private RoomDto(String menteeNickname, String mentorNickname) {
+    private RoomDto(String menteeNickname, String mentorNickname, String roomId) {
         this.menteeNickname = menteeNickname;
         this.mentorNickname = mentorNickname;
+        this.roomId = roomId;
     }
 
     @Builder
@@ -36,6 +40,7 @@ public class RoomDto {
         return RoomDto.roomDtoConstructor()
                 .menteeNickname(room.getMenteeNickname())
                 .mentorNickname(room.getMentorNickname())
+                .roomId(room.getId())
                 .build();
     }
 

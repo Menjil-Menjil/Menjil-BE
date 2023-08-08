@@ -36,17 +36,17 @@ public class MessageServiceExceptionTest {
     @Test
     void sendWelcomeMessage_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
-        String roomId = "test_room_id";
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname("test_mentor")
                 .menteeNickname("test_mentee")
+                .roomId("test_room_id")
                 .build();
 
         // DataIntegrityViolationException
         doThrow(DataIntegrityViolationException.class).when(messageRepository).save(any(ChatMessage.class));
 
         // Act and Assert
-        assertThrows(CustomException.class, () -> messageService.sendWelcomeMessage(roomDto, roomId));
+        assertThrows(CustomException.class, () -> messageService.sendWelcomeMessage(roomDto));
     }
 
     /**
