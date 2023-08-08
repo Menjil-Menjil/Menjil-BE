@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
@@ -21,7 +20,6 @@ import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,10 +28,7 @@ public class RoomService {
 
     private final MessageService messageService;
     private final RoomRepository roomRepository;
-    private final MessageRepository messageRepository;
     private final MongoTemplate mongoTemplate;
-    private final String SPECIAL_CHARACTER1 = "##*&^";
-    private final String SPECIAL_CHARACTER2 = "^_$#@";
     private final int PAGE_SIZE = 10;
     private final int GET_ROOM_INFO = 1;
     private final String TYPE_MENTEE = "MENTEE";
