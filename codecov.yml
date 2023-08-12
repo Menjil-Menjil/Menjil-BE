@@ -1,10 +1,21 @@
+# For more configuration details:
+# https://docs.codecov.io/docs/codecov-yaml
+#
+# Validate your repository YAML by posting the content to Codecov for analysis.
+# curl --data-binary @codecov.yml https://codecov.io/validate
 codecov:
   require_ci_to_pass: yes
 
+coverage:
+  range: 50..80 # Red, Yellow, Green
+  round: down
+  precision: 2
+
+# Pull request comments:
+# ----------------------
+# Diff is the Coverage Diff of the pull request.
+# Files are the files impacted by the pull request
 comment:
-  layout: "reach,diff,flags,files,footer"
+  layout: "diff, flags, files"
   behavior: default
-  require_changes: false
-  branches:
-    - develop
-    - feature/issue-4
+  require_changes: false  # if true: only post the comment if coverage changes
