@@ -78,6 +78,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Verify MySQL connection
+        run: |
+          sleep 30
+          mysql --host 127.0.0.1 --port 3306 --user root --password=root -e "SHOW DATABASES;"
+
       ## Build
       - name: Build with Gradle
         run: ./gradlew clean build

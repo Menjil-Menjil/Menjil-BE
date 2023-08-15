@@ -77,10 +77,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Test MySQL Connection
+      - name: Verify MySQL connection
         run: |
           sleep 30
-          mysql -h 127.0.0.1 --port 3306 -uroot -proot -e "show variables like 'chara%'"
+          mysql --host 127.0.0.1 --port 3306 --user root --password=root -e "SHOW DATABASES;"
 
       ## Build
       ## test, build 중 어느 곳에서 오류가 발생하는지 확인을 위해 분리
