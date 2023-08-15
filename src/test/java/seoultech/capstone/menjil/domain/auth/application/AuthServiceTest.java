@@ -165,7 +165,7 @@ class AuthServiceTest {
     private SignUpRequestDto createSignUpReqDto(String id, String email, String provider, String nickname) {
         return new SignUpRequestDto(id, email, provider, nickname,
                 UserRole.MENTEE, 2000, 3, "고려대학교",
-                3, "중반", 2021, 3, "경제학과", null, null,
+                3, "중반", 2021, 3, "경제학과", null, null, null,
                 "Devops", "AWS", null, null, null, null);
     }
 

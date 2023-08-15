@@ -65,6 +65,9 @@ public class User extends BaseTimeEntity {
     @Column(length = 50)
     private String minor;       // 부전공
 
+    @Column(length = 100)
+    private String company;     // 재직 중인 회사.
+
     @Column(nullable = false)
     private String field;       // 관심 분야
 
@@ -77,12 +80,16 @@ public class User extends BaseTimeEntity {
     @Embedded
     private OptionInfo optionInfo;
 
+    @Column(name = "img_url", length = 100)
+    private String imgUrl;
+
     /* Builder 로만 생성할 수 있도록 private 설정 */
     @Builder
     private User(String id, String email, String provider, String nickname,
                  UserRole role, Integer birthYear, Integer birthMonth, String school,
                  Integer score, String scoreRange, Integer graduateDate, Integer graduateMonth, String major,
-                 String subMajor, String minor, String field, String techStack, OptionInfo optionInfo) {
+                 String subMajor, String minor, String company, String field, String techStack,
+                 OptionInfo optionInfo, String imgUrl) {
         this.id = id;
         this.email = email;
         this.provider = provider;
@@ -98,9 +105,11 @@ public class User extends BaseTimeEntity {
         this.major = major;
         this.subMajor = subMajor;
         this.minor = minor;
+        this.company = company;
         this.field = field;
         this.techStack = techStack;
         this.optionInfo = optionInfo;
+        this.imgUrl = imgUrl;
     }
 }
 

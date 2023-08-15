@@ -366,7 +366,7 @@ class AuthControllerTest {
                                                 String school, Integer score) {
         return new SignUpRequestDto(id, email, provider, nickname,
                 UserRole.MENTEE, birthYear, birthMonth, school,
-                score, "중반", 2021, 3, "경제학과", null, null,
+                score, "중반", 2021, 3, "경제학과", null, null, null,
                 "Devops", "AWS", null, null, null, null);
     }
 

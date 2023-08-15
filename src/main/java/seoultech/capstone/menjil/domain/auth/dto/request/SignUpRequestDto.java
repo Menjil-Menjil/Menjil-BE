@@ -52,6 +52,7 @@ public class SignUpRequestDto {
     private String major;
     private String subMajor;
     private String minor;
+    private String company;
     @NotBlank
     private String field;
     @NotBlank
@@ -83,6 +84,7 @@ public class SignUpRequestDto {
                 .major(major)
                 .subMajor(subMajor)
                 .minor(minor)
+                .company(company)
                 .field(field)
                 .techStack(techStack)
                 .optionInfo(new OptionInfo(career, certificate, awards, activity))  // use Embedded type
@@ -109,6 +111,7 @@ public class SignUpRequestDto {
                 && Objects.equals(major, that.major)
                 && Objects.equals(subMajor, that.subMajor)
                 && Objects.equals(minor, that.minor)
+                && Objects.equals(company, that.company)
                 && Objects.equals(field, that.field)
                 && Objects.equals(techStack, that.techStack)
                 && Objects.equals(career, that.career)
@@ -122,6 +125,6 @@ public class SignUpRequestDto {
         return Objects.hash(userId, email, provider, nickname,
                 role, birthYear, birthMonth, school, score,
                 scoreRange, graduateDate, graduateMonth, major,
-                subMajor, minor, field, techStack, career, certificate, awards, activity);
+                subMajor, minor, company, field, techStack, career, certificate, awards, activity);
     }
 }
