@@ -109,6 +109,10 @@ class AuthServiceTest {
 
         assertThat(responseDto.getAccessToken()).isNotNull();
         assertThat(responseDto.getRefreshToken()).isNotNull();
+
+        assertThat(responseDto.getNickname()).isEqualTo(TEST_USER_NICKNAME);
+        assertThat(responseDto.getMajor()).isEqualTo("경제학과");
+        assertThat(responseDto.getSchool()).isEqualTo("서울과학기술대학교");
     }
 
     @Test
@@ -150,7 +154,7 @@ class AuthServiceTest {
         return User.builder()
                 .id(id).email(email).provider(provider).nickname(nickname)
                 .role(UserRole.MENTEE).birthYear(2000).birthMonth(3)
-                .school("고려대학교").score(3).scoreRange("중반")
+                .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
