@@ -8,11 +8,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RoomListResponse {
 
+    private String roomId;
+
     private String nickname;
     private String lastMessage;
 
     @Builder
-    private RoomListResponse(String nickname, String lastMessage) {
+    private RoomListResponse(String roomId, String nickname, String lastMessage) {
+        this.roomId = roomId;
         this.nickname = nickname;
         this.lastMessage = lastMessage;
     }

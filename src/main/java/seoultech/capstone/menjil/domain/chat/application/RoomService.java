@@ -95,6 +95,7 @@ public class RoomService {
                 String lastMessage = messageList.get(0).getMessage();
 
                 result.add(RoomListResponse.builder()
+                        .roomId(roomId)
                         .lastMessage(lastMessage)
                         .nickname(menteeNickname)
                         .build());
@@ -117,6 +118,7 @@ public class RoomService {
                 String lastMessage = messageList.get(0).getMessage();
 
                 result.add(RoomListResponse.builder()
+                        .roomId(roomId)
                         .lastMessage(lastMessage)
                         .nickname(mentorNickname)
                         .build());
