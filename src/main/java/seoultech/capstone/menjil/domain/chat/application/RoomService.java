@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
@@ -21,7 +20,6 @@ import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,59 +28,41 @@ public class RoomService {
 
     private final MessageService messageService;
     private final RoomRepository roomRepository;
-    private final MessageRepository messageRepository;
     private final MongoTemplate mongoTemplate;
-    private final String SPECIAL_CHARACTER1 = "##*&^";
-    private final String SPECIAL_CHARACTER2 = "^_$#@";
     private final int PAGE_SIZE = 10;
     private final int GET_ROOM_INFO = 1;
     private final String TYPE_MENTEE = "MENTEE";
     private final String TYPE_MENTOR = "MENTOR";
 
     /**
-     * RoomId 생성: UUID
-     */
-    public String createUUID(RoomDto roomDto) {
-        String seed = SPECIAL_CHARACTER1 + roomDto.getMenteeNickname() +
-                roomDto.getMentorNickname() + SPECIAL_CHARACTER2;
-
-        // get the bytes of the string
-        byte[] bytes = seed.getBytes();
-
-        // create a UUID from the hash of the bytes
-        UUID uuid = UUID.nameUUIDFromBytes(bytes);
-        return uuid.toString();
-    }
-
-    /**
      * 채팅방 입장
      * case 1: 채팅 내역이 존재하지 않는 경우(처음 입장)
      * case 2: 채팅 내역이 존재하는 경우
      */
-    public List<MessagesResponse> enterTheRoom(RoomDto roomDto, String roomId) {
+    public List<MessagesResponse> enterTheRoom(RoomDto roomDto) {
         List<MessagesResponse> result = new ArrayList<>();
 
-        Room room = roomRepository.findRoomById(roomId);
+        Room room = roomRepository.findRoomById(roomDto.getRoomId());
         if (room == null) {
             // case 1: 채팅방이 존재하지 않는 경우
             // 먼저 채팅방을 저장한다.
             Room newRoom = Room.builder()
-                    .roomId(roomId)
+                    .roomId(roomDto.getRoomId())
                     .menteeNickname(roomDto.getMenteeNickname())
                     .mentorNickname(roomDto.getMentorNickname())
                     .build();
             try {
                 roomRepository.save(newRoom);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 throw new CustomException(ErrorCode.SERVER_ERROR);
             }
 
             RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
-            MessagesResponse messagesResponse = messageService.sendWelcomeMessage(newRoomDto, roomId);
+            MessagesResponse messagesResponse = messageService.sendWelcomeMessage(newRoomDto);
             result.add(messagesResponse);
         } else {
             // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
-            List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(PAGE_SIZE, roomId);
+            List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(PAGE_SIZE, roomDto.getRoomId());
             for (int i = 0; i < messageList.size(); i++) {
                 MessagesResponse dto = MessagesResponse.fromMessage(messageList.get(i), messageList.size() - i);
                 result.add(dto);
@@ -101,7 +81,7 @@ public class RoomService {
 
         if (type.equals(TYPE_MENTOR)) {
             List<Room> roomList = roomRepository.findRoomsByMentorNickname(nickname);
-            if (roomList == null) {
+            if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
                 return result;
             }
@@ -122,7 +102,7 @@ public class RoomService {
 
         } else if (type.equals(TYPE_MENTEE)) {
             List<Room> roomList = roomRepository.findRoomsByMenteeNickname(nickname);
-            if (roomList == null) {
+            if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
                 return result;
             }
@@ -157,15 +137,5 @@ public class RoomService {
         query.addCriteria(Criteria.where("room_id").is(roomId));
         return mongoTemplate.find(query, ChatMessage.class);
     }
-
-    /* MessageController에서, mentor의 이름을 가져오는 메서드 */
-    public String getMentorNickname(String roomId, String menteeNickname) {
-        Room room = roomRepository.findRoomByIdAndAndMenteeNickname(roomId, menteeNickname);
-        if (room == null) {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
-        }
-        return room.getMentorNickname();
-    }
-
 
 }

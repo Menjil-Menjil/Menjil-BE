@@ -114,7 +114,7 @@ class ChatGptServiceTest {
 
     @Test
     @DisplayName("ChatGPT API를 통해 받은 데이터가 null이면, CustomException 리턴")
-    void messageIsNull() {
+    void getMessageFromGpt_result_is_Null() {
         // given
         String question = "You are a helpful assistant.";
         String msg = "내 질문은 \"" + question + "\" 이야. " + "이 질문을 세 줄 요약해줘";

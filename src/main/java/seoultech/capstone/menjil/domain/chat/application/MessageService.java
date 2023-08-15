@@ -2,7 +2,6 @@ package seoultech.capstone.menjil.domain.chat.application;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -38,19 +37,19 @@ public class MessageService {
     /**
      * 사용자에게 처음 응답 메시지를 보내준다.
      */
-    public MessagesResponse sendWelcomeMessage(RoomDto roomDto, String roomId) {
+    public MessagesResponse sendWelcomeMessage(RoomDto roomDto) {
         ChatMessage welcomeMsg = new ChatMessage();
         String welcomeMessage = "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
                 + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
 
-        welcomeMsg.setWelcomeMessage(roomId, SenderType.MENTOR,
+        welcomeMsg.setWelcomeMessage(roomDto.getRoomId(), SenderType.MENTOR,
                 roomDto.getMentorNickname(), welcomeMessage, MessageType.ENTER,
                 LocalDateTime.now());
 
         // save entity to mongoDB
         try {
             messageRepository.save(welcomeMsg);
-        } catch (DataAccessException e) {
+        } catch (RuntimeException e) {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
@@ -69,7 +68,7 @@ public class MessageService {
         // 저장이 잘된 경우 true, 그렇지 않은 경우 false 리턴
         try {
             messageRepository.save(chatMessage);
-        } catch (DataAccessException e) {
+        } catch (RuntimeException e) {
             return false;
         }
         return true;

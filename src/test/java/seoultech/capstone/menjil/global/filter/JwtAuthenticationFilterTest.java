@@ -78,7 +78,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 1: 요청이 들어올 때, header 에 Authentication 정보가 없는 경우 403 오류 리턴")
-    void authenticationIsNone() throws Exception {
+    void authentication_is_none() throws Exception {
         mockMvc.perform(post(REQUEST_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding("UTF-8")
@@ -94,7 +94,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 1: 요청이 들어올 때, header 의 Authentication 타입이 Bearer 가 아닌 경우 403 오류 리턴")
-    void authenticationTypeIsNotValid() throws Exception {
+    void authentication_type_is_not_valid() throws Exception {
         String type = "hello-Bearer";
         String token1 = "token1";
         String token2 = "token2";
@@ -116,7 +116,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 2: 요청이 들어올 때, header의 Authentication 값이 3개 이상인 경우 403 오류 리턴")
-    void authenticationHasSeveralValues() throws Exception {
+    void authentication_header_has_moreThan_two_values() throws Exception {
         String token1 = "token1";
         String token2 = "token2";
         String token3 = "token3";
@@ -137,7 +137,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 3: 요청이 들어올 때, Access Token 이 올바른 경우 TokenTestController 의 응답이 리턴")
-    void accessTokenIsReliable() throws Exception {
+    void accessToken_is_reliable() throws Exception {
         String validAccessToken = jwtTokenProvider.generateAccessToken(TEST_USER_ID, LocalDateTime.now());
 
         mockMvc.perform(post(REQUEST_URL)
@@ -156,7 +156,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 3: 요청이 들어올 때, Access Token 이 올바르지 않은 경우 403 오류 리턴")
-    void accessTokenIsNotReliable() throws Exception {
+    void accessToken_is_not_reliable() throws Exception {
         String userIdNotInDb = "user_3373284718294319";
         String nonValidAccessToken = jwtTokenProvider.generateAccessToken(userIdNotInDb, LocalDateTime.now());
 
@@ -176,7 +176,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 4: Refresh Token 이 유효한 경우 Access Token 재발급")
-    void reIssuanceAccessToken() throws Exception {
+    void AccessToken_reIssuance_when_refreshToken_is_reliable() throws Exception {
         String userIdNotInDb = "user_3373284718294319";
         String nonValidAccessToken = jwtTokenProvider.generateAccessToken(userIdNotInDb, LocalDateTime.now());
 
@@ -195,7 +195,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Case 4: Refresh Token 이 유효하지 않은 경우(db에 값이 없는 경우) 403 오류 리턴")
-    void refreshTokenIsNotReliable() throws Exception {
+    void refreshToken_is_not_reliable() throws Exception {
         String userIdNotInDb = "user_3373284718294319";
         String nonValidAccessToken = jwtTokenProvider.generateAccessToken(userIdNotInDb, LocalDateTime.now());
         String nonValidRefreshToken = jwtTokenProvider.generateRefreshToken(userIdNotInDb, LocalDateTime.now());

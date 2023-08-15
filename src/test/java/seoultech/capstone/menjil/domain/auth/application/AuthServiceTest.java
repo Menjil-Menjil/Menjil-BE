@@ -48,7 +48,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("회원가입: 플랫폼 서버(google, kakao)에서 인증 받은 뒤, 추가정보 입력 전 유저 조회")
-    void checkUserAlreadyExistsInDb() {
+    void checkUserExistsInDb_user_already_exists_in_db() {
         // email, provider 가 같은 유저가 db에 이미 존재하면, 409 CONFLICT
         int result = authService.checkUserExistsInDb(TEST_USER_EMAIL, TEST_USER_PROVIDER);
         assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
@@ -70,6 +70,9 @@ class AuthServiceTest {
         assertThat(result2).isEqualTo(HttpStatus.OK.value());
     }
 
+    /**
+     * signUp()
+     */
     @Test
     @DisplayName("정상적으로 회원가입이 동작하는지 확인")
     void signUp() {
@@ -87,31 +90,17 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("회원가입 시 닉네임이 db에 이미 존재하는 경우 CustomException 리턴")
-    void signUpNicknameDuplicate() {
+    void signUp_Nickname_already_existed() {
         // given
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "test@kakao.com",
                 "kakao", TEST_USER_NICKNAME);
 
-        assertThrows(CustomException.class, () -> {
-            authService.signUp(signUpRequestDtoA);
-        });
+        assertThrows(CustomException.class, () -> authService.signUp(signUpRequestDtoA));
     }
 
     /**
-     * 로그인
+     * signIn()
      */
-    @Test
-    @DisplayName("로그인 시 db에 사용자 정보가 없는 경우 CustomException 리턴")
-    void signInUserNotExist() {
-        // given
-        User userB = createUser("kakao_4237", "userA@kakao.com", "kakao", "testA");
-
-        // when
-        assertThrows(CustomException.class, () -> {
-            authService.signIn(userB.getEmail(), userB.getProvider());
-        });
-    }
-
     @Test
     @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 Access Token 과 Refresh Token 이 생성된다.")
     void signIn() {
@@ -123,8 +112,18 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("로그인 시 db에 사용자 정보가 없는 경우 CustomException 리턴")
+    void signIn_User_Not_Existed() {
+        // given
+        User userB = createUser("kakao_4237", "userA@kakao.com", "kakao", "testA");
+
+        // when
+        assertThrows(CustomException.class, () -> authService.signIn(userB.getEmail(), userB.getProvider()));
+    }
+
+    @Test
     @DisplayName("로그인 시 TokenRepository 에 이미 RefreshToken 정보가 있는 경우, Token 값이 update 된다")
-    void updateRefreshToken() throws InterruptedException {
+    void signIn_update_RefreshToken() throws InterruptedException {
         // First Login
         SignInResponseDto responseDto = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
         String firstRT = responseDto.getRefreshToken();

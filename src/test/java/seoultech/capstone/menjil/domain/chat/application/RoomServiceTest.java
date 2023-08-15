@@ -62,96 +62,11 @@ class RoomServiceTest {
     }
 
     /**
-     * createUUID()
-     */
-    @Test
-    @DisplayName("UUID가 정상적으로 생성이 된다.")
-    void createUUID() {
-        // given
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        // when
-        String result = roomService.createUUID(roomDto);
-
-        // then
-        assertThat(result).isNotNull();
-    }
-
-    @Test
-    @DisplayName("멘티와 멘토 닉네임이 같은 경우, 생성되는 UUID 값은 동일하다 ")
-    void checkUUIDIsEqual() {
-        // given
-        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .build();
-
-        // when
-        String result1 = roomService.createUUID(roomDto1);
-        String result2 = roomService.createUUID(roomDto2);
-
-        // then
-        assertThat(result1).isEqualTo(result2);
-    }
-
-    @Test
-    @DisplayName("멘티 닉네임이 다른 경우, 생성되는 UUID 값은 같지 않다")
-    void checkUUIDIsNotEqual() {
-        // given
-        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_menteee_1")   // here is different
-                .build();
-
-        // when
-        String result1 = roomService.createUUID(roomDto1);
-        String result2 = roomService.createUUID(roomDto2);
-
-        // then
-        assertThat(result1).isNotEqualTo(result2);
-    }
-
-    @Test
-    @DisplayName("멘토와 멘티 닉네임 순서가 다른 경우, 생성되는 UUID 값은 같지 않다")
-    void checkUUIDNicknameOrderIsNotEqual() {
-        // given
-        RoomDto roomDto1 = RoomDto.roomDtoConstructor()
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .build();
-
-        RoomDto roomDto2 = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentee_1")   // here is different
-                .menteeNickname("test_mentor_1")   // here is different
-                .build();
-
-        // when
-        String result1 = roomService.createUUID(roomDto1);
-        String result2 = roomService.createUUID(roomDto2);
-
-        // then
-        assertThat(result1).isNotEqualTo(result2);
-    }
-
-    /**
      * enterTheRoom()
      */
     @Test
     @DisplayName("방 입장시 채팅방이 db에 존재하지 않는 경우, Welcome Message를 보내준다")
-    void roomNotExists() {
+    void enterTheRoom_Room_Not_Exists() {
         // given
         String menteeNickname = TEST_MENTEE_NICKNAME + "no";
         String mentorNickname = TEST_MENTOR_NICKNAME + "no";
@@ -160,9 +75,10 @@ class RoomServiceTest {
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname(mentorNickname)
                 .menteeNickname(menteeNickname)
+                .roomId(roomId)
                 .build();
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, roomId);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(1);
 
         MessagesResponse response = messageList.get(0);
@@ -175,10 +91,11 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다")
-    void enterTheRoomInChatMessage() {
+    void enterTheRoom_when_Room_already_exists() {
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
         LocalDateTime now = LocalDateTime.now();
 
@@ -213,7 +130,7 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto, TEST_ROOM_ID);
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.
@@ -248,7 +165,7 @@ class RoomServiceTest {
      */
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하면, RoomListResponse 객체 3개가 리턴된다")
-    void getAllRoomsByMENTEE() {
+    void getAllRooms_By_MENTEE() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
         String room2MentorNickname = TEST_MENTOR_NICKNAME + "room2";
@@ -323,7 +240,7 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
-    void getAllRoomsByMENTEEException() {
+    void getAllRooms_By_MENTEE_when_data_is_Null() {
         String notExistsMenteeNickname = "mentee_haha_hoho";
         List<RoomListResponse> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
 
@@ -332,7 +249,7 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하면, RoomListResponse 객체 3개가 리턴된다")
-    void getAllRoomsByMENTOR() {
+    void getAllRooms_By_MENTOR() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
         String room2MenteeNickname = TEST_MENTEE_NICKNAME + "room2";
@@ -407,7 +324,7 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
-    void getAllRoomsByMENTORException() {
+    void getAllRooms_By_MENTOR_when_data_is_Null() {
         String notExistsMentorNickname = "mentor_haha_hoho";
         List<RoomListResponse> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
 
@@ -416,9 +333,8 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("type이 MENTEE, MENTOR가 아닌 경우 CustomException 리턴")
-    void getAllRoomsByTypeException() {
+    void getAllRooms_type_mismatch() {
         String typeMismatch = "MENTORWA";
         assertThrows(CustomException.class, () -> roomService.getAllRooms(TEST_MENTEE_NICKNAME, typeMismatch));
     }
-
 }
