@@ -111,5 +111,9 @@ public class User extends BaseTimeEntity {
         this.optionInfo = optionInfo;
         this.imgUrl = imgUrl;
     }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
 }
 
