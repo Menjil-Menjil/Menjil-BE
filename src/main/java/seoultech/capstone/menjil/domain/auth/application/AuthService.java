@@ -130,6 +130,9 @@ public class AuthService {
             return SignInResponseDto.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
+                    .nickname(user.getNickname())
+                    .school(user.getSchool())
+                    .major(user.getMajor())
                     .build();
         } else {
             throw new CustomException(ErrorCode.USER_NOT_EXISTED);
