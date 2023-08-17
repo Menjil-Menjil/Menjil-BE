@@ -9,17 +9,22 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
+import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +33,7 @@ public class RoomService {
 
     private final MessageService messageService;
     private final RoomRepository roomRepository;
+    private final UserRepository userRepository;    // img url 정보 조회를 위해, 부득이하게 userRepository 사용
     private final MongoTemplate mongoTemplate;
     private final int PAGE_SIZE = 10;
     private final int GET_ROOM_INFO = 1;
@@ -73,35 +79,47 @@ public class RoomService {
 
     /**
      * 사용자의 채팅방 전체 데이터를 불러오는 경우
-     * 멘티는 멘토의 닉네임과 마지막 대화내용,
-     * 멘토는 멘티의 닉네임과 마지막 대화내용 리스트 정보가 필요하다.
+     * 멘티는 방 id, 멘토의 닉네임과 img_url, 마지막 대화내용,
+     * 멘토는 방 Id, 멘티의 닉네임과 img_url, 마지막 대화내용
+     * 리스트 정보가 필요하다.
      */
-    public List<RoomListResponse> getAllRooms(String nickname, String type) {
-        List<RoomListResponse> result = new ArrayList<>();
+    public List<RoomInfo> getAllRooms(String nickname, String type) {
+        List<RoomInfo> result = new ArrayList<>();
 
+        /* type == Mentor 의 경우(사용자가 멘토인 경우) */
         if (type.equals(TYPE_MENTOR)) {
             List<Room> roomList = roomRepository.findRoomsByMentorNickname(nickname);
             if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
                 return result;
             }
-
             for (Room room : roomList) {
-                // get mentee nickname and last message in room
+                // Get MENTEE nickname, and Room id
                 String menteeNickname = room.getMenteeNickname();
                 String roomId = room.getId();
 
+                // Get MENTEE img url
+                User mentee = userRepository.findUserByNickname(menteeNickname)
+                        .orElse(null);
+                assert mentee != null;  // 멘티가 존재하지 않을 수 없다.
+                String menteeImgUrl = mentee.getImgUrl();
+
+                // Get Last Message and message time
                 List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
                 String lastMessage = messageList.get(0).getMessage();
+                LocalDateTime lastMessageTime = messageList.get(0).getTime();
 
-                result.add(RoomListResponse.builder()
+                result.add(RoomInfo.builder()
                         .roomId(roomId)
                         .lastMessage(lastMessage)
+                        .imgUrl(menteeImgUrl)
                         .nickname(menteeNickname)
+                        .lastMessageTime(lastMessageTime)
                         .build());
             }
-
-        } else if (type.equals(TYPE_MENTEE)) {
+        }
+        /* type == MENTEE 의 경우(사용자가 멘타인 경우) */
+        else if (type.equals(TYPE_MENTEE)) {
             List<Room> roomList = roomRepository.findRoomsByMenteeNickname(nickname);
             if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
@@ -109,23 +127,37 @@ public class RoomService {
             }
 
             for (Room room : roomList) {
-                // get mentor nickname and last message in room
+                // Get MENTOR nickname, and Room id
                 String mentorNickname = room.getMentorNickname();
                 String roomId = room.getId();
 
-                List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
-                System.out.println("messageList.size() = " + messageList.size());
-                String lastMessage = messageList.get(0).getMessage();
+                // Get MENTOR img url
+                User mentor = userRepository.findUserByNickname(mentorNickname)
+                        .orElse(null);
+                assert mentor != null;  // 멘토가 존재하지 않을 수 없다.
+                String mentorImgUrl = mentor.getImgUrl();
 
-                result.add(RoomListResponse.builder()
+                // Get Last Message and message time
+                List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
+                String lastMessage = messageList.get(0).getMessage();
+                LocalDateTime lastMessageTime = messageList.get(0).getTime();
+
+                result.add(RoomInfo.builder()
                         .roomId(roomId)
                         .lastMessage(lastMessage)
+                        .imgUrl(mentorImgUrl)
                         .nickname(mentorNickname)
+                        .lastMessageTime(lastMessageTime)
                         .build());
             }
         } else {
             throw new CustomException(ErrorCode.TYPE_NOT_ALLOWED);
         }
+
+        // Sort by lastMessageTime, order by DESC
+        result = result.stream()
+                .sorted(Comparator.comparing(RoomInfo::getLastMessageTime).reversed())
+                .collect(Collectors.toList());
         return result;
     }
 

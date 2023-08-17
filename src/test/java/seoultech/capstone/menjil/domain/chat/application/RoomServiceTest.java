@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
+import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
@@ -16,7 +19,7 @@ import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -36,6 +39,9 @@ class RoomServiceTest {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private MessageRepository messageRepository;
@@ -164,7 +170,7 @@ class RoomServiceTest {
      * getAllRooms()
      */
     @Test
-    @DisplayName("멘티가 멘토링 페이지를 조회하면, RoomListResponse 객체 3개가 리턴된다")
+    @DisplayName("멘티가 멘토링 페이지를 조회하면, RoomInfo 객체 3개가 리턴된다")
     void getAllRooms_By_MENTEE() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
@@ -177,7 +183,8 @@ class RoomServiceTest {
 
         // save rooms
         Room room2 = Room.builder()
-                .roomId(room2Id).menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(room2Id)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
                 .mentorNickname(room2MentorNickname)
                 .build();
         Room room3 = Room.builder()
@@ -220,8 +227,16 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
+        // save mentor data to users table
+        List<User> mentors = Arrays.asList(
+                createUser("test_1", "testmentor1@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR),
+                createUser("test_2", "testmentor2@google.com", room2MentorNickname, UserRole.MENTOR),
+                createUser("test_3", "testmentor3@google.com", room3MentorNickname, UserRole.MENTOR)
+        );
+        userRepository.saveAll(mentors);
+
         // when
-        List<RoomListResponse> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
+        List<RoomInfo> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
 
         // then
         // test if size is 3
@@ -236,19 +251,23 @@ class RoomServiceTest {
                 msg -> msg.equals(room2Msg));
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
+
+        // getRoomList의 결과로, RoomInfo 데이터가 시간 순으로(Order by DESC) 정렬되어서 순서대로 담겼는지 검증
+        assertThat(getRoomList.get(0).getLastMessageTime()).isAfter(getRoomList.get(1).getLastMessageTime());
+        assertThat(getRoomList.get(1).getLastMessageTime()).isAfter(getRoomList.get(2).getLastMessageTime());
     }
 
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTEE_when_data_is_Null() {
         String notExistsMenteeNickname = "mentee_haha_hoho";
-        List<RoomListResponse> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
+        List<RoomInfo> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
 
         assertThat(getRoomList.size()).isZero();
     }
 
     @Test
-    @DisplayName("멘토가 멘토링 페이지를 조회하면, RoomListResponse 객체 3개가 리턴된다")
+    @DisplayName("멘토가 멘토링 페이지를 조회하면, RoomInfo 객체 3개가 리턴된다")
     void getAllRooms_By_MENTOR() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
@@ -304,8 +323,16 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
+        // save mentee data to users table
+        List<User> mentors = Arrays.asList(
+                createUser("test_1", "testmentee1@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE),
+                createUser("test_2", "testmentee2@google.com", room2MenteeNickname, UserRole.MENTEE),
+                createUser("test_3", "testmentee3@google.com", room3MenteeNickname, UserRole.MENTEE)
+        );
+        userRepository.saveAll(mentors);
+
         // when
-        List<RoomListResponse> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
+        List<RoomInfo> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
 
         // then
         // test if size is 3
@@ -320,13 +347,17 @@ class RoomServiceTest {
                 msg -> msg.equals(room2Msg));
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
+
+        // getRoomList의 결과로, RoomInfo 데이터가 시간 순으로(Order by DESC) 정렬되어서 순서대로 담겼는지 검증
+        assertThat(getRoomList.get(0).getLastMessageTime()).isAfter(getRoomList.get(1).getLastMessageTime());
+        assertThat(getRoomList.get(1).getLastMessageTime()).isAfter(getRoomList.get(2).getLastMessageTime());
     }
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTOR_when_data_is_Null() {
         String notExistsMentorNickname = "mentor_haha_hoho";
-        List<RoomListResponse> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
+        List<RoomInfo> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
 
         assertThat(getRoomList.size()).isZero();
     }
@@ -336,5 +367,19 @@ class RoomServiceTest {
     void getAllRooms_type_mismatch() {
         String typeMismatch = "MENTORWA";
         assertThrows(CustomException.class, () -> roomService.getAllRooms(TEST_MENTEE_NICKNAME, typeMismatch));
+    }
+
+
+    private User createUser(String id, String email, String nickname, UserRole role) {
+        return User.builder()
+                .id(id).email(email).provider("google").nickname(nickname)
+                .role(role).birthYear(2000).birthMonth(3)
+                .school("서울과학기술대학교").score(3).scoreRange("중반")
+                .graduateDate(2021).graduateMonth(3)
+                .major("경제학과").subMajor(null)
+                .minor(null).field("백엔드").techStack("AWS")
+                .optionInfo(null)
+                .imgUrl("default/profile.png")  // set img url
+                .build();
     }
 }
