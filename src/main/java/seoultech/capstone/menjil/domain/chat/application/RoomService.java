@@ -2,6 +2,7 @@ package seoultech.capstone.menjil.domain.chat.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,7 +20,9 @@ import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
+import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 public class RoomService {
 
     private final MessageService messageService;
+    private final AwsS3Handler awsS3Handler;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;    // img url 정보 조회를 위해, 부득이하게 userRepository 사용
     private final MongoTemplate mongoTemplate;
@@ -39,6 +43,9 @@ public class RoomService {
     private final int GET_ROOM_INFO = 1;
     private final String TYPE_MENTEE = "MENTEE";
     private final String TYPE_MENTOR = "MENTOR";
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String BUCKET_NAME;
 
     /**
      * 채팅방 입장
@@ -102,7 +109,8 @@ public class RoomService {
                 User mentee = userRepository.findUserByNickname(menteeNickname)
                         .orElse(null);
                 assert mentee != null;  // 멘티가 존재하지 않을 수 없다.
-                String menteeImgUrl = mentee.getImgUrl();
+                // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
+                String menteeImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentee.getImgUrl(), Duration.ofDays(1)));
 
                 // Get Last Message and message time
                 List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
@@ -135,7 +143,8 @@ public class RoomService {
                 User mentor = userRepository.findUserByNickname(mentorNickname)
                         .orElse(null);
                 assert mentor != null;  // 멘토가 존재하지 않을 수 없다.
-                String mentorImgUrl = mentor.getImgUrl();
+                // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
+                String mentorImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentor.getImgUrl(), Duration.ofDays(7)));
 
                 // Get Last Message and message time
                 List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
