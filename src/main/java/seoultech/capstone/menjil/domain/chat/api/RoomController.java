@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -56,9 +56,9 @@ public class RoomController {
      * 사용자의 전체 Room 목록을 불러온다
      */
     @GetMapping("/rooms")
-    public ResponseEntity<ApiResponse<List<RoomInfo>>> getAllRooms(@RequestParam("nickname") String nickname,
-                                                                   @RequestParam("type") String type) {
-        List<RoomInfo> result = roomService.getAllRooms(nickname, type);
+    public ResponseEntity<ApiResponse<List<RoomInfoDto>>> getAllRooms(@RequestParam("nickname") String nickname,
+                                                                      @RequestParam("type") String type) {
+        List<RoomInfoDto> result = roomService.getAllRooms(nickname, type);
 
         if (result.size() == 0) {
             return ResponseEntity.status(HttpStatus.OK)

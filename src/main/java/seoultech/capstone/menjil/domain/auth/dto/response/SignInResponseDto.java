@@ -10,14 +10,16 @@ public class SignInResponseDto {
     private String nickname;
     private String school;
     private String major;
+    private String imgUrl;
 
     @Builder
     private SignInResponseDto(String accessToken, String refreshToken,
-                              String nickname, String school, String major) {
+                              String nickname, String school, String major, String imgUrl) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.nickname = nickname;
         this.school = school;
         this.major = major;
+        this.imgUrl = imgUrl;
     }
 }

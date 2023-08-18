@@ -3,7 +3,9 @@ package seoultech.capstone.menjil.domain.main.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
@@ -13,8 +15,8 @@ import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
@@ -31,7 +33,6 @@ import java.util.stream.Collectors;
 @Service
 public class MainPageService {
 
-
     private final AwsS3Handler awsS3Handler;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
@@ -46,35 +47,29 @@ public class MainPageService {
     /**
      * 멘토 리스트를 가져오는 메서드
      */
-    public void getMentorList() {
+    public Page<MentorInfoDto> getMentorList(Pageable pageable) {
+        Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
+        Page<MentorInfoDto> mentorInfoDto = page.map(user -> {
+            MentorInfoDto dto = new MentorInfoDto(user);
 
-    }
+            // set AWS S3 presigned url
+            dto.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(
+                    BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
 
-    /**
-     * 사용자의 정보를 가져오는 메서드
-     */
-    public UserInfo getUserInfo(String nickname) {
-        User user = userRepository.findUserByNickname(nickname).orElse(null);
-        if (user == null) {
-            throw new CustomException(ErrorCode.NICKNAME_NOT_EXISTED);
-        } else {
-            String awsImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
-
-            return UserInfo.builder()
-                    .nickname(user.getNickname())
-                    .school(user.getSchool())
-                    .major(user.getMajor())
-                    .imgUrl(awsImgUrl)
-                    .build();
-        }
+            // set lastAnsweredMessage
+            // 우선 임의로 작성
+            dto.setLastAnsweredMessage("현재 테스트 중입니다");
+            return dto;
+        });
+        return mentorInfoDto;
     }
 
     /**
      * 사용자의 채팅방 목록을 가져온다.
-     * RoomService의 getAllRooms() 메소드와 거의 동일함
+     * RoomService의 getAllRooms() 메소드와 유사함
      */
-    public List<RoomInfo> getUserRoomList(String nickname) {
-        List<RoomInfo> result = new ArrayList<>();
+    public List<RoomInfoDto> getUserRoomList(String nickname) {
+        List<RoomInfoDto> result = new ArrayList<>();
 
         User user = userRepository.findUserByNickname(nickname).orElse(null);
         if (user == null) {
@@ -113,12 +108,15 @@ public class MainPageService {
                 String lastMessage = messagePage.get(0).getMessage();
                 LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
-                result.add(RoomInfo.builder()
+                // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
+                Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
+
+                result.add(RoomInfoDto.builder()
                         .roomId(roomId)
                         .lastMessage(lastMessage)
                         .imgUrl(mentorImgUrl)
                         .nickname(mentorNickname)
-                        .lastMessageTime(lastMessageTime)
+                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
                         .build());
             }
         }
@@ -150,21 +148,34 @@ public class MainPageService {
                 String lastMessage = messagePage.get(0).getMessage();
                 LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
-                result.add(RoomInfo.builder()
+                // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
+                Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
+
+                result.add(RoomInfoDto.builder()
                         .roomId(roomId)
                         .lastMessage(lastMessage)
                         .imgUrl(menteeImgUrl)
                         .nickname(menteeNickname)
-                        .lastMessageTime(lastMessageTime)
+                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
                         .build());
             }
         }
 
-        // Sort by lastMessageTime, order by DESC
+        // Sort by getLastMessagedTimeOfHour, order by ASC
+        // 가장 최근에 대화한 내용이 있는 대화방이 앞에 오도록 정렬
         result = result.stream()
-                .sorted(Comparator.comparing(RoomInfo::getLastMessageTime).reversed())
+                .sorted(Comparator.comparing(RoomInfoDto::getLastMessagedTimeOfHour))
                 .collect(Collectors.toList());
         return result;
     }
-    
+
+    /**
+     * 마지막 대화 내용이, 현재 시간 기준으로 몇 시간 전에 대화하였는지 제공하는 메서드
+     * e.g) 2시간 전, 3시간 전, ...
+     */
+    public Long timeCalculation(LocalDateTime lastMessageTime) {
+        Duration duration = Duration.between(lastMessageTime, LocalDateTime.now());
+        return duration.toHours();
+    }
+
 }
