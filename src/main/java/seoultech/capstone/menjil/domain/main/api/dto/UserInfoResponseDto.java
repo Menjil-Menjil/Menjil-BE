@@ -2,8 +2,8 @@ package seoultech.capstone.menjil.domain.main.api.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 
 import java.util.List;
 
@@ -11,14 +11,14 @@ import java.util.List;
 @NoArgsConstructor
 public class UserInfoResponseDto {
 
-    private UserInfo userInfo;
-    private List<RoomInfo> roomInfoList;
+    private UserInfoDto userInfoDto;
+    private List<RoomInfoDto> roomInfoDtoList;
 
-    public void setUserInfo(UserInfo userInfo) {
-        this.userInfo = userInfo;
+    public void setUserInfoDto(UserInfoDto userInfoDto) {
+        this.userInfoDto = userInfoDto;
     }
 
-    public void setRoomInfoList(List<RoomInfo> roomInfoList) {
-        this.roomInfoList = roomInfoList;
+    public void setRoomInfoDtoList(List<RoomInfoDto> roomInfoDtoList) {
+        this.roomInfoDtoList = roomInfoDtoList;
     }
 }

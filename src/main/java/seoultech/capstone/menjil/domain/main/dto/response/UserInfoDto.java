@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class UserInfo {
+public class UserInfoDto {
 
     private String nickname;
     private String school;
@@ -12,7 +12,7 @@ public class UserInfo {
     private String imgUrl;
 
     @Builder
-    private UserInfo(String nickname, String school, String major, String imgUrl) {
+    private UserInfoDto(String nickname, String school, String major, String imgUrl) {
         this.nickname = nickname;
         this.school = school;
         this.major = major;

@@ -1,7 +1,10 @@
 package seoultech.capstone.menjil.domain.auth.dao;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,10 +15,10 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     List<User> findUserByEmailAndProvider(String email, String provider);
 
-    // Nickname 은 중복이 되지 않으므로, List 가 아닌 Optional 로 조회
-    Optional<User> findUserByNickname(String nickname);
+    Optional<User> findUserByNickname(String nickname);  // Nickname 은 중복이 되지 않으므로, List 가 아닌 Optional 로 조회
 
     Optional<User> findUserById(String id);
 
+    Page<User> findUsersByRole(UserRole role, Pageable pageable);
 }
 

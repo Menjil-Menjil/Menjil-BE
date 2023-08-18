@@ -6,6 +6,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
@@ -17,8 +20,9 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
+import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -60,6 +64,58 @@ class MainPageServiceTest {
     }
 
     /**
+     * getMentorList()
+     */
+    @Test
+    @DisplayName("page=0, sort=3, order by createdDate, nickname DESC")
+    void getMentorList() throws InterruptedException {
+        // given
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(
+                Sort.Order.asc("createdDate"),
+                Sort.Order.asc("nickname")
+        ));
+
+        // save 8 mentor data in users table
+        // 헷갈림 방지를 위해, @BeforeEach에서 저장한 데이터 제거
+        userRepository.deleteAll();
+
+        int MENTOR_NUM = 8;
+        String MENTOR_NICKNAME = "test_mentor_";
+        List<User> users = new ArrayList<>();
+        for (int i = 1; i <= MENTOR_NUM; i++) {
+            String testId = "google_" + i;
+            String testEmail = "test_" + i + "@gmail.com";
+            String testNickname = MENTOR_NICKNAME + i;
+            users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
+        }
+
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoDto에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // 추후 리팩토링할때 무시할 것
+        userRepository.saveAll(List.of(users.get(0), users.get(1)));
+        Thread.sleep(1000);
+
+        userRepository.saveAll(List.of(users.get(2), users.get(3), users.get(4)));
+        Thread.sleep(1000);
+
+        userRepository.saveAll(List.of(users.get(5), users.get(6), users.get(7)));
+
+        // when
+        Page<MentorInfoDto> mentorList = mainPageService.getMentorList(pageRequest);
+
+        // then
+        assertThat(mentorList.getSize()).isEqualTo(3);
+
+        MentorInfoDto firstDto = mentorList.getContent().get(0);
+        MentorInfoDto secondDto = mentorList.getContent().get(1);
+        MentorInfoDto thirdDto = mentorList.getContent().get(2);
+
+        assertThat(firstDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 1);
+        assertThat(firstDto.getImgUrl()).isNotBlank();
+        assertThat(secondDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 2);
+        assertThat(thirdDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 3);
+    }
+
+    /**
      * getUserInfo()
      */
     @Test
@@ -69,12 +125,12 @@ class MainPageServiceTest {
         String nickname = TEST_MENTEE_NICKNAME;
 
         // when
-        UserInfo userInfo = mainPageService.getUserInfo(nickname);
+        UserInfoDto userInfoDto = mainPageService.getUserInfo(nickname);
 
         // then
-        assertThat(userInfo.getNickname()).isEqualTo(TEST_MENTEE_NICKNAME);
-        assertThat(userInfo.getSchool()).isEqualTo("서울과학기술대학교");
-        assertThat(userInfo.getMajor()).isEqualTo("컴퓨터공학과");
+        assertThat(userInfoDto.getNickname()).isEqualTo(TEST_MENTEE_NICKNAME);
+        assertThat(userInfoDto.getSchool()).isEqualTo("서울과학기술대학교");
+        assertThat(userInfoDto.getMajor()).isEqualTo("컴퓨터공학과");
     }
 
     @Test
@@ -108,7 +164,7 @@ class MainPageServiceTest {
         String menteeNickname = TEST_MENTEE_NICKNAME;
 
         // when
-        List<RoomInfo> result = mainPageService.getUserRoomList(menteeNickname);
+        List<RoomInfoDto> result = mainPageService.getUserRoomList(menteeNickname);
 
         // then
         assertThat(result.size()).isZero();
@@ -121,7 +177,7 @@ class MainPageServiceTest {
         String mentorNickname = TEST_MENTOR_NICKNAME;
 
         // when
-        List<RoomInfo> result = mainPageService.getUserRoomList(mentorNickname);
+        List<RoomInfoDto> result = mainPageService.getUserRoomList(mentorNickname);
 
         // then
         assertThat(result.size()).isZero();
@@ -160,7 +216,7 @@ class MainPageServiceTest {
             }
             String message = "message_" + i;
             MessageType messageType = MessageType.TALK;
-            LocalDateTime time = now.plusSeconds(i * 1000L);
+            LocalDateTime time = now.plusSeconds(i);
 
             // Add list
             chatMessageList.add(ChatMessage.builder()
@@ -176,19 +232,21 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfo> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
+        List<RoomInfoDto> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
 
         // then
         assertThat(result.size()).isEqualTo(1);
 
-        RoomInfo oneRoom = result.get(0);
+        RoomInfoDto oneRoom = result.get(0);
         assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
         assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
-        assertThat(oneRoom.getLastMessageTime()).isEqualTo(now.plusSeconds(FIXED_NUM * 1000L));
+
+        // LocalDateTime.now() - 테스트 데이터를 입력한 시간 = Hour 값이 0일 것임
+        assertThat(oneRoom.getLastMessagedTimeOfHour()).isZero();
     }
 
     @Test
-    @DisplayName("'멘토'의 닉네임에 대한 방이 하나 존재, 방 메시지가 13개 존재하는 경우, 방 1개에 대한 가장 마지막에 작성된 메시지가 반환된다")
+    @DisplayName("'멘토'의 닉네임에 대한 방이 하나 존재, 방 메시지가 13개 존재하는 경우, 방 데이터와 가장 마지막에 작성된 메시지가 반환된다")
     void getUserRoomList_of_mentor_when_room_isOne_and_messages_is_13() {
         // given
         String mentorNickname = TEST_MENTOR_NICKNAME;
@@ -220,7 +278,7 @@ class MainPageServiceTest {
             }
             String message = "message_" + i;
             MessageType messageType = MessageType.TALK;
-            LocalDateTime time = now.plusSeconds(i * 1000L);
+            LocalDateTime time = now.plusSeconds(i);
 
             // Add list
             chatMessageList.add(ChatMessage.builder()
@@ -236,15 +294,17 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfo> result = mainPageService.getUserRoomList(mentorNickname);    // here is mentornickname
+        List<RoomInfoDto> result = mainPageService.getUserRoomList(mentorNickname);    // here is mentornickname
 
         // then
         assertThat(result.size()).isEqualTo(1);
 
-        RoomInfo oneRoom = result.get(0);
+        RoomInfoDto oneRoom = result.get(0);
         assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
         assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
-        assertThat(oneRoom.getLastMessageTime()).isEqualTo(now.plusSeconds(FIXED_NUM * 1000L));
+
+        // LocalDateTime.now() - 테스트 데이터를 입력한 시간 = Hour 값이 0일 것임
+        assertThat(oneRoom.getLastMessagedTimeOfHour()).isZero();
     }
 
     /* 이 경우는 '멘티'의 경우만 검증해도 '멘토'의 경우도 함께 검증할 수 있을 것으로 판단하여,
@@ -303,18 +363,20 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfo> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
+        List<RoomInfoDto> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
 
         // then
         assertThat(result.size()).isEqualTo(5);
 
         // 리스트의 인덱스가 작을 수록, 가장 최근에 대화한 메시지가 존재하는 방이다.
-        RoomInfo firstRoom = result.get(0);
-        RoomInfo middleRoom = result.get((result.size() - 1) / 2);
-        RoomInfo lastRoom = result.get(result.size() - 1);
+        RoomInfoDto firstRoom = result.get(0);
+        RoomInfoDto middleRoom = result.get((result.size() - 1) / 2);
+        RoomInfoDto lastRoom = result.get(result.size() - 1);
 
-        assertThat(firstRoom.getLastMessageTime()).isAfter(middleRoom.getLastMessageTime());
-        assertThat(middleRoom.getLastMessageTime()).isAfter(lastRoom.getLastMessageTime());
+        assertThat(firstRoom.getLastMessagedTimeOfHour())
+                .isLessThanOrEqualTo(middleRoom.getLastMessagedTimeOfHour());
+        assertThat(middleRoom.getLastMessagedTimeOfHour())
+                .isLessThanOrEqualTo(lastRoom.getLastMessagedTimeOfHour());
     }
 
 
@@ -330,4 +392,5 @@ class MainPageServiceTest {
                 .imgUrl("default/profile.png")  // set img url
                 .build();
     }
+
 }

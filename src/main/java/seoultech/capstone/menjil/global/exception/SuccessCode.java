@@ -26,6 +26,7 @@ public enum SuccessCode {
 
     // main
     GET_USER_INFO_AVAILABLE(HttpStatus.OK.value(), "사용자 정보를 정상적으로 불러왔습니다"),
+    GET_MENTOR_LIST_AVAILABLE(HttpStatus.OK.value(), "멘토 리스트를 정상적으로 불러왔습니다"),
 
 
     /**

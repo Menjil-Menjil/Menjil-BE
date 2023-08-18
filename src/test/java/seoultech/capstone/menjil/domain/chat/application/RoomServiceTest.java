@@ -19,7 +19,7 @@ import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -291,7 +291,7 @@ class RoomServiceTest {
         userRepository.saveAll(mentors);
 
         // when
-        List<RoomInfo> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
+        List<RoomInfoDto> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
 
         // then
         // test if size is 3
@@ -307,16 +307,18 @@ class RoomServiceTest {
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfo 데이터가 시간 순으로(Order by DESC) 정렬되어서 순서대로 담겼는지 검증
-        assertThat(getRoomList.get(0).getLastMessageTime()).isAfter(getRoomList.get(1).getLastMessageTime());
-        assertThat(getRoomList.get(1).getLastMessageTime()).isAfter(getRoomList.get(2).getLastMessageTime());
+        // getRoomList의 결과로, RoomInfoDto 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
+        assertThat(getRoomList.get(0).getLastMessagedTimeOfHour())
+                .isLessThanOrEqualTo(getRoomList.get(1).getLastMessagedTimeOfHour());
+        assertThat(getRoomList.get(1).getLastMessagedTimeOfHour())
+                .isLessThanOrEqualTo(getRoomList.get(2).getLastMessagedTimeOfHour());
     }
 
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTEE_when_data_is_Null() {
         String notExistsMenteeNickname = "mentee_haha_hoho";
-        List<RoomInfo> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
+        List<RoomInfoDto> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
 
         assertThat(getRoomList.size()).isZero();
     }
@@ -387,7 +389,7 @@ class RoomServiceTest {
         userRepository.saveAll(mentors);
 
         // when
-        List<RoomInfo> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
+        List<RoomInfoDto> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
 
         // then
         // test if size is 3
@@ -403,16 +405,18 @@ class RoomServiceTest {
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfo 데이터가 시간 순으로(Order by DESC) 정렬되어서 순서대로 담겼는지 검증
-        assertThat(getRoomList.get(0).getLastMessageTime()).isAfter(getRoomList.get(1).getLastMessageTime());
-        assertThat(getRoomList.get(1).getLastMessageTime()).isAfter(getRoomList.get(2).getLastMessageTime());
+        // getRoomList의 결과로, RoomInfoDto 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
+        assertThat(getRoomList.get(0).getLastMessagedTimeOfHour())
+                .isLessThanOrEqualTo(getRoomList.get(1).getLastMessagedTimeOfHour());
+        assertThat(getRoomList.get(1).getLastMessagedTimeOfHour())
+                .isLessThanOrEqualTo(getRoomList.get(2).getLastMessagedTimeOfHour());
     }
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTOR_when_data_is_Null() {
         String notExistsMentorNickname = "mentor_haha_hoho";
-        List<RoomInfo> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
+        List<RoomInfoDto> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
 
         assertThat(getRoomList.size()).isZero();
     }

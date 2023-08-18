@@ -14,7 +14,7 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
@@ -92,8 +92,8 @@ public class RoomService {
      * 멘토는 방 Id, 멘티의 닉네임과 img_url, 마지막 대화내용
      * 리스트 정보가 필요하다.
      */
-    public List<RoomInfo> getAllRooms(String nickname, String type) {
-        List<RoomInfo> result = new ArrayList<>();
+    public List<RoomInfoDto> getAllRooms(String nickname, String type) {
+        List<RoomInfoDto> result = new ArrayList<>();
 
         /* type == Mentor 의 경우(사용자가 멘토인 경우) */
         if (type.equals(TYPE_MENTOR)) {
@@ -123,12 +123,15 @@ public class RoomService {
                 String lastMessage = messagePage.get(0).getMessage();
                 LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
-                result.add(RoomInfo.builder()
+                // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
+                Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
+
+                result.add(RoomInfoDto.builder()
                         .roomId(roomId)
                         .lastMessage(lastMessage)
                         .imgUrl(menteeImgUrl)
                         .nickname(menteeNickname)
-                        .lastMessageTime(lastMessageTime)
+                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
                         .build());
             }
         }
@@ -161,23 +164,36 @@ public class RoomService {
                 String lastMessage = messagePage.get(0).getMessage();
                 LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
-                result.add(RoomInfo.builder()
+                // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
+                Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
+
+                result.add(RoomInfoDto.builder()
                         .roomId(roomId)
                         .lastMessage(lastMessage)
                         .imgUrl(mentorImgUrl)
                         .nickname(mentorNickname)
-                        .lastMessageTime(lastMessageTime)
+                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
                         .build());
             }
         } else {
             throw new CustomException(ErrorCode.TYPE_NOT_ALLOWED);
         }
 
-        // Sort by lastMessageTime, order by DESC
+        // Sort by getLastMessagedTimeOfHour, order by ASC
+        // 가장 최근에 대화한 내용이 있는 대화방이 앞에 오도록 정렬
         result = result.stream()
-                .sorted(Comparator.comparing(RoomInfo::getLastMessageTime).reversed())
+                .sorted(Comparator.comparing(RoomInfoDto::getLastMessagedTimeOfHour))
                 .collect(Collectors.toList());
         return result;
+    }
+
+    /**
+     * 마지막 대화 내용이, 현재 시간 기준으로 몇 시간 전에 대화하였는지 제공하는 메서드
+     * e.g) 2시간 전, 3시간 전, ...
+     */
+    public Long timeCalculation(LocalDateTime lastMessageTime) {
+        Duration duration = Duration.between(lastMessageTime, LocalDateTime.now());
+        return duration.toHours();
     }
 
 }

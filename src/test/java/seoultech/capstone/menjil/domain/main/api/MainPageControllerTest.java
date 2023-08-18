@@ -12,13 +12,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfo;
+import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,16 +54,16 @@ class MainPageControllerTest {
     void getUserInfo_room_does_not_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
-        UserInfo userInfo = UserInfo.builder()
+        UserInfoDto userInfoDto = UserInfoDto.builder()
                 .nickname(nickname)
                 .school("서울과학기술대학교")
                 .major("컴퓨터공학과")
                 .imgUrl("test_url")
                 .build();
-        List<RoomInfo> roomList = new ArrayList<>();
+        List<RoomInfoDto> roomList = new ArrayList<>();
 
         // when
-        Mockito.when(mainPageService.getUserInfo(nickname)).thenReturn(userInfo);
+        Mockito.when(mainPageService.getUserInfo(nickname)).thenReturn(userInfoDto);
         Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
 
         // then
@@ -73,8 +72,8 @@ class MainPageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(SuccessCode.GET_USER_INFO_AVAILABLE.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.GET_USER_INFO_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data.userInfo.nickname", is(nickname)))
-                .andExpect(jsonPath("$.data.roomInfoList").isEmpty())   // 빈 리스트
+                .andExpect(jsonPath("$.data.userInfoDto.nickname", is(nickname)))
+                .andExpect(jsonPath("$.data.roomInfoDtoList").isEmpty())   // 빈 리스트
                 .andDo(print());
 
         verify(mainPageService, times(1)).getUserInfo(nickname);
@@ -86,27 +85,25 @@ class MainPageControllerTest {
     void getUserInfo_room_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
-        UserInfo userInfo = UserInfo.builder()
+        UserInfoDto userInfoDto = UserInfoDto.builder()
                 .nickname(nickname)
                 .school("서울과학기술대학교")
                 .major("컴퓨터공학과")
                 .imgUrl("test_url")
                 .build();
 
-        List<RoomInfo> roomList = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
+        List<RoomInfoDto> roomList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
-            roomList.add(RoomInfo.builder()
+            roomList.add(RoomInfoDto.builder()
                     .roomId("room_" + i)
                     .nickname(nickname)
                     .imgUrl("test_url")
                     .lastMessage("message_" + i)
-                    .lastMessageTime(now.plusSeconds(i * 1000L))
                     .build());
         }
 
         // when
-        Mockito.when(mainPageService.getUserInfo(nickname)).thenReturn(userInfo);
+        Mockito.when(mainPageService.getUserInfo(nickname)).thenReturn(userInfoDto);
 
         // 내가 넣는 대로 Mocking되므로, 방의 순서를 보장하지는 않는다.(내림차순)
         Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
@@ -117,8 +114,8 @@ class MainPageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(SuccessCode.GET_USER_INFO_AVAILABLE.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.GET_USER_INFO_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data.userInfo.nickname", is(nickname)))
-                .andExpect(jsonPath("$.data.roomInfoList").isNotEmpty())   // 데이터가 존재하는 리스트
+                .andExpect(jsonPath("$.data.userInfoDto.nickname", is(nickname)))
+                .andExpect(jsonPath("$.data.roomInfoDtoList").isNotEmpty())   // 데이터가 존재하는 리스트
                 .andDo(print());
 
         verify(mainPageService, times(1)).getUserInfo(nickname);

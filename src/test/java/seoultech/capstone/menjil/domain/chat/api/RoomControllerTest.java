@@ -23,7 +23,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -255,12 +255,12 @@ class RoomControllerTest {
 
         // when
         Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
-                RoomInfo.builder()
+                RoomInfoDto.builder()
                         .roomId(roomId2)
                         .nickname(nickname2)
                         .lastMessage("hello here~~22")
                         .build(),
-                RoomInfo.builder()
+                RoomInfoDto.builder()
                         .roomId(roomId3)
                         .nickname(nickname3)
                         .lastMessage("hello there~~33")
@@ -289,7 +289,7 @@ class RoomControllerTest {
         // given
         String targetNickname = "test_HOHO";
         String type = "MENTEE";
-        List<RoomInfo> result = new ArrayList<>();
+        List<RoomInfoDto> result = new ArrayList<>();
 
         // when
         Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(result);
