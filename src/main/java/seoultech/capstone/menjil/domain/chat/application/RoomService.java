@@ -4,14 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
@@ -37,10 +34,10 @@ public class RoomService {
     private final MessageService messageService;
     private final AwsS3Handler awsS3Handler;
     private final RoomRepository roomRepository;
-    private final UserRepository userRepository;    // img url 정보 조회를 위해, 부득이하게 userRepository 사용
-    private final MongoTemplate mongoTemplate;
+    private final MessageRepository messageRepository;
+    private final UserRepository userRepository;    // img_url 정보 조회를 위해, 부득이하게 userRepository 사용
     private final int PAGE_SIZE = 10;
-    private final int GET_ROOM_INFO = 1;
+    private final int GET_ROOM_INFO_SIZE = 1;
     private final String TYPE_MENTEE = "MENTEE";
     private final String TYPE_MENTOR = "MENTOR";
 
@@ -58,7 +55,7 @@ public class RoomService {
         Room room = roomRepository.findRoomById(roomDto.getRoomId());
         if (room == null) {
             // case 1: 채팅방이 존재하지 않는 경우
-            // 먼저 채팅방을 저장한다.
+            // 먼저 채팅방을 db에 저장한다.
             Room newRoom = Room.builder()
                     .roomId(roomDto.getRoomId())
                     .menteeNickname(roomDto.getMenteeNickname())
@@ -75,9 +72,14 @@ public class RoomService {
             result.add(messagesResponse);
         } else {
             // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
-            List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(PAGE_SIZE, roomDto.getRoomId());
-            for (int i = 0; i < messageList.size(); i++) {
-                MessagesResponse dto = MessagesResponse.fromMessage(messageList.get(i), messageList.size() - i);
+            // 최대 10개의 메시지를 클라이언트로 보낸다.
+            PageRequest pageRequest = PageRequest.of(0, PAGE_SIZE, Sort.by(
+                    Sort.Order.desc("time"),
+                    Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+            ));
+            List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
+            for (int i = 0; i < messagePage.size(); i++) {
+                MessagesResponse dto = MessagesResponse.fromMessage(messagePage.get(i), messagePage.size() - i);
                 result.add(dto);
             }
         }
@@ -113,9 +115,13 @@ public class RoomService {
                 String menteeImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentee.getImgUrl(), Duration.ofDays(1)));
 
                 // Get Last Message and message time
-                List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
-                String lastMessage = messageList.get(0).getMessage();
-                LocalDateTime lastMessageTime = messageList.get(0).getTime();
+                PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
+                        Sort.Order.desc("time"),
+                        Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                ));
+                List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
+                String lastMessage = messagePage.get(0).getMessage();
+                LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
                 result.add(RoomInfo.builder()
                         .roomId(roomId)
@@ -147,9 +153,13 @@ public class RoomService {
                 String mentorImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentor.getImgUrl(), Duration.ofDays(7)));
 
                 // Get Last Message and message time
-                List<ChatMessage> messageList = getOrderedChatMessagesByRoomId(GET_ROOM_INFO, roomId);
-                String lastMessage = messageList.get(0).getMessage();
-                LocalDateTime lastMessageTime = messageList.get(0).getTime();
+                PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
+                        Sort.Order.desc("time"),
+                        Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                ));
+                List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
+                String lastMessage = messagePage.get(0).getMessage();
+                LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
                 result.add(RoomInfo.builder()
                         .roomId(roomId)
@@ -168,17 +178,6 @@ public class RoomService {
                 .sorted(Comparator.comparing(RoomInfo::getLastMessageTime).reversed())
                 .collect(Collectors.toList());
         return result;
-    }
-
-    private List<ChatMessage> getOrderedChatMessagesByRoomId(int size, String roomId) {
-        Pageable pageable = PageRequest.of(0, size);
-        Sort sort = Sort.by(
-                Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // Ignore milliseconds, so order _id if time is same
-        );
-        Query query = new Query().with(pageable).with(sort);
-        query.addCriteria(Criteria.where("room_id").is(roomId));
-        return mongoTemplate.find(query, ChatMessage.class);
     }
 
 }

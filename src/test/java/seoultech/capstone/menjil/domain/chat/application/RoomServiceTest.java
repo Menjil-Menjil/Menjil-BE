@@ -23,6 +23,7 @@ import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -96,7 +97,7 @@ class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다")
+    @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 3개 존재하는 경우")
     void enterTheRoom_when_Room_already_exists() {
         RoomDto roomDto = RoomDto.roomDtoConstructor()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
@@ -164,6 +165,60 @@ class RoomServiceTest {
         assertThat(order2Exists).isTrue();
         assertThat(order3Exists).isTrue();
         assertThat(order4Exists).isFalse(); // order 4 not exists because of the number of data is 3
+    }
+
+    @Test
+    @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 다수 존재하는 경우")
+    void enterTheRoom_when_Room_already_exists_2() {
+        // given
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
+        LocalDateTime now = LocalDateTime.now();
+        int FIXED_NUM = 76;
+
+        List<ChatMessage> chatMessageList = new ArrayList<>();
+        for (int i = 1; i <= FIXED_NUM; i++) {
+            String _id = "id_" + i;
+            SenderType senderType;
+            String senderNickname;
+            if (i % 2 == 0) {
+                senderType = SenderType.MENTOR;
+                senderNickname = TEST_MENTOR_NICKNAME;
+            } else {
+                senderType = SenderType.MENTEE;
+                senderNickname = TEST_MENTEE_NICKNAME;
+            }
+            String message = "message_" + i;
+            MessageType messageType = MessageType.TALK;
+            LocalDateTime time = now.plusSeconds(i * 1000L);
+
+            // Add list
+            chatMessageList.add(ChatMessage.builder()
+                    ._id(_id)
+                    .roomId(TEST_ROOM_ID)
+                    .senderType(senderType)
+                    .senderNickname(senderNickname)
+                    .message(message)
+                    .messageType(messageType)
+                    .time(time)
+                    .build());
+        }
+        messageRepository.saveAll(chatMessageList);
+
+        // when
+        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
+
+        // then
+        assertThat(messageList.size()).isEqualTo(10);
+
+        MessagesResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
+        assertThat(lastResponse.get_id()).isEqualTo("id_" + FIXED_NUM);
+
+        MessagesResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
+        assertThat(firstResponse.get_id()).isEqualTo("id_" + (FIXED_NUM - 10 + 1));
     }
 
     /**
