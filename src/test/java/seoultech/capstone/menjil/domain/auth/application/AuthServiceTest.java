@@ -107,7 +107,7 @@ class AuthServiceTest {
      * signIn()
      */
     @Test
-    @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 Access Token 과 Refresh Token 이 생성된다.")
+    @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 Access Token, Refresh Token, 그 외 사용자 정보를 응답으로 보낸다")
     void signIn() {
         // dto 검증
         SignInResponseDto responseDto = authService.signIn(TEST_USER_EMAIL, "google");
@@ -118,6 +118,11 @@ class AuthServiceTest {
         assertThat(responseDto.getNickname()).isEqualTo(TEST_USER_NICKNAME);
         assertThat(responseDto.getMajor()).isEqualTo("경제학과");
         assertThat(responseDto.getSchool()).isEqualTo("서울과학기술대학교");
+        assertThat(responseDto.getNickname()).isNotBlank();
+        assertThat(responseDto.getSchool()).isNotBlank();
+        assertThat(responseDto.getMajor()).isNotBlank();
+        assertThat(responseDto.getImgUrl()).isNotBlank();
+        
     }
 
     @Test

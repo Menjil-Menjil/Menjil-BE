@@ -22,7 +22,6 @@ import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -114,35 +113,6 @@ class MainPageServiceTest {
         assertThat(secondDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 2);
         assertThat(thirdDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 3);
     }
-
-    /**
-     * getUserInfo()
-     */
-    @Test
-    @DisplayName("db에 닉네임이 존재하는 경우 정상적으로 UserInfo 객체 리턴")
-    void getUserInfo() {
-        // given
-        String nickname = TEST_MENTEE_NICKNAME;
-
-        // when
-        UserInfoDto userInfoDto = mainPageService.getUserInfo(nickname);
-
-        // then
-        assertThat(userInfoDto.getNickname()).isEqualTo(TEST_MENTEE_NICKNAME);
-        assertThat(userInfoDto.getSchool()).isEqualTo("서울과학기술대학교");
-        assertThat(userInfoDto.getMajor()).isEqualTo("컴퓨터공학과");
-    }
-
-    @Test
-    @DisplayName("db에 닉네임이 존재하지 않는 경우 CustomException 리턴")
-    void getUserInfo_nickname_not_exists_in_db() {
-        // given
-        String nickname = "nickname_not_in_db";
-
-        // when
-        assertThrows(CustomException.class, () -> mainPageService.getUserInfo(nickname));
-    }
-
 
     /**
      * getUserRoomList()

@@ -2,6 +2,7 @@ package seoultech.capstone.menjil.domain.auth.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +15,10 @@ import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
+import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,11 +27,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class AuthService {
+
+    private final AwsS3Handler awsS3Handler;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private static final long refreshTokenExpiresIn = 14;
+    private final int AWS_URL_DURATION = 7;
     private static final String defaultImgUrl = "default/profile.png";
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String BUCKET_NAME;
 
     /**
      * 회원가입 전, 유저가 이미 db에 존재하는지 조회.
@@ -130,13 +139,14 @@ public class AuthService {
                 }
             }
 
-            // Created 응답과 함께 Access, Refresh token 발급
+            // Created 응답과 함께 Access, Refresh token, 그 외 사용자 정보를 담아서 클라이언트에게 전달
             return SignInResponseDto.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
                     .nickname(user.getNickname())
                     .school(user.getSchool())
                     .major(user.getMajor())
+                    .imgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))))
                     .build();
         } else {
             throw new CustomException(ErrorCode.USER_NOT_EXISTED);

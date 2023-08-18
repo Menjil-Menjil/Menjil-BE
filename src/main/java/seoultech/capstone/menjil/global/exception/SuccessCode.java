@@ -22,11 +22,11 @@ public enum SuccessCode {
     // chat
     MESSAGE_CREATED(HttpStatus.OK.value(), "채팅방 입장이 정상적으로 처리되었습니다"),
     GET_ROOMS_AND_NOT_EXISTS(HttpStatus.OK.value(), "채팅방 목록이 존재하지 않습니다"),
-    GET_ROOMS_AVAILABLE(HttpStatus.OK.value(), "채팅방 목록 조회가 정상적으로 처리되었습니다"),
+    GET_ROOMS_AVAILABLE(HttpStatus.OK.value(), "채팅방 목록을 불러오는데 성공하였습니다"),
 
     // main
-    GET_USER_INFO_AVAILABLE(HttpStatus.OK.value(), "사용자 정보를 정상적으로 불러왔습니다"),
-    GET_MENTOR_LIST_AVAILABLE(HttpStatus.OK.value(), "멘토 리스트를 정상적으로 불러왔습니다"),
+    GET_USER_ROOMS_AVAILABLE(HttpStatus.OK.value(), "사용자의 채팅방 목록을 불러오는데 성공하였습니다"),
+    GET_MENTOR_LIST_AVAILABLE(HttpStatus.OK.value(), "멘토 리스트를 불러오는데 성공하였습니다"),
 
 
     /**
@@ -34,7 +34,6 @@ public enum SuccessCode {
      */
     // auth
     SIGNUP_SUCCESS(HttpStatus.CREATED.value(), "회원가입이 정상적으로 완료됐습니다"),
-    ROOM_CREATED(HttpStatus.CREATED.value(), "채팅방이 정상적으로 생성되었습니다"),
     TOKEN_CREATED(HttpStatus.CREATED.value(), "Access Token, Refresh Token이 정상적으로 생성되었습니다"),
 
     // chat

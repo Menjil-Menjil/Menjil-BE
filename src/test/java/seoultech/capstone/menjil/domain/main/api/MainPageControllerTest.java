@@ -63,20 +63,17 @@ class MainPageControllerTest {
         List<RoomInfoDto> roomList = new ArrayList<>();
 
         // when
-        Mockito.when(mainPageService.getUserInfo(nickname)).thenReturn(userInfoDto);
         Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
 
         // then
         mvc.perform(get("/api/main/userinfo")
                         .queryParam("nickname", nickname))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(SuccessCode.GET_USER_INFO_AVAILABLE.getCode())))
-                .andExpect(jsonPath("$.message", is(SuccessCode.GET_USER_INFO_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data.userInfoDto.nickname", is(nickname)))
-                .andExpect(jsonPath("$.data.roomInfoDtoList").isEmpty())   // 빈 리스트
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_USER_ROOMS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_USER_ROOMS_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.data").isEmpty())   // 빈 리스트
                 .andDo(print());
 
-        verify(mainPageService, times(1)).getUserInfo(nickname);
         verify(mainPageService, times(1)).getUserRoomList(nickname);
     }
 
@@ -103,8 +100,6 @@ class MainPageControllerTest {
         }
 
         // when
-        Mockito.when(mainPageService.getUserInfo(nickname)).thenReturn(userInfoDto);
-
         // 내가 넣는 대로 Mocking되므로, 방의 순서를 보장하지는 않는다.(내림차순)
         Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
 
@@ -112,13 +107,11 @@ class MainPageControllerTest {
         mvc.perform(get("/api/main/userinfo")
                         .queryParam("nickname", nickname))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(SuccessCode.GET_USER_INFO_AVAILABLE.getCode())))
-                .andExpect(jsonPath("$.message", is(SuccessCode.GET_USER_INFO_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data.userInfoDto.nickname", is(nickname)))
-                .andExpect(jsonPath("$.data.roomInfoDtoList").isNotEmpty())   // 데이터가 존재하는 리스트
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_USER_ROOMS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_USER_ROOMS_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.data").isNotEmpty())   // 데이터가 존재하는 리스트
                 .andDo(print());
 
-        verify(mainPageService, times(1)).getUserInfo(nickname);
         verify(mainPageService, times(1)).getUserRoomList(nickname);
     }
 }

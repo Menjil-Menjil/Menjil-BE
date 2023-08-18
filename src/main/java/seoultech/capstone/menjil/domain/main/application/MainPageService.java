@@ -17,7 +17,6 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
@@ -63,25 +62,6 @@ public class MainPageService {
             return dto;
         });
         return mentorInfoDto;
-    }
-
-    /**
-     * 사용자의 정보를 가져오는 메서드
-     */
-    public UserInfoDto getUserInfo(String nickname) {
-        User user = userRepository.findUserByNickname(nickname).orElse(null);
-        if (user == null) {
-            throw new CustomException(ErrorCode.NICKNAME_NOT_EXISTED);
-        } else {
-            String awsImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
-
-            return UserInfoDto.builder()
-                    .nickname(user.getNickname())
-                    .school(user.getSchool())
-                    .major(user.getMajor())
-                    .imgUrl(awsImgUrl)
-                    .build();
-        }
     }
 
     /**

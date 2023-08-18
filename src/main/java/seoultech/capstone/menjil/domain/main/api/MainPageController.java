@@ -13,10 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
-import seoultech.capstone.menjil.domain.main.api.dto.UserInfoResponseDto;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
 import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -39,16 +37,11 @@ public class MainPageController {
     }
 
     @GetMapping("/userinfo")
-    public ResponseEntity<ApiResponse<UserInfoResponseDto>> getUserInfo(@RequestParam("nickname") String nickname) {
-        UserInfoDto userInfoDto = mainPageService.getUserInfo(nickname);
+    public ResponseEntity<ApiResponse<List<RoomInfoDto>>> getUserInfo(@RequestParam("nickname") String nickname) {
         List<RoomInfoDto> roomInfoDtoList = mainPageService.getUserRoomList(nickname);
 
-        UserInfoResponseDto userInfoResponseDto = new UserInfoResponseDto();
-        userInfoResponseDto.setUserInfoDto(userInfoDto);
-        userInfoResponseDto.setRoomInfoDtoList(roomInfoDtoList);
-
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.GET_USER_INFO_AVAILABLE, userInfoResponseDto));
+                .body(ApiResponse.success(SuccessCode.GET_USER_ROOMS_AVAILABLE, roomInfoDtoList));
     }
 
 }
