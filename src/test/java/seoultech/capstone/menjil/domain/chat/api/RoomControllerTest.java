@@ -23,7 +23,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfo;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -247,32 +247,39 @@ class RoomControllerTest {
     void getAllRooms() throws Exception {
         // given
         String targetNickname = "test_HOHO";
+        String roomId2 = "test_room_2";
+        String roomId3 = "test_room_3";
         String nickname2 = "서울과기대2123";
         String nickname3 = "서울시립1873";
         String type = "MENTEE";
 
+        // when
         Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
-                RoomListResponse.builder()
+                RoomInfo.builder()
+                        .roomId(roomId2)
                         .nickname(nickname2)
-                        .lastMessage("hello here~~")
+                        .lastMessage("hello here~~22")
                         .build(),
-                RoomListResponse.builder()
+                RoomInfo.builder()
+                        .roomId(roomId3)
                         .nickname(nickname3)
-                        .lastMessage("hello there~~")
+                        .lastMessage("hello there~~33")
                         .build()
         ));
 
-        // Act
+        // then
         mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
                         .queryParam("nickname", targetNickname)
                         .queryParam("type", type))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AVAILABLE.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data").exists())     // check data is not null
+                .andExpect(jsonPath("$.data[0]").exists())     // check data is not null
+                .andExpect(jsonPath("$.data[0].roomId", is(roomId2)))
+                .andExpect(jsonPath("$.data[1]").exists())     // check data is not null
+                .andExpect(jsonPath("$.data[1].roomId", is(roomId3)))
                 .andDo(print());
 
-        // Assert
         verify(roomService, times(1)).getAllRooms(targetNickname, type);
     }
 
@@ -282,21 +289,21 @@ class RoomControllerTest {
         // given
         String targetNickname = "test_HOHO";
         String type = "MENTEE";
-        List<RoomListResponse> result = new ArrayList<>();
+        List<RoomInfo> result = new ArrayList<>();
 
+        // when
         Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(result);
 
-        // Act
+        // then
         mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
                         .queryParam("nickname", targetNickname)
                         .queryParam("type", type))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getMessage())))
-                .andExpect(jsonPath("$.data", is(result)))
+                .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 
-        // Assert
         verify(roomService, times(1)).getAllRooms(targetNickname, type);
     }
 

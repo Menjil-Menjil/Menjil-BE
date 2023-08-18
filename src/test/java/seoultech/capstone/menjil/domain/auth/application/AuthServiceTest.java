@@ -37,6 +37,7 @@ class AuthServiceTest {
     private final String TEST_USER_EMAIL = "testUserA@gmail.com";
     private final String TEST_USER_NICKNAME = "testUserA";
     private final String TEST_USER_PROVIDER = "google";
+    private static final String defaultImgUrl = "default/profile.png";
 
     @BeforeEach
     void init() {
@@ -74,16 +75,20 @@ class AuthServiceTest {
      * signUp()
      */
     @Test
-    @DisplayName("정상적으로 회원가입이 동작하는지 확인")
+    @DisplayName("정상적으로 회원가입이 동작하는지 확인: img_url 세팅 및 데이터 저장")
     void signUp() {
         SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
 
-        int result = authService.signUp(signUpRequestDtoA);
+        // @BeforeEach 에서 저장된 데이터 제거
+        userRepository.deleteAll();
 
-        // db 에 잘 저장되는지 검증
+        int result = authService.signUp(signUpRequestDtoA);
         List<User> userList = userRepository.findAll();
-        assertThat(userList.size()).isEqualTo(2);
+        assertThat(userList.size()).isEqualTo(1);
+
+        // default img url이 잘 저장되는지 검증
+        assertThat(userList.get(0).getImgUrl()).isEqualTo(defaultImgUrl);
 
         assertThat(result).isEqualTo(HttpStatus.CREATED.value());
     }
@@ -159,13 +164,14 @@ class AuthServiceTest {
                 .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
                 .optionInfo(null)
+                .imgUrl(defaultImgUrl)  // set img url
                 .build();
     }
 
     private SignUpRequestDto createSignUpReqDto(String id, String email, String provider, String nickname) {
         return new SignUpRequestDto(id, email, provider, nickname,
                 UserRole.MENTEE, 2000, 3, "고려대학교",
-                3, "중반", 2021, 3, "경제학과", null, null,
+                3, "중반", 2021, 3, "경제학과", null, null, null,
                 "Devops", "AWS", null, null, null, null);
     }
 

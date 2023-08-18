@@ -28,6 +28,7 @@ public class AuthService {
     private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private static final long refreshTokenExpiresIn = 14;
+    private static final String defaultImgUrl = "default/profile.png";
 
     /**
      * 회원가입 전, 유저가 이미 db에 존재하는지 조회.
@@ -80,6 +81,9 @@ public class AuthService {
             // 이 부분은, 컨트롤러가 아닌 서비스에서 처리하는 것이 더 바람직할 것으로 보임.
             throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
+
+        // Set AWS S3 default image url in user
+        user.setImgUrl(defaultImgUrl);
 
         // save in db
         try {
