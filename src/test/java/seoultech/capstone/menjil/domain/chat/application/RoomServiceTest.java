@@ -18,7 +18,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -85,10 +85,10 @@ class RoomServiceTest {
                 .roomId(roomId)
                 .build();
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(1);
 
-        MessagesResponse response = messageList.get(0);
+        MessagesResponseDto response = messageList.get(0);
 
         assertThat(response.getRoomId()).isEqualTo(roomId);
         assertThat(response.getSenderNickname()).isEqualTo(mentorNickname); // Welcome Message is sent by mentor
@@ -137,7 +137,7 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.
@@ -209,15 +209,15 @@ class RoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(10);
 
-        MessagesResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
+        MessagesResponseDto lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
         assertThat(lastResponse.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        MessagesResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
+        MessagesResponseDto firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
         assertThat(firstResponse.get_id()).isEqualTo("id_" + (FIXED_NUM - 10 + 1));
     }
 

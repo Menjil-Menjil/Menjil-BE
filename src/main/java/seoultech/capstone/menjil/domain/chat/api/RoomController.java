@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -31,9 +31,9 @@ public class RoomController {
      */
     @PostMapping("/room/enter")
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
-        List<MessagesResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
 
-        ResponseEntity<ApiResponse<List<MessagesResponse>>> messageResponse;
+        ResponseEntity<ApiResponse<List<MessagesResponseDto>>> messageResponse;
         if (messageList.size() != 1) {
             messageResponse = ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
