@@ -27,7 +27,8 @@ public enum ErrorCode {
 
     // chat
     ROOM_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH01", "채팅방의 정보를 가져올 수 없습니다. 채팅방 아이디를 다시 확인해주세요"),
-    TYPE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CH02", "사용자의 타입이 \"MENTEE\" 또는 \"MENTOR\" 가 아닙니다");
+    TYPE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CH02", "사용자의 타입이 \"MENTEE\" 또는 \"MENTOR\" 가 아닙니다"),
+    TIME_INPUT_INVALID(HttpStatus.BAD_REQUEST, "CH03", "time 형식을 yyyy-MM-dd HH:mm:ss으로 작성해 주세요");
 
     private final HttpStatus httpStatus;
     private final String type;

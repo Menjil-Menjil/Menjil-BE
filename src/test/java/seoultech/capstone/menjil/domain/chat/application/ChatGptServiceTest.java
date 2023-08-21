@@ -81,7 +81,7 @@ class ChatGptServiceTest {
     void getMessageFromGpt() {
         // given
         String question = "You are a helpful assistant.";
-        String msg = "내 질문은 \"" + question + "\" 이야. " + "이 질문을 세 줄 요약해줘";
+        String msg = "내 질문은 \"" + question + "\" 이야. " + "이 문장을 세 줄로 요약해줘";
         ChatGptRequest gptRequest = ChatGptRequest
                 .builder()
                 .model(OPEN_AI_MODEL)
@@ -117,7 +117,7 @@ class ChatGptServiceTest {
     void getMessageFromGpt_result_is_Null() {
         // given
         String question = "You are a helpful assistant.";
-        String msg = "내 질문은 \"" + question + "\" 이야. " + "이 질문을 세 줄 요약해줘";
+        String msg = "내 질문은 \"" + question + "\" 이야. " + "이 문장을 세 줄로 요약해줘";
         ChatGptRequest gptRequest = ChatGptRequest
                 .builder()
                 .model(OPEN_AI_MODEL)

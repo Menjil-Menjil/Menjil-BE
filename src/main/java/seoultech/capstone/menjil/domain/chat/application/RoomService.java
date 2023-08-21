@@ -13,7 +13,7 @@ import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -49,8 +49,8 @@ public class RoomService {
      * case 1: 채팅 내역이 존재하지 않는 경우(처음 입장)
      * case 2: 채팅 내역이 존재하는 경우
      */
-    public List<MessagesResponse> enterTheRoom(RoomDto roomDto) {
-        List<MessagesResponse> result = new ArrayList<>();
+    public List<MessagesResponseDto> enterTheRoom(RoomDto roomDto) {
+        List<MessagesResponseDto> result = new ArrayList<>();
 
         Room room = roomRepository.findRoomById(roomDto.getRoomId());
         if (room == null) {
@@ -68,8 +68,8 @@ public class RoomService {
             }
 
             RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
-            MessagesResponse messagesResponse = messageService.sendWelcomeMessage(newRoomDto);
-            result.add(messagesResponse);
+            MessagesResponseDto messagesResponseDto = messageService.sendWelcomeMessage(newRoomDto);
+            result.add(messagesResponseDto);
         } else {
             // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
             // 최대 10개의 메시지를 클라이언트로 보낸다.
@@ -79,7 +79,7 @@ public class RoomService {
             ));
             List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
             for (int i = 0; i < messagePage.size(); i++) {
-                MessagesResponse dto = MessagesResponse.fromMessage(messagePage.get(i), messagePage.size() - i);
+                MessagesResponseDto dto = MessagesResponseDto.fromChatMessage(messagePage.get(i), messagePage.size() - i);
                 result.add(dto);
             }
         }

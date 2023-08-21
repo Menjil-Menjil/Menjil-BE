@@ -1,5 +1,6 @@
 package seoultech.capstone.menjil.domain.chat.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,27 +8,30 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor
-public class MessagesResponse {
+public class MessagesResponseDto {
     /**
      * 기존의 채팅 내역이 존재하는 경우, 채팅 내역들을 클라이언트로 보낼 때 사용하는 Response DTO
-     * _id, order 값도 같이 전달하므로, MessageDto를 사용하지 않음
      */
 
-    private String _id; // different from MessageDto
-    private Integer order; // different from MessageDto
+    private String _id; // different from MessageRequestDto
+    private Integer order; // different from MessageRequestDto
     private String roomId;
     private SenderType senderType;
     private String senderNickname;
     private String message;
     private MessageType messageType;
-    private String time;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+    private LocalDateTime time;
 
     @Builder
-    private MessagesResponse(String _id, Integer order, String roomId, SenderType senderType,
-                             String senderNickname, String message,
-                             MessageType messageType, String time) {
+    private MessagesResponseDto(String _id, Integer order, String roomId, SenderType senderType,
+                                String senderNickname, String message,
+                                MessageType messageType, LocalDateTime time) {
         this._id = _id;
         this.order = order;
         this.roomId = roomId;
@@ -38,13 +42,8 @@ public class MessagesResponse {
         this.time = time;
     }
 
-    public static MessagesResponse fromMessage(ChatMessage chatMessage, Integer order) {
-
-        // remove nano seconds
-        String time = chatMessage.getTime().withNano(0).toString();
-        time = time.replace("T", " ");
-
-        return MessagesResponse.builder()
+    public static MessagesResponseDto fromChatMessage(ChatMessage chatMessage, Integer order) {
+        return MessagesResponseDto.builder()
                 ._id(chatMessage.get_id())
                 .order(order)
                 .roomId(chatMessage.getRoomId())
@@ -52,7 +51,7 @@ public class MessagesResponse {
                 .senderNickname(chatMessage.getSenderNickname())
                 .message(chatMessage.getMessage())
                 .messageType(chatMessage.getMessageType())
-                .time(time)
+                .time(chatMessage.getTime())
                 .build();
     }
 

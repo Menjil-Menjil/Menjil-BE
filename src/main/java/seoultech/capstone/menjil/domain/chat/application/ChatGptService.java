@@ -33,7 +33,7 @@ public class ChatGptService {
      * 질문 데이터를 받아서 세 줄 요약을 수행
      */
     public Message getMessageFromGpt(String question) {
-        String msg = "내 질문은 \"" + question + "\" 이야. " + "이 질문을 세 줄 요약해줘";
+        String msg = "내 질문은 \"" + question + "\" 이야. " + "이 문장을 세 줄로 요약해줘";
 
         ChatGptRequest chatGptRequest = ChatGptRequest
                 .builder()

@@ -10,13 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
-import seoultech.capstone.menjil.domain.chat.dto.MessageDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
+import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequestDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
+import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
@@ -52,7 +55,7 @@ class MessageServiceTest {
                 .build();
 
         // when
-        MessagesResponse result = messageService.sendWelcomeMessage(roomDto);
+        MessagesResponseDto result = messageService.sendWelcomeMessage(roomDto);
 
         // then
         assertThat(result.getRoomId()).isEqualTo(roomId);
@@ -70,14 +73,17 @@ class MessageServiceTest {
     @DisplayName("클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 true 리턴")
     void saveChatMessage() {
         // given
-        LocalDateTime now = LocalDateTime.now();
-        MessageDto messageDto = MessageDto.builder()
+        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDate = now.format(formatter);
+
+        MessageRequestDto messageDto = MessageRequestDto.builder()
                 .roomId("test_room_3")
                 .senderType(SenderType.MENTOR)
                 .senderNickname("test_mentor_nickname")
                 .message("Welcome Message")
                 .messageType(MessageType.ENTER)
-                .time(now.toString())
+                .time(formattedDate)
                 .build();
 
         // when
@@ -85,6 +91,26 @@ class MessageServiceTest {
 
         // then
         assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("MessageDto에서 time 형식이 올바르지 않은 경우 CustomException 발생")
+    void saveChatMessage_time_format_is_not_alright() {
+        // given
+        String format_is_wrong = "2023:08:14T12:23:00";
+
+        MessageRequestDto messageDto = MessageRequestDto.builder()
+                .roomId("test_room_3")
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(format_is_wrong)
+                .build();
+
+        // when
+        assertThrows(CustomException.class, () -> messageService.saveChatMessage(messageDto));
+
     }
 
 }
