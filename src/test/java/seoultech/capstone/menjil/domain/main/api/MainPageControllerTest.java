@@ -10,10 +10,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
+import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -44,6 +48,79 @@ class MainPageControllerTest {
 
     @MockBean
     private MainPageService mainPageService;
+
+    private final int SIZE = 3;
+    private final Sort SORT = Sort.by("createdDate", "nickname").ascending();
+
+
+    /**
+     * getMentorList()
+     */
+    @Test
+    @DisplayName("page=0일 때, 멘토 데이터가 존재하지 않는 경우 content에 빈 리스트가 리턴되는지 확인한다")
+    void getMentorList_page_0_mentor_is_not_exist() throws Exception {
+        // given
+        String nickname = "test_user_1";
+        int pageNumber = 0;
+
+        /* 여기서 주의사항: MainPageController의 파라미터 중 @PageableDefault에서 작성한 값과 일치하도록 작성해야 한다 */
+        Pageable pageable = PageRequest.of(pageNumber, SIZE, SORT);
+
+        List<MentorInfoResponse> responseList = new ArrayList<>();
+        Page<MentorInfoResponse> page = new PageImpl<>(responseList);
+
+        // when
+        Mockito.when(mainPageService.getMentorList(nickname, pageable)).thenReturn(page);
+
+        // then
+        mvc.perform(get("/api/main/mentors")
+                        .queryParam("nickname", nickname)
+                        .queryParam("page", String.valueOf(pageable.getPageNumber())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.data.content").isEmpty())    // 빈 리스트이므로, doesNotExist() (X)
+                .andDo(print());
+
+        Mockito.verify(mainPageService).getMentorList(nickname, pageable);
+    }
+
+    @Test
+    @DisplayName("page=0일 때, 멘토 데이터가 2개가 존재하는 경우 정상적으로 2개의 content를 가져오는지 테스트")
+    void getMentorList_page_0_mentor_2() throws Exception {
+        // given
+        String nickname = "test_user_1";
+        int pageNumber = 0;
+
+        /* 여기서 주의사항: MainPageController의 파라미터 중 @PageableDefault에서 작성한 값과 일치하도록 작성해야 한다 */
+        Pageable pageable = PageRequest.of(pageNumber, SIZE, SORT);
+
+        // 현재 MentorInfoResponse는 of 메서드가 없으므로,
+        // fromUserEntity 메서드를 사용하기 위해, userA, userB 생성
+        User userA = createUser("google_1231323", "test@google.com", "test_1", UserRole.MENTOR);
+        User userB = createUser("google_1231324", "test2@google.com", "test_2", UserRole.MENTOR);
+        List<MentorInfoResponse> responseList = List.of(MentorInfoResponse.fromUserEntity(userA),
+                MentorInfoResponse.fromUserEntity(userB));
+        Page<MentorInfoResponse> page = new PageImpl<>(responseList);
+
+        // when
+        Mockito.when(mainPageService.getMentorList(nickname, pageable)).thenReturn(page);
+
+        // then
+        mvc.perform(get("/api/main/mentors")
+                        .queryParam("nickname", nickname)
+                        .queryParam("page", String.valueOf(pageable.getPageNumber())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.content[0]").isNotEmpty())
+                .andExpect(jsonPath("$.data.content[1]").isNotEmpty())
+                .andExpect(jsonPath("$.data.content[2]").doesNotExist()) // Data not exists
+                .andDo(print());
+
+        Mockito.verify(mainPageService).getMentorList(nickname, pageable);
+    }
 
     /**
      * getUserInfo()
@@ -95,5 +172,18 @@ class MainPageControllerTest {
                 .andDo(print());
 
         verify(mainPageService, times(1)).getUserRoomList(nickname);
+    }
+
+    private User createUser(String id, String email, String nickname, UserRole role) {
+        return User.builder()
+                .id(id).email(email).provider("google").nickname(nickname)
+                .role(role).birthYear(2000).birthMonth(3)
+                .school("서울과학기술대학교").score(3).scoreRange("중반")
+                .graduateDate(2021).graduateMonth(3)
+                .major("컴퓨터공학과").subMajor(null)
+                .minor(null).field("백엔드").techStack("AWS")
+                .optionInfo(null)
+                .imgUrl("default/profile.png")  // set img url
+                .build();
     }
 }

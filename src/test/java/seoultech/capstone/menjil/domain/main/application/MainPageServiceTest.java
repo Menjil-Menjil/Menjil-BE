@@ -46,6 +46,11 @@ class MainPageServiceTest {
     @Autowired
     private MessageRepository messageRepository;
 
+    private final int SIZE = 3;
+    private final Sort SORT = Sort.by(
+            Sort.Order.asc("createdDate"),
+            Sort.Order.asc("nickname")
+    );
     private final String TEST_MENTEE_NICKNAME = "test_mentee_nickname";
     private final String TEST_MENTOR_NICKNAME = "test_mentor_nickname";
 
@@ -66,13 +71,11 @@ class MainPageServiceTest {
      * getMentorList()
      */
     @Test
-    @DisplayName("page=0, sort=3, order by createdDate, nickname DESC")
-    void getMentorList() throws InterruptedException {
+    @DisplayName("page=0, sort=3, order by createdDate, nickname DESC, mentor=8: 데이터 3개 리턴")
+    void getMentorList_page_0() throws InterruptedException {
         // given
-        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(
-                Sort.Order.asc("createdDate"),
-                Sort.Order.asc("nickname")
-        ));
+        int pageNum = 0;
+        PageRequest pageRequest = PageRequest.of(pageNum, SIZE, SORT);
 
         // save 8 mentor data in users table
         // 헷갈림 방지를 위해, @BeforeEach에서 저장한 데이터 제거
@@ -99,19 +102,109 @@ class MainPageServiceTest {
         userRepository.saveAll(List.of(users.get(5), users.get(6), users.get(7)));
 
         // when
+        // nickname은 중요하지 않다.
         Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
 
         // then
         assertThat(mentorList.getSize()).isEqualTo(3);
 
-        MentorInfoResponse firstDto = mentorList.getContent().get(0);
-        MentorInfoResponse secondDto = mentorList.getContent().get(1);
-        MentorInfoResponse thirdDto = mentorList.getContent().get(2);
+        MentorInfoResponse firstMentor = mentorList.getContent().get(0);
+        MentorInfoResponse secondMentor = mentorList.getContent().get(1);
+        MentorInfoResponse thirdMentor = mentorList.getContent().get(2);
 
-        assertThat(firstDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 1);
-        assertThat(firstDto.getImgUrl()).isNotBlank();
-        assertThat(secondDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 2);
-        assertThat(thirdDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 3);
+        assertThat(firstMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 1);
+        assertThat(firstMentor.getImgUrl()).isNotBlank();
+        assertThat(secondMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 2);
+        assertThat(thirdMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 3);
+    }
+
+    @Test
+    @DisplayName("page=2, sort=3, order by createdDate, nickname DESC, mentor=8 : Content 2개 리턴")
+    void getMentorList_page_2() throws InterruptedException {
+        // given
+        int pageNum = 2;
+        PageRequest pageRequest = PageRequest.of(pageNum, SIZE, SORT);
+
+        // save 8 mentor data in users table
+        // 헷갈림 방지를 위해, @BeforeEach에서 저장한 데이터 제거
+        userRepository.deleteAll();
+
+        int MENTOR_NUM = 8;
+        String MENTOR_NICKNAME = "test_mentor_";
+        List<User> users = new ArrayList<>();
+        for (int i = 1; i <= MENTOR_NUM; i++) {
+            String testId = "google_" + i;
+            String testEmail = "test_" + i + "@gmail.com";
+            String testNickname = MENTOR_NICKNAME + i;
+            users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
+        }
+
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // 추후 리팩토링할때 무시할 것
+        userRepository.saveAll(List.of(users.get(0), users.get(1)));
+        Thread.sleep(1000);
+
+        userRepository.saveAll(List.of(users.get(2), users.get(3), users.get(4)));
+        Thread.sleep(1000);
+
+        userRepository.saveAll(List.of(users.get(5), users.get(6), users.get(7)));
+
+        // when
+        // nickname은 중요하지 않다.
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
+
+        // then
+        // size 값은 SIZE 값과 동일하다.
+        assertThat(mentorList.getSize()).isEqualTo(3);
+
+        // content의 개수가 2개이다.
+        assertThat(mentorList.getContent().size()).isEqualTo(2);
+
+        MentorInfoResponse firstMentor = mentorList.getContent().get(0);
+        MentorInfoResponse secondMentor = mentorList.getContent().get(1);
+
+        assertThat(firstMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 7);
+        assertThat(firstMentor.getImgUrl()).isNotBlank();
+        assertThat(secondMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 8);
+    }
+
+    @Test
+    @DisplayName("page=3, sort=3, order by createdDate, nickname DESC, mentor=8 : Content 0개 리턴")
+    void getMentorList_page_3() throws InterruptedException {
+        // given
+        int pageNum = 3;
+        PageRequest pageRequest = PageRequest.of(pageNum, SIZE, SORT);
+
+        // save 8 mentor data in users table
+        // 헷갈림 방지를 위해, @BeforeEach에서 저장한 데이터 제거
+        userRepository.deleteAll();
+
+        int MENTOR_NUM = 8;
+        String MENTOR_NICKNAME = "test_mentor_";
+        List<User> users = new ArrayList<>();
+        for (int i = 1; i <= MENTOR_NUM; i++) {
+            String testId = "google_" + i;
+            String testEmail = "test_" + i + "@gmail.com";
+            String testNickname = MENTOR_NICKNAME + i;
+            users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
+        }
+
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // 추후 리팩토링할때 무시할 것
+        userRepository.saveAll(List.of(users.get(0), users.get(1)));
+        Thread.sleep(1000);
+
+        userRepository.saveAll(List.of(users.get(2), users.get(3), users.get(4)));
+        Thread.sleep(1000);
+
+        userRepository.saveAll(List.of(users.get(5), users.get(6), users.get(7)));
+
+        // when
+        // nickname은 중요하지 않다.
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
+
+        // then
+        assertThat(mentorList.getContent().size()).isEqualTo(0);
     }
 
     /**
