@@ -37,7 +37,7 @@ class AuthServiceTest {
     private final String TEST_USER_EMAIL = "testUserA@gmail.com";
     private final String TEST_USER_NICKNAME = "testUserA";
     private final String TEST_USER_PROVIDER = "google";
-    private static final String defaultImgUrl = "default/profile.png";
+    private static final String defaultImgUrl = "profile/default.png";
 
     @BeforeEach
     void init() {
@@ -122,7 +122,7 @@ class AuthServiceTest {
         assertThat(responseDto.getSchool()).isNotBlank();
         assertThat(responseDto.getMajor()).isNotBlank();
         assertThat(responseDto.getImgUrl()).isNotBlank();
-        
+
     }
 
     @Test

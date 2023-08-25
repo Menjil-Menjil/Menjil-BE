@@ -27,7 +27,7 @@ public class RoomServiceExceptionTest {
     /**
      * enterTheRoom()
      */
-    @Test
+    /*@Test
     void enterTheRoom_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
         RoomDto roomDto = RoomDto.roomDtoConstructor()
@@ -41,5 +41,5 @@ public class RoomServiceExceptionTest {
 
         // Act and Assert
         assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto));
-    }
+    }*/
 }

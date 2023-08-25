@@ -55,11 +55,19 @@ class RoomServiceTest {
 
     @BeforeEach
     void init() {
+        // save Room
         Room room = Room.builder()
                 .roomId(TEST_ROOM_ID).menteeNickname(TEST_MENTEE_NICKNAME)
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .build();
         roomRepository.save(room);
+
+        // save Mentee, Mentor
+        User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME,
+                UserRole.MENTEE);
+        User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME,
+                UserRole.MENTOR);
+        userRepository.saveAll(List.of(mentee, mentor));
     }
 
     @AfterEach
@@ -72,10 +80,28 @@ class RoomServiceTest {
      * enterTheRoom()
      */
     @Test
-    @DisplayName("방 입장시 채팅방이 db에 존재하지 않는 경우, Welcome Message를 보내준다")
-    void enterTheRoom_Room_Not_Exists() {
+    @DisplayName("'멘티'의 데이터가 db에 없는 경우, 방 입장 전에 CustomException 리턴")
+    void enterTheRoom_mentee_not_in_db() {
         // given
         String menteeNickname = TEST_MENTEE_NICKNAME + "no";
+        String mentorNickname = TEST_MENTOR_NICKNAME;
+        String roomId = TEST_ROOM_ID + "no";
+
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname(mentorNickname)
+                .menteeNickname(menteeNickname)
+                .roomId(roomId)
+                .build();
+
+        // when
+        assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto));
+    }
+
+    @Test
+    @DisplayName("'멘토'의 데이터가 db에 없는 경우, 방 입장 전에 CustomException 리턴")
+    void enterTheRoom_mentor_not_in_db() {
+        // given
+        String menteeNickname = TEST_MENTEE_NICKNAME;
         String mentorNickname = TEST_MENTOR_NICKNAME + "no";
         String roomId = TEST_ROOM_ID + "no";
 
@@ -85,13 +111,29 @@ class RoomServiceTest {
                 .roomId(roomId)
                 .build();
 
+        // when
+        assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto));
+    }
+
+    @Test
+    @DisplayName("방 입장시 채팅방이 db에 존재하지 않는 경우, Welcome Message를 보내준다")
+    void enterTheRoom_Room_Not_Exists() {
+        // given
+        String roomId = TEST_ROOM_ID + "no";
+
+        RoomDto roomDto = RoomDto.roomDtoConstructor()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(roomId)
+                .build();
+
         List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(1);
 
         MessagesResponseDto response = messageList.get(0);
 
         assertThat(response.getRoomId()).isEqualTo(roomId);
-        assertThat(response.getSenderNickname()).isEqualTo(mentorNickname); // Welcome Message is sent by mentor
+        assertThat(response.getSenderNickname()).isEqualTo(TEST_MENTOR_NICKNAME); // Welcome Message is sent by mentor
         assertThat(response.getSenderType()).isEqualTo(SenderType.MENTOR);
         assertThat(response.getMessageType()).isEqualTo(MessageType.ENTER);
     }
@@ -284,7 +326,8 @@ class RoomServiceTest {
 
         // save mentor data to users table
         List<User> mentors = Arrays.asList(
-                createUser("test_1", "testmentor1@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR),
+                // @BeforeEach에서 TEST_MENTOR_NICKNAME 유저를 저장하므로, 여기서 저장하면 DataIntegrityViolationException 발생함
+//                createUser("test_1", "testmentor1@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR),
                 createUser("test_2", "testmentor2@google.com", room2MentorNickname, UserRole.MENTOR),
                 createUser("test_3", "testmentor3@google.com", room3MentorNickname, UserRole.MENTOR)
         );
@@ -382,7 +425,8 @@ class RoomServiceTest {
 
         // save mentee data to users table
         List<User> mentors = Arrays.asList(
-                createUser("test_1", "testmentee1@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE),
+                // @BeforeEach에서 TEST_MENTOR_NICKNAME 유저를 저장하므로, 여기서 저장하면 DataIntegrityViolationException 발생함
+//                createUser("test_1", "testmentee1@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE),
                 createUser("test_2", "testmentee2@google.com", room2MenteeNickname, UserRole.MENTEE),
                 createUser("test_3", "testmentee3@google.com", room3MenteeNickname, UserRole.MENTEE)
         );

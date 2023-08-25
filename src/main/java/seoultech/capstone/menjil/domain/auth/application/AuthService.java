@@ -34,7 +34,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private static final long refreshTokenExpiresIn = 14;
     private final int AWS_URL_DURATION = 7;
-    private static final String defaultImgUrl = "default/profile.png";
+    private static final String defaultImgUrl = "profile/default.png";
 
     @Value("${cloud.aws.s3.bucket}")
     private String BUCKET_NAME;

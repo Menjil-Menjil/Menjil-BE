@@ -52,6 +52,18 @@ public class RoomService {
     public List<MessagesResponseDto> enterTheRoom(RoomDto roomDto) {
         List<MessagesResponseDto> result = new ArrayList<>();
 
+        // case 0: 멘티 혹은 멘토 id가 db에 존재하지 않는 경우 CustomException
+        User menteeInDb = userRepository.findUserByNickname(roomDto.getMenteeNickname())
+                .orElse(null);
+        User mentorInDb = userRepository.findUserByNickname(roomDto.getMentorNickname())
+                .orElse(null);
+        if (menteeInDb == null) {
+            throw new CustomException(ErrorCode.MENTEE_NICKNAME_NOT_EXISTED);
+        }
+        if (mentorInDb == null) {
+            throw new CustomException(ErrorCode.MENTOR_NICKNAME_NOT_EXISTED);
+        }
+
         Room room = roomRepository.findRoomById(roomDto.getRoomId());
         if (room == null) {
             // case 1: 채팅방이 존재하지 않는 경우
