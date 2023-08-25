@@ -13,12 +13,12 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.Message;
-import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequestDto;
+import seoultech.capstone.menjil.domain.chat.dto.request.AwsLambdaRequest;
+import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.request.FlaskRequestDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.FlaskResponseDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
@@ -48,7 +48,7 @@ public class MessageService {
     /**
      * 사용자에게 첫 응답 메시지를 보낸다.
      */
-    public MessagesResponseDto sendWelcomeMessage(RoomDto roomDto) {
+    public MessageResponse sendWelcomeMessage(RoomDto roomDto) {
         ChatMessage welcomeMsg = new ChatMessage();
         String welcomeMessage = "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
                 + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
@@ -66,17 +66,17 @@ public class MessageService {
         }
 
         // Entity -> Dto
-        return MessagesResponseDto.fromChatMessage(welcomeMsg, null);
+        return MessageResponse.fromChatMessage(welcomeMsg, null);
     }
 
     /**
      * 채팅 메시지를 저장한다.
      */
-    public boolean saveChatMessage(MessageRequestDto messageRequestDto) {
+    public boolean saveChatMessage(MessageRequest messageRequest) {
         // messageDto의 time format 검증
         LocalDateTime dateTime;
         try {
-            String time = messageRequestDto.getTime();
+            String time = messageRequest.getTime();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             dateTime = LocalDateTime.parse(time, formatter);
         } catch (RuntimeException e) {
@@ -84,8 +84,8 @@ public class MessageService {
             throw new CustomException(ErrorCode.TIME_INPUT_INVALID);
         }
 
-        // MessageRequestDto -> ChatMessage(Entity) 변환
-        ChatMessage chatMessage = MessageRequestDto.toChatMessage(messageRequestDto, dateTime);
+        // MessageRequest -> ChatMessage(Entity) 변환
+        ChatMessage chatMessage = MessageRequest.toChatMessage(messageRequest, dateTime);
 
         // save entity to mongoDB
         // 저장이 잘된 경우 true, 그렇지 않은 경우 false 리턴
@@ -101,7 +101,7 @@ public class MessageService {
     /**
      * MessageType: QUESTION
      */
-    public MessagesResponseDto sendAIMessage(String roomId, MessageRequestDto messageRequestDto) {
+    public MessageResponse sendAIMessage(String roomId, MessageRequest messageRequest) {
         String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와줄 AI 서포터입니다.\n" +
                 "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
                 "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
@@ -110,7 +110,7 @@ public class MessageService {
         ChatMessage message = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
-                .senderNickname(findMentorNickname(roomId, messageRequestDto.getSenderNickname()))
+                .senderNickname(findMentorNickname(roomId, messageRequest.getSenderNickname()))
                 .message(specificMessage)
                 .messageType(MessageType.AI_QUESTION_RESPONSE)
                 .time(now)
@@ -122,31 +122,30 @@ public class MessageService {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
-        return MessagesResponseDto.fromChatMessage(message, null);
+        return MessageResponse.fromChatMessage(message, null);
     }
 
-    public MessageListResponse handleQuestion(String roomId, MessageRequestDto messageRequestDto) {
+    public MessageListResponse handleQuestion(String roomId, MessageRequest messageRequest) {
         // 1. 사용자가 입력한 채팅 메시지 저장
-        boolean saveMsg = saveChatMessage(messageRequestDto);
+        boolean saveMsg = saveChatMessage(messageRequest);
         if (!saveMsg) {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
         // 2. ChatGPT에게 질문 데이터 전달하여 세줄 요약 결과를 받아온다.
-        Message message = chatGptService.getMessageFromGpt(messageRequestDto.getMessage());
+        Message message = chatGptService.getMessageFromGpt(messageRequest.getMessage());
 
-        // 3. Create FlaskRequestDto
-
-        FlaskRequestDto flaskRequestDto = FlaskRequestDto.of(findMentorNickname(roomId, messageRequestDto.getSenderNickname()),
-                messageRequestDto.getSenderNickname(), messageRequestDto.getMessage(),
+        // 3. Create AwsLambdaRequest
+        AwsLambdaRequest awsLambdaRequest = AwsLambdaRequest.of(findMentorNickname(roomId, messageRequest.getSenderNickname()),
+                messageRequest.getSenderNickname(), messageRequest.getMessage(),
                 message.getContent());
 
-        // 4. Make the POST request to Flask Serverand block to get the response
-        List<FlaskResponseDto> flaskResponseDtoList = flaskWebClient.post()
-                .uri("/api/chat/flask")
-                .body(BodyInserters.fromValue(flaskRequestDto))
+        // 4. Make the POST request to AWS Lambda and block to get the response
+        List<AwsLambdaResponse> flaskResponseDtoList = flaskWebClient.post()
+                .uri("/api/lambda")
+                .body(BodyInserters.fromValue(awsLambdaRequest))
                 .retrieve()
-                .bodyToFlux(FlaskResponseDto.class)
+                .bodyToFlux(AwsLambdaResponse.class)
                 .collectList()
                 .block();  // Use block() for a non-reactive application*/
 
@@ -155,7 +154,7 @@ public class MessageService {
         ChatMessage flaskResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
-                .senderNickname(findMentorNickname(roomId, messageRequestDto.getSenderNickname()))
+                .senderNickname(findMentorNickname(roomId, messageRequest.getSenderNickname()))
                 .messageList(flaskResponseDtoList)  // save three of summary_question and answer
                 .messageType(MessageType.AI_QUESTION_RESPONSE)
                 .time(now)
@@ -169,7 +168,6 @@ public class MessageService {
         }
 
         return MessageListResponse.fromChatMessage(flaskResponseMessage, null);
-
     }
 
     /**

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-public class MessageRequestDto {
+public class MessageRequest {
 
     @NotBlank
     private String roomId;
@@ -29,8 +29,8 @@ public class MessageRequestDto {
     private String time;
 
     @Builder
-    private MessageRequestDto(String roomId, SenderType senderType, String senderNickname,
-                              String message, MessageType messageType, String time) {
+    private MessageRequest(String roomId, SenderType senderType, String senderNickname,
+                           String message, MessageType messageType, String time) {
         this.roomId = roomId;
         this.senderType = senderType;
         this.senderNickname = senderNickname;
@@ -39,13 +39,13 @@ public class MessageRequestDto {
         this.time = time;
     }
 
-    public static ChatMessage toChatMessage(MessageRequestDto messageRequestDto, LocalDateTime time) {
+    public static ChatMessage toChatMessage(MessageRequest messageRequest, LocalDateTime time) {
         return ChatMessage.builder()
-                .roomId(messageRequestDto.getRoomId())
-                .senderType(messageRequestDto.getSenderType())
-                .senderNickname(messageRequestDto.getSenderNickname())
-                .message(messageRequestDto.getMessage())
-                .messageType(messageRequestDto.getMessageType())
+                .roomId(messageRequest.getRoomId())
+                .senderType(messageRequest.getSenderType())
+                .senderNickname(messageRequest.getSenderNickname())
+                .message(messageRequest.getMessage())
+                .messageType(messageRequest.getMessageType())
                 .time(time)
                 .build();
     }

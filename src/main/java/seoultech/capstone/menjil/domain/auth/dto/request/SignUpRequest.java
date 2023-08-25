@@ -14,7 +14,7 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignUpRequestDto {
+public class SignUpRequest {
 
     @NotBlank
     private String userId;
@@ -95,7 +95,7 @@ public class SignUpRequestDto {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SignUpRequestDto that = (SignUpRequestDto) o;
+        SignUpRequest that = (SignUpRequest) o;
         return Objects.equals(userId, that.userId)
                 && Objects.equals(email, that.email)
                 && Objects.equals(provider, that.provider)

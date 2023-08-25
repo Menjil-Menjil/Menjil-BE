@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SignInResponseDto {
+public class SignInResponse {
     private String accessToken;
     private String refreshToken;
     private String nickname;
@@ -13,8 +13,8 @@ public class SignInResponseDto {
     private String major;
     private String imgUrl;
 
-    public static SignInResponseDto of(String accessToken, String refreshToken,
-                                        String nickname, String school, String major, String imgUrl) {
-        return new SignInResponseDto(accessToken, refreshToken, nickname, school, major, imgUrl);
+    public static SignInResponse of(String accessToken, String refreshToken,
+                                    String nickname, String school, String major, String imgUrl) {
+        return new SignInResponse(accessToken, refreshToken, nickname, school, major, imgUrl);
     }
 }

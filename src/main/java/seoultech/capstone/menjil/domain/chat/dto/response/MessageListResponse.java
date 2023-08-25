@@ -15,12 +15,12 @@ import java.util.List;
 @NoArgsConstructor
 public class MessageListResponse {
 
-    private String _id; // different from MessageRequestDto
-    private Integer order; // different from MessageRequestDto
+    private String _id; // different from MessageRequest
+    private Integer order; // different from MessageRequest
     private String roomId;
     private SenderType senderType;
     private String senderNickname;
-    private List<FlaskResponseDto> messageList;
+    private List<AwsLambdaResponse> messageList;
     private MessageType messageType;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
@@ -29,7 +29,7 @@ public class MessageListResponse {
     @Builder
     private MessageListResponse(String _id, Integer order, String roomId,
                                 SenderType senderType, String senderNickname,
-                                List<FlaskResponseDto> messageList, MessageType messageType,
+                                List<AwsLambdaResponse> messageList, MessageType messageType,
                                 LocalDateTime time) {
         this._id = _id;
         this.order = order;
@@ -48,7 +48,7 @@ public class MessageListResponse {
                 .roomId(chatMessage.getRoomId())
                 .senderType(chatMessage.getSenderType())
                 .senderNickname(chatMessage.getSenderNickname())
-                .messageList((List<FlaskResponseDto>) chatMessage.getMessageList())
+                .messageList((List<AwsLambdaResponse>) chatMessage.getMessageList())
                 .messageType(chatMessage.getMessageType())
                 .time(chatMessage.getTime())
                 .build();

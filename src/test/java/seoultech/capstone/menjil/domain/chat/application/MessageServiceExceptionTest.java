@@ -11,7 +11,7 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequestDto;
+import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -60,7 +60,7 @@ public class MessageServiceExceptionTest {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDate = now.format(formatter);
 
-        MessageRequestDto messageDto = MessageRequestDto.builder()
+        MessageRequest messageDto = MessageRequest.builder()
                 .roomId("test1")
                 .message("hello Message")
                 .messageType(MessageType.ENTER)

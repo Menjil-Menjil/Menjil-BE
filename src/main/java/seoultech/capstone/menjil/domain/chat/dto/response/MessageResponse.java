@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-public class MessagesResponseDto {
+public class MessageResponse {
     /**
      * 기존의 채팅 내역이 존재하는 경우, 채팅 내역들을 클라이언트로 보낼 때 사용하는 Response DTO
      */
 
-    private String _id; // different from MessageRequestDto
-    private Integer order; // different from MessageRequestDto
+    private String _id; // different from MessageRequest
+    private Integer order; // different from MessageRequest
     private String roomId;
     private SenderType senderType;
     private String senderNickname;
@@ -29,9 +29,9 @@ public class MessagesResponseDto {
     private LocalDateTime time;
 
     @Builder
-    private MessagesResponseDto(String _id, Integer order, String roomId, SenderType senderType,
-                                String senderNickname, String message,
-                                MessageType messageType, LocalDateTime time) {
+    private MessageResponse(String _id, Integer order, String roomId, SenderType senderType,
+                            String senderNickname, String message,
+                            MessageType messageType, LocalDateTime time) {
         this._id = _id;
         this.order = order;
         this.roomId = roomId;
@@ -42,8 +42,8 @@ public class MessagesResponseDto {
         this.time = time;
     }
 
-    public static MessagesResponseDto fromChatMessage(ChatMessage chatMessage, Integer order) {
-        return MessagesResponseDto.builder()
+    public static MessageResponse fromChatMessage(ChatMessage chatMessage, Integer order) {
+        return MessageResponse.builder()
                 ._id(chatMessage.get_id())
                 .order(order)
                 .roomId(chatMessage.getRoomId())

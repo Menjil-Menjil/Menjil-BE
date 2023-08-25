@@ -11,8 +11,8 @@ import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequestDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
+import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -55,7 +55,7 @@ class MessageServiceTest {
                 .build();
 
         // when
-        MessagesResponseDto result = messageService.sendWelcomeMessage(roomDto);
+        MessageResponse result = messageService.sendWelcomeMessage(roomDto);
 
         // then
         assertThat(result.getRoomId()).isEqualTo(roomId);
@@ -77,7 +77,7 @@ class MessageServiceTest {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDate = now.format(formatter);
 
-        MessageRequestDto messageDto = MessageRequestDto.builder()
+        MessageRequest messageDto = MessageRequest.builder()
                 .roomId("test_room_3")
                 .senderType(SenderType.MENTOR)
                 .senderNickname("test_mentor_nickname")
@@ -99,7 +99,7 @@ class MessageServiceTest {
         // given
         String format_is_wrong = "2023:08:14T12:23:00";
 
-        MessageRequestDto messageDto = MessageRequestDto.builder()
+        MessageRequest messageDto = MessageRequest.builder()
                 .roomId("test_room_3")
                 .senderType(SenderType.MENTOR)
                 .senderNickname("test_mentor_nickname")
@@ -110,7 +110,6 @@ class MessageServiceTest {
 
         // when
         assertThrows(CustomException.class, () -> messageService.saveChatMessage(messageDto));
-
     }
 
 }

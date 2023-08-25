@@ -8,7 +8,7 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MentorInfoDto {
+public class MentorInfoResponse {
     /**
      * 메인 화면에 보여질 멘토의 정보를 담는 DTO.
      * User Entity로부터 정보를 가져온다.
@@ -21,8 +21,8 @@ public class MentorInfoDto {
     private String imgUrl;
     private String lastAnsweredMessage; // 가장 최근에 답변한 질문 <- 이 부분은 추후 개발 예정
 
-    public static MentorInfoDto from(User user) {
-        return new MentorInfoDto(user.getNickname(), user.getMajor(), user.getCompany(),
+    public static MentorInfoResponse from(User user) {
+        return new MentorInfoResponse(user.getNickname(), user.getMajor(), user.getCompany(),
                 user.getField(), user.getTechStack(), null, null);
     }
 

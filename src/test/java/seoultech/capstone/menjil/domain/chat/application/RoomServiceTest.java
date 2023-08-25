@@ -18,8 +18,8 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -127,10 +127,10 @@ class RoomServiceTest {
                 .roomId(roomId)
                 .build();
 
-        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(1);
 
-        MessagesResponseDto response = messageList.get(0);
+        MessageResponse response = messageList.get(0);
 
         assertThat(response.getRoomId()).isEqualTo(roomId);
         assertThat(response.getSenderNickname()).isEqualTo(TEST_MENTOR_NICKNAME); // Welcome Message is sent by mentor
@@ -179,7 +179,7 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
-        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
         assertThat(messageList.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.
@@ -251,15 +251,15 @@ class RoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(10);
 
-        MessagesResponseDto lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
+        MessageResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
         assertThat(lastResponse.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        MessagesResponseDto firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
+        MessageResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
         assertThat(firstResponse.get_id()).isEqualTo("id_" + (FIXED_NUM - 10 + 1));
     }
 
@@ -334,7 +334,7 @@ class RoomServiceTest {
         userRepository.saveAll(mentors);
 
         // when
-        List<RoomInfoDto> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
 
         // then
         // test if size is 3
@@ -350,7 +350,7 @@ class RoomServiceTest {
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfoDto 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
+        // getRoomList의 결과로, RoomInfoResponse 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
         assertThat(getRoomList.get(0).getLastMessagedTimeOfHour())
                 .isLessThanOrEqualTo(getRoomList.get(1).getLastMessagedTimeOfHour());
         assertThat(getRoomList.get(1).getLastMessagedTimeOfHour())
@@ -361,7 +361,7 @@ class RoomServiceTest {
     @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTEE_when_data_is_Null() {
         String notExistsMenteeNickname = "mentee_haha_hoho";
-        List<RoomInfoDto> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
 
         assertThat(getRoomList.size()).isZero();
     }
@@ -433,7 +433,7 @@ class RoomServiceTest {
         userRepository.saveAll(mentors);
 
         // when
-        List<RoomInfoDto> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
 
         // then
         // test if size is 3
@@ -449,7 +449,7 @@ class RoomServiceTest {
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfoDto 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
+        // getRoomList의 결과로, RoomInfoResponse 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
         assertThat(getRoomList.get(0).getLastMessagedTimeOfHour())
                 .isLessThanOrEqualTo(getRoomList.get(1).getLastMessagedTimeOfHour());
         assertThat(getRoomList.get(1).getLastMessagedTimeOfHour())
@@ -460,7 +460,7 @@ class RoomServiceTest {
     @DisplayName("멘토가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTOR_when_data_is_Null() {
         String notExistsMentorNickname = "mentor_haha_hoho";
-        List<RoomInfoDto> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
 
         assertThat(getRoomList.size()).isZero();
     }

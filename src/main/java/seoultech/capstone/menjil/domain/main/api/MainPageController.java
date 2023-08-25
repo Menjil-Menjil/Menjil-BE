@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -29,7 +29,7 @@ public class MainPageController {
     private final MainPageService mainPageService;
 
     @GetMapping("/mentors")
-    public ResponseEntity<ApiResponse<Page<MentorInfoDto>>> getMentorList(@PageableDefault(size = 3, sort = {"createdDate", "nickname"},
+    public ResponseEntity<ApiResponse<Page<MentorInfoResponse>>> getMentorList(@PageableDefault(size = 3, sort = {"createdDate", "nickname"},
             direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK)
@@ -37,11 +37,11 @@ public class MainPageController {
     }
 
     @GetMapping("/userinfo")
-    public ResponseEntity<ApiResponse<List<RoomInfoDto>>> getUserInfo(@RequestParam("nickname") String nickname) {
-        List<RoomInfoDto> roomInfoDtoList = mainPageService.getUserRoomList(nickname);
+    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getUserInfo(@RequestParam("nickname") String nickname) {
+        List<RoomInfoResponse> roomInfoResponseList = mainPageService.getUserRoomList(nickname);
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.GET_USER_ROOMS_AVAILABLE, roomInfoDtoList));
+                .body(ApiResponse.success(SuccessCode.GET_USER_ROOMS_AVAILABLE, roomInfoResponseList));
     }
 
 }

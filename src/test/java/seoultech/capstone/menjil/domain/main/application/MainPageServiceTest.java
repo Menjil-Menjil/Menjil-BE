@@ -20,8 +20,8 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
@@ -88,7 +88,7 @@ class MainPageServiceTest {
             users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
         }
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoDto에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -99,14 +99,14 @@ class MainPageServiceTest {
         userRepository.saveAll(List.of(users.get(5), users.get(6), users.get(7)));
 
         // when
-        Page<MentorInfoDto> mentorList = mainPageService.getMentorList(pageRequest);
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList(pageRequest);
 
         // then
         assertThat(mentorList.getSize()).isEqualTo(3);
 
-        MentorInfoDto firstDto = mentorList.getContent().get(0);
-        MentorInfoDto secondDto = mentorList.getContent().get(1);
-        MentorInfoDto thirdDto = mentorList.getContent().get(2);
+        MentorInfoResponse firstDto = mentorList.getContent().get(0);
+        MentorInfoResponse secondDto = mentorList.getContent().get(1);
+        MentorInfoResponse thirdDto = mentorList.getContent().get(2);
 
         assertThat(firstDto.getNickname()).isEqualTo(MENTOR_NICKNAME + 1);
         assertThat(firstDto.getImgUrl()).isNotBlank();
@@ -134,7 +134,7 @@ class MainPageServiceTest {
         String menteeNickname = TEST_MENTEE_NICKNAME;
 
         // when
-        List<RoomInfoDto> result = mainPageService.getUserRoomList(menteeNickname);
+        List<RoomInfoResponse> result = mainPageService.getUserRoomList(menteeNickname);
 
         // then
         assertThat(result.size()).isZero();
@@ -147,7 +147,7 @@ class MainPageServiceTest {
         String mentorNickname = TEST_MENTOR_NICKNAME;
 
         // when
-        List<RoomInfoDto> result = mainPageService.getUserRoomList(mentorNickname);
+        List<RoomInfoResponse> result = mainPageService.getUserRoomList(mentorNickname);
 
         // then
         assertThat(result.size()).isZero();
@@ -202,12 +202,12 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfoDto> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
+        List<RoomInfoResponse> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
 
         // then
         assertThat(result.size()).isEqualTo(1);
 
-        RoomInfoDto oneRoom = result.get(0);
+        RoomInfoResponse oneRoom = result.get(0);
         assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
         assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
 
@@ -264,12 +264,12 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfoDto> result = mainPageService.getUserRoomList(mentorNickname);    // here is mentornickname
+        List<RoomInfoResponse> result = mainPageService.getUserRoomList(mentorNickname);    // here is mentornickname
 
         // then
         assertThat(result.size()).isEqualTo(1);
 
-        RoomInfoDto oneRoom = result.get(0);
+        RoomInfoResponse oneRoom = result.get(0);
         assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
         assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
 
@@ -333,15 +333,15 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfoDto> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
+        List<RoomInfoResponse> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
 
         // then
         assertThat(result.size()).isEqualTo(5);
 
         // 리스트의 인덱스가 작을 수록, 가장 최근에 대화한 메시지가 존재하는 방이다.
-        RoomInfoDto firstRoom = result.get(0);
-        RoomInfoDto middleRoom = result.get((result.size() - 1) / 2);
-        RoomInfoDto lastRoom = result.get(result.size() - 1);
+        RoomInfoResponse firstRoom = result.get(0);
+        RoomInfoResponse middleRoom = result.get((result.size() - 1) / 2);
+        RoomInfoResponse lastRoom = result.get(result.size() - 1);
 
         assertThat(firstRoom.getLastMessagedTimeOfHour())
                 .isLessThanOrEqualTo(middleRoom.getLastMessagedTimeOfHour());
