@@ -243,7 +243,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("회원가입 요청 시 @NotBlank 여러 개 검증: null 값이 2개인 경우")
-    void signUp_Null_is_morethan_two() throws Exception {
+    void signUp_Null_is_more_than_two() throws Exception {
         SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 null, 1999, 3, null, 3);
 
@@ -261,7 +261,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("회원가입 요청 시 @Max 검증: 학점이 4 이상인 경우")
-    void signUp_if_score_is_morethan_4() throws Exception {
+    void signUp_if_score_is_more_than_4() throws Exception {
         SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 "hi", 1999, 3, "서울시립대", 6);
 
@@ -306,10 +306,8 @@ class AuthControllerTest {
         SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "kakao");
         String content = gson.toJson(requestDto);
 
-        SignInResponseDto signInResponseDto = SignInResponseDto.builder()
-                .accessToken("test_access_token")
-                .refreshToken("test_refresh_token")
-                .build();
+        SignInResponseDto signInResponseDto = SignInResponseDto.of("test_access_token", "test_refresh_token",
+                "test", "test", "test", "test");
 
         Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponseDto);
 
@@ -337,10 +335,8 @@ class AuthControllerTest {
         SignInRequestDto requestDto = new SignInRequestDto("testUser@google.com", "google");
         String content = gson.toJson(requestDto);
 
-        SignInResponseDto signInResponseDto = SignInResponseDto.builder()
-                .accessToken("test_access_token")
-                .refreshToken("test_refresh_token")
-                .build();
+        SignInResponseDto signInResponseDto = SignInResponseDto.of("test_access_token", "test_refresh_token",
+                "test", "test", "test", "test");
 
         Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponseDto);
 

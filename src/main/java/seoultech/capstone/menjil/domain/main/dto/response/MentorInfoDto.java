@@ -1,11 +1,13 @@
 package seoultech.capstone.menjil.domain.main.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class MentorInfoDto {
     /**
      * 메인 화면에 보여질 멘토의 정보를 담는 DTO.
@@ -17,15 +19,11 @@ public class MentorInfoDto {
     private String field;       // 관심 분야
     private String techStack;   // 기술 스택
     private String imgUrl;
-
     private String lastAnsweredMessage; // 가장 최근에 답변한 질문 <- 이 부분은 추후 개발 예정
 
-    public MentorInfoDto(User user) {
-        this.nickname = user.getNickname();
-        this.major = user.getMajor();
-        this.company = user.getCompany();
-        this.field = user.getField();
-        this.techStack = user.getTechStack();
+    public static MentorInfoDto from(User user) {
+        return new MentorInfoDto(user.getNickname(), user.getMajor(), user.getCompany(),
+                user.getField(), user.getTechStack(), null, null);
     }
 
     public void setImgUrl(String imgUrl) {

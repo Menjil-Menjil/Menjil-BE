@@ -14,7 +14,6 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
-import seoultech.capstone.menjil.domain.main.dto.response.UserInfoDto;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -54,12 +53,6 @@ class MainPageControllerTest {
     void getUserInfo_room_does_not_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
-        UserInfoDto userInfoDto = UserInfoDto.builder()
-                .nickname(nickname)
-                .school("서울과학기술대학교")
-                .major("컴퓨터공학과")
-                .imgUrl("test_url")
-                .build();
         List<RoomInfoDto> roomList = new ArrayList<>();
 
         // when
@@ -82,21 +75,10 @@ class MainPageControllerTest {
     void getUserInfo_room_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
-        UserInfoDto userInfoDto = UserInfoDto.builder()
-                .nickname(nickname)
-                .school("서울과학기술대학교")
-                .major("컴퓨터공학과")
-                .imgUrl("test_url")
-                .build();
-
         List<RoomInfoDto> roomList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
-            roomList.add(RoomInfoDto.builder()
-                    .roomId("room_" + i)
-                    .nickname(nickname)
-                    .imgUrl("test_url")
-                    .lastMessage("message_" + i)
-                    .build());
+            roomList.add(RoomInfoDto.of("room_" + i, nickname, "test_url",
+                    "message_" + i, (long) i));
         }
 
         // when

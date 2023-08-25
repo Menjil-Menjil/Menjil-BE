@@ -42,8 +42,18 @@ class TokenRepositoryTest {
         Timestamp timestampB = Timestamp.valueOf(LocalDateTime.now().plusSeconds(3));
 
         // when
-        RefreshToken rfEntityA = new RefreshToken(1L, userA, "token1", timestampA);
-        RefreshToken rfEntityB = new RefreshToken(2L, userB, "token2", timestampB);
+        RefreshToken rfEntityA = RefreshToken.builder()
+                .id(1L)
+                .userId(userA)
+                .token("token1")
+                .expiryDate(timestampA)
+                .build();
+        RefreshToken rfEntityB = RefreshToken.builder()
+                .id(2L)
+                .userId(userB)
+                .token("token2")
+                .expiryDate(timestampB)
+                .build();
         tokenRepository.save(rfEntityA);
         tokenRepository.save(rfEntityB);
 
@@ -70,7 +80,12 @@ class TokenRepositoryTest {
         // given
         User userA = createUser("google_1", "userA@gmail.com", "google", "g1");
         Timestamp timestampA = Timestamp.valueOf(LocalDateTime.now());
-        RefreshToken rfEntityA = new RefreshToken(null, userA, "old token", timestampA);
+        RefreshToken rfEntityA = RefreshToken.builder()
+                .id(null)
+                .userId(userA)
+                .token("old token")
+                .expiryDate(timestampA)
+                .build();
         tokenRepository.save(rfEntityA);
 
         // when

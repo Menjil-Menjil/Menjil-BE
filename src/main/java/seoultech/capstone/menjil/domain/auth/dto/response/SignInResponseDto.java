@@ -1,9 +1,10 @@
 package seoultech.capstone.menjil.domain.auth.dto.response;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class SignInResponseDto {
     private String accessToken;
     private String refreshToken;
@@ -12,14 +13,8 @@ public class SignInResponseDto {
     private String major;
     private String imgUrl;
 
-    @Builder
-    private SignInResponseDto(String accessToken, String refreshToken,
-                              String nickname, String school, String major, String imgUrl) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-        this.nickname = nickname;
-        this.school = school;
-        this.major = major;
-        this.imgUrl = imgUrl;
+    public static SignInResponseDto of(String accessToken, String refreshToken,
+                                        String nickname, String school, String major, String imgUrl) {
+        return new SignInResponseDto(accessToken, refreshToken, nickname, school, major, imgUrl);
     }
 }

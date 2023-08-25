@@ -50,7 +50,7 @@ public class MainPageService {
     public Page<MentorInfoDto> getMentorList(Pageable pageable) {
         Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
         Page<MentorInfoDto> mentorInfoDto = page.map(user -> {
-            MentorInfoDto dto = new MentorInfoDto(user);
+            MentorInfoDto dto = MentorInfoDto.from(user);
 
             // set AWS S3 presigned url
             dto.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(
@@ -111,13 +111,8 @@ public class MainPageService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.builder()
-                        .roomId(roomId)
-                        .lastMessage(lastMessage)
-                        .imgUrl(mentorImgUrl)
-                        .nickname(mentorNickname)
-                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
-                        .build());
+                result.add(RoomInfoDto.of(roomId, mentorNickname,
+                        mentorImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         }
         /* 사용자가 멘토인 경우 */
@@ -151,13 +146,8 @@ public class MainPageService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.builder()
-                        .roomId(roomId)
-                        .lastMessage(lastMessage)
-                        .imgUrl(menteeImgUrl)
-                        .nickname(menteeNickname)
-                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
-                        .build());
+                result.add(RoomInfoDto.of(roomId, menteeNickname,
+                        menteeImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         }
 
