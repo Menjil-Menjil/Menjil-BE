@@ -17,6 +17,7 @@ import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequestDto;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.FlaskRequestDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.FlaskResponseDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -124,7 +125,7 @@ public class MessageService {
         return MessagesResponseDto.fromChatMessage(message, null);
     }
 
-    public List<FlaskResponseDto> handleQuestion(String roomId, MessageRequestDto messageRequestDto) {
+    public MessageListResponse handleQuestion(String roomId, MessageRequestDto messageRequestDto) {
         // 1. 사용자가 입력한 채팅 메시지 저장
         boolean saveMsg = saveChatMessage(messageRequestDto);
         if (!saveMsg) {
@@ -169,10 +170,8 @@ public class MessageService {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
-        if (flaskResponseDtoList != null) {
-            return flaskResponseDtoList;
-        }
-        return null;
+        return MessageListResponse.fromChatMessage(flaskResponseMessage, null);
+
     }
 
     /**
