@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class FlaskResponseDto {
+public class AwsLambdaResponse {
     @JsonProperty(value = "question_summary")
     private String threeLineSummaryMessage;
 
@@ -15,7 +15,7 @@ public class FlaskResponseDto {
     private String answer;
 
     @Builder
-    private FlaskResponseDto(String threeLineSummaryMessage, String answer) {
+    private AwsLambdaResponse(String threeLineSummaryMessage, String answer) {
         this.threeLineSummaryMessage = threeLineSummaryMessage;
         this.answer = answer;
     }

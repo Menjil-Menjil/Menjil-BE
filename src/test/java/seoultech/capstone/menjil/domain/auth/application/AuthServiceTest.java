@@ -13,8 +13,8 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.util.List;
@@ -77,13 +77,13 @@ class AuthServiceTest {
     @Test
     @DisplayName("정상적으로 회원가입이 동작하는지 확인: img_url 세팅 및 데이터 저장")
     void signUp() {
-        SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
+        SignUpRequest SignUpRequestA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
 
         // @BeforeEach 에서 저장된 데이터 제거
         userRepository.deleteAll();
 
-        int result = authService.signUp(signUpRequestDtoA);
+        int result = authService.signUp(SignUpRequestA);
         List<User> userList = userRepository.findAll();
         assertThat(userList.size()).isEqualTo(1);
 
@@ -97,10 +97,10 @@ class AuthServiceTest {
     @DisplayName("회원가입 시 닉네임이 db에 이미 존재하는 경우 CustomException 리턴")
     void signUp_Nickname_already_existed() {
         // given
-        SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "test@kakao.com",
+        SignUpRequest SignUpRequestA = createSignUpReqDto("google_123", "test@kakao.com",
                 "kakao", TEST_USER_NICKNAME);
 
-        assertThrows(CustomException.class, () -> authService.signUp(signUpRequestDtoA));
+        assertThrows(CustomException.class, () -> authService.signUp(SignUpRequestA));
     }
 
     /**
@@ -110,7 +110,7 @@ class AuthServiceTest {
     @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 Access Token, Refresh Token, 그 외 사용자 정보를 응답으로 보낸다")
     void signIn() {
         // dto 검증
-        SignInResponseDto responseDto = authService.signIn(TEST_USER_EMAIL, "google");
+        SignInResponse responseDto = authService.signIn(TEST_USER_EMAIL, "google");
 
         assertThat(responseDto.getAccessToken()).isNotNull();
         assertThat(responseDto.getRefreshToken()).isNotNull();
@@ -139,13 +139,13 @@ class AuthServiceTest {
     @DisplayName("로그인 시 TokenRepository 에 이미 RefreshToken 정보가 있는 경우, Token 값이 update 된다")
     void signIn_update_RefreshToken() throws InterruptedException {
         // First Login
-        SignInResponseDto responseDto = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
+        SignInResponse responseDto = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
         String firstRT = responseDto.getRefreshToken();
 
         Thread.sleep(3000);
 
         // Second Login: Update RefreshToken in TokenRepository: firstRT -> secondRT
-        SignInResponseDto responseDto2 = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
+        SignInResponse responseDto2 = authService.signIn(TEST_USER_EMAIL, TEST_USER_PROVIDER);
         String secondRT = responseDto2.getRefreshToken();
         assertThat(firstRT).isNotEqualTo(secondRT);
 
@@ -173,8 +173,8 @@ class AuthServiceTest {
                 .build();
     }
 
-    private SignUpRequestDto createSignUpReqDto(String id, String email, String provider, String nickname) {
-        return new SignUpRequestDto(id, email, provider, nickname,
+    private SignUpRequest createSignUpReqDto(String id, String email, String provider, String nickname) {
+        return new SignUpRequest(id, email, provider, nickname,
                 UserRole.MENTEE, 2000, 3, "고려대학교",
                 3, "중반", 2021, 3, "경제학과", null, null, null,
                 "Devops", "AWS", null, null, null, null);

@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -31,9 +31,9 @@ public class RoomController {
      */
     @PostMapping("/room/enter")
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
-        List<MessagesResponseDto> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
 
-        ResponseEntity<ApiResponse<List<MessagesResponseDto>>> messageResponse;
+        ResponseEntity<ApiResponse<List<MessageResponse>>> messageResponse;
         if (messageList.size() != 1) {
             messageResponse = ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
@@ -56,9 +56,9 @@ public class RoomController {
      * 사용자의 전체 Room 목록을 불러온다
      */
     @GetMapping("/rooms")
-    public ResponseEntity<ApiResponse<List<RoomInfoDto>>> getAllRooms(@RequestParam("nickname") String nickname,
-                                                                      @RequestParam("type") String type) {
-        List<RoomInfoDto> result = roomService.getAllRooms(nickname, type);
+    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllRooms(@RequestParam("nickname") String nickname,
+                                                                           @RequestParam("type") String type) {
+        List<RoomInfoResponse> result = roomService.getAllRooms(nickname, type);
 
         if (result.size() == 0) {
             return ResponseEntity.status(HttpStatus.OK)

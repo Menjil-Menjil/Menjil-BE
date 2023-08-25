@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FlaskRequestDto {
+public class AwsLambdaRequest {
 
     @JsonProperty(value = "mentee_nickname")
     private String menteeNickname;
@@ -22,9 +22,9 @@ public class FlaskRequestDto {
     @JsonProperty(value = "question_summary")
     private String threeLineSummaryMessage;
 
-    public static FlaskRequestDto of(String menteeNickname, String mentorNickname,
-                                     String originMessage, String threeLineSummaryMessage) {
-        return new FlaskRequestDto(menteeNickname, mentorNickname,
+    public static AwsLambdaRequest of(String menteeNickname, String mentorNickname,
+                                      String originMessage, String threeLineSummaryMessage) {
+        return new AwsLambdaRequest(menteeNickname, mentorNickname,
                 originMessage, threeLineSummaryMessage);
     }
 }

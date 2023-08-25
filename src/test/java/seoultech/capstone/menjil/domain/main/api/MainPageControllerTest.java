@@ -12,7 +12,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -53,7 +53,7 @@ class MainPageControllerTest {
     void getUserInfo_room_does_not_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
-        List<RoomInfoDto> roomList = new ArrayList<>();
+        List<RoomInfoResponse> roomList = new ArrayList<>();
 
         // when
         Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
@@ -75,9 +75,9 @@ class MainPageControllerTest {
     void getUserInfo_room_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
-        List<RoomInfoDto> roomList = new ArrayList<>();
+        List<RoomInfoResponse> roomList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
-            roomList.add(RoomInfoDto.of("room_" + i, nickname, "test_url",
+            roomList.add(RoomInfoResponse.of("room_" + i, nickname, "test_url",
                     "message_" + i, (long) i));
         }
 

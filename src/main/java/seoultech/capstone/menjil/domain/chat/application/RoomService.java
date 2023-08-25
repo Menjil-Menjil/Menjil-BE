@@ -13,8 +13,8 @@ import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponseDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
@@ -49,8 +49,8 @@ public class RoomService {
      * case 1: 채팅 내역이 존재하지 않는 경우(처음 입장)
      * case 2: 채팅 내역이 존재하는 경우
      */
-    public List<MessagesResponseDto> enterTheRoom(RoomDto roomDto) {
-        List<MessagesResponseDto> result = new ArrayList<>();
+    public List<MessageResponse> enterTheRoom(RoomDto roomDto) {
+        List<MessageResponse> result = new ArrayList<>();
 
         // case 0: 멘티 혹은 멘토 id가 db에 존재하지 않는 경우 CustomException
         User menteeInDb = userRepository.findUserByNickname(roomDto.getMenteeNickname())
@@ -80,8 +80,8 @@ public class RoomService {
             }
 
             RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
-            MessagesResponseDto messagesResponseDto = messageService.sendWelcomeMessage(newRoomDto);
-            result.add(messagesResponseDto);
+            MessageResponse messageResponse = messageService.sendWelcomeMessage(newRoomDto);
+            result.add(messageResponse);
         } else {
             // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
             // 최대 10개의 메시지를 클라이언트로 보낸다.
@@ -91,7 +91,7 @@ public class RoomService {
             ));
             List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
             for (int i = 0; i < messagePage.size(); i++) {
-                MessagesResponseDto dto = MessagesResponseDto.fromChatMessage(messagePage.get(i), messagePage.size() - i);
+                MessageResponse dto = MessageResponse.fromChatMessage(messagePage.get(i), messagePage.size() - i);
                 result.add(dto);
             }
         }
@@ -104,8 +104,8 @@ public class RoomService {
      * 멘토는 방 Id, 멘티의 닉네임과 img_url, 마지막 대화내용
      * 리스트 정보가 필요하다.
      */
-    public List<RoomInfoDto> getAllRooms(String nickname, String type) {
-        List<RoomInfoDto> result = new ArrayList<>();
+    public List<RoomInfoResponse> getAllRooms(String nickname, String type) {
+        List<RoomInfoResponse> result = new ArrayList<>();
 
         /* type == Mentor 의 경우(사용자가 멘토인 경우) */
         if (type.equals(TYPE_MENTOR)) {
@@ -138,7 +138,7 @@ public class RoomService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.of(roomId, menteeNickname,
+                result.add(RoomInfoResponse.of(roomId, menteeNickname,
                         menteeImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         }
@@ -174,7 +174,7 @@ public class RoomService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.of(roomId, mentorNickname,
+                result.add(RoomInfoResponse.of(roomId, mentorNickname,
                         mentorImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         } else {
@@ -184,7 +184,7 @@ public class RoomService {
         // Sort by getLastMessagedTimeOfHour, order by ASC
         // 가장 최근에 대화한 내용이 있는 대화방이 앞에 오도록 정렬
         result = result.stream()
-                .sorted(Comparator.comparing(RoomInfoDto::getLastMessagedTimeOfHour))
+                .sorted(Comparator.comparing(RoomInfoResponse::getLastMessagedTimeOfHour))
                 .collect(Collectors.toList());
         return result;
     }

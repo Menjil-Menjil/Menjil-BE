@@ -15,8 +15,8 @@ import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoDto;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
@@ -47,10 +47,10 @@ public class MainPageService {
     /**
      * 멘토 리스트를 가져오는 메서드
      */
-    public Page<MentorInfoDto> getMentorList(Pageable pageable) {
+    public Page<MentorInfoResponse> getMentorList(Pageable pageable) {
         Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
-        Page<MentorInfoDto> mentorInfoDto = page.map(user -> {
-            MentorInfoDto dto = MentorInfoDto.from(user);
+        Page<MentorInfoResponse> mentorInfoDto = page.map(user -> {
+            MentorInfoResponse dto = MentorInfoResponse.from(user);
 
             // set AWS S3 presigned url
             dto.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(
@@ -68,8 +68,8 @@ public class MainPageService {
      * 사용자의 채팅방 목록을 가져온다.
      * RoomService의 getAllRooms() 메소드와 유사함
      */
-    public List<RoomInfoDto> getUserRoomList(String nickname) {
-        List<RoomInfoDto> result = new ArrayList<>();
+    public List<RoomInfoResponse> getUserRoomList(String nickname) {
+        List<RoomInfoResponse> result = new ArrayList<>();
 
         User user = userRepository.findUserByNickname(nickname).orElse(null);
         if (user == null) {
@@ -111,7 +111,7 @@ public class MainPageService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.of(roomId, mentorNickname,
+                result.add(RoomInfoResponse.of(roomId, mentorNickname,
                         mentorImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         }
@@ -146,7 +146,7 @@ public class MainPageService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.of(roomId, menteeNickname,
+                result.add(RoomInfoResponse.of(roomId, menteeNickname,
                         menteeImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         }
@@ -154,7 +154,7 @@ public class MainPageService {
         // Sort by getLastMessagedTimeOfHour, order by ASC
         // 가장 최근에 대화한 내용이 있는 대화방이 앞에 오도록 정렬
         result = result.stream()
-                .sorted(Comparator.comparing(RoomInfoDto::getLastMessagedTimeOfHour))
+                .sorted(Comparator.comparing(RoomInfoResponse::getLastMessagedTimeOfHour))
                 .collect(Collectors.toList());
         return result;
     }

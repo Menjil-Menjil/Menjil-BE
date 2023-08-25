@@ -17,9 +17,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequest;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -171,7 +171,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 요청이 정상적으로 된 경우 SuccessCode.SIGNUP_SUCCESS 리턴")
     void signUp() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+        SignUpRequest signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 "hi", 1999, 3, "서울시립대", 3);
         String content = gson.toJson(signUpReqDto);
 
@@ -192,7 +192,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 공백이 포함된 경우 CustomException 발생")
     void signUp_nickname_contains_blank() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_2134", "test@kakao.com", "kakao",
+        SignUpRequest signUpReqDto = createSignUpReqDto("google_2134", "test@kakao.com", "kakao",
                 "가나 다라마", 1999, 3, "서울과기대", 3);
 
         String content = gson.toJson(signUpReqDto);
@@ -209,7 +209,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 요청 시 닉네임 검증: 닉네임에 특수문자가 포함된 경우 CustomException 발생")
     void signUp_nickname_contains_character() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+        SignUpRequest signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 "가나@다라마", 1999, 3, "서울과기대", 3);
 
         String content = gson.toJson(signUpReqDto);
@@ -226,7 +226,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 요청 시 닉네임 검증: 값이 null 인 경우 @NotBlank")
     void signUp_nickname_is_Null() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+        SignUpRequest signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 null, 1999, 3, "서울과기대", 3);
 
         String content = gson.toJson(signUpReqDto);
@@ -244,7 +244,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 요청 시 @NotBlank 여러 개 검증: null 값이 2개인 경우")
     void signUp_Null_is_more_than_two() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+        SignUpRequest signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 null, 1999, 3, null, 3);
 
         String content = gson.toJson(signUpReqDto);
@@ -262,7 +262,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 요청 시 @Max 검증: 학점이 4 이상인 경우")
     void signUp_if_score_is_more_than_4() throws Exception {
-        SignUpRequestDto signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
+        SignUpRequest signUpReqDto = createSignUpReqDto("google_213", "tes@google.com", "google",
                 "hi", 1999, 3, "서울시립대", 6);
 
         String content = gson.toJson(signUpReqDto);
@@ -285,7 +285,7 @@ class AuthControllerTest {
     void signIn_provider_type_mismatch() throws Exception {
         // given
         String typeMismatch = "naver";
-        SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", typeMismatch);
+        SignInRequest requestDto = new SignInRequest("k337kk@kakao.com", typeMismatch);
         String content = gson.toJson(requestDto);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
@@ -303,13 +303,13 @@ class AuthControllerTest {
     @DisplayName("kakao 로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
     void signIn_kakao() throws Exception {
         // given
-        SignInRequestDto requestDto = new SignInRequestDto("k337kk@kakao.com", "kakao");
+        SignInRequest requestDto = new SignInRequest("k337kk@kakao.com", "kakao");
         String content = gson.toJson(requestDto);
 
-        SignInResponseDto signInResponseDto = SignInResponseDto.of("test_access_token", "test_refresh_token",
+        SignInResponse signInResponse = SignInResponse.of("test_access_token", "test_refresh_token",
                 "test", "test", "test", "test");
 
-        Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponseDto);
+        Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponse);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -320,9 +320,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message",
                         is(SuccessCode.TOKEN_CREATED.getMessage())))
                 .andExpect(jsonPath("$.data.accessToken",
-                        is(signInResponseDto.getAccessToken())))
+                        is(signInResponse.getAccessToken())))
                 .andExpect(jsonPath("$.data.refreshToken",
-                        is(signInResponseDto.getRefreshToken())))
+                        is(signInResponse.getRefreshToken())))
                 .andDo(print());
 
         verify(authService, times(1)).signIn(requestDto.getEmail(), requestDto.getProvider());
@@ -332,13 +332,13 @@ class AuthControllerTest {
     @DisplayName("google 로그인이 잘 된경우, SuccessCode.TOKEN_CREATED 리턴")
     void signIn_google() throws Exception {
         // given
-        SignInRequestDto requestDto = new SignInRequestDto("testUser@google.com", "google");
+        SignInRequest requestDto = new SignInRequest("testUser@google.com", "google");
         String content = gson.toJson(requestDto);
 
-        SignInResponseDto signInResponseDto = SignInResponseDto.of("test_access_token", "test_refresh_token",
+        SignInResponse signInResponse = SignInResponse.of("test_access_token", "test_refresh_token",
                 "test", "test", "test", "test");
 
-        Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponseDto);
+        Mockito.when(authService.signIn(requestDto.getEmail(), requestDto.getProvider())).thenReturn(signInResponse);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/auth/signin")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -349,18 +349,18 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message",
                         is(SuccessCode.TOKEN_CREATED.getMessage())))
                 .andExpect(jsonPath("$.data.accessToken",
-                        is(signInResponseDto.getAccessToken())))
+                        is(signInResponse.getAccessToken())))
                 .andExpect(jsonPath("$.data.refreshToken",
-                        is(signInResponseDto.getRefreshToken())))
+                        is(signInResponse.getRefreshToken())))
                 .andDo(print());
 
         verify(authService, times(1)).signIn(requestDto.getEmail(), requestDto.getProvider());
     }
 
-    private SignUpRequestDto createSignUpReqDto(String id, String email, String provider, String nickname,
-                                                Integer birthYear, Integer birthMonth,
-                                                String school, Integer score) {
-        return new SignUpRequestDto(id, email, provider, nickname,
+    private SignUpRequest createSignUpReqDto(String id, String email, String provider, String nickname,
+                                             Integer birthYear, Integer birthMonth,
+                                             String school, Integer score) {
+        return new SignUpRequest(id, email, provider, nickname,
                 UserRole.MENTEE, birthYear, birthMonth, school,
                 score, "중반", 2021, 3, "경제학과", null, null, null,
                 "Devops", "AWS", null, null, null, null);

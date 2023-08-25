@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequest;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -77,7 +77,7 @@ public class AuthController {
      * 사용자가 입력한 데이터를 클라이언트로부터 전달 받는다.
      */
     @PostMapping(value = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody final SignUpRequestDto signUpRequestDto,
+    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody final SignUpRequest signUpRequest,
                                                       BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -95,8 +95,8 @@ public class AuthController {
             throw exception;
         }
 
-        return ResponseEntity.status(authService.signUp(signUpRequestDto))
-                .body(success(SIGNUP_SUCCESS, signUpRequestDto.getEmail()));
+        return ResponseEntity.status(authService.signUp(signUpRequest))
+                .body(success(SIGNUP_SUCCESS, signUpRequest.getEmail()));
     }
 
     /**
@@ -107,7 +107,7 @@ public class AuthController {
      * 가입된 유저가 없으면, CustomException 처리
      */
     @PostMapping(value = "/signin", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<SignInResponseDto>> signIn(@RequestBody SignInRequestDto dto) {
+    public ResponseEntity<ApiResponse<SignInResponse>> signIn(@RequestBody SignInRequest dto) {
 
         String provider = dto.getProvider();
 
@@ -115,10 +115,10 @@ public class AuthController {
             throw new CustomException(PROVIDER_NOT_ALLOWED);
         }
 
-        SignInResponseDto signInResponseDto = authService.signIn(dto.getEmail(),
+        SignInResponse signInResponse = authService.signIn(dto.getEmail(),
                 dto.getProvider());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponseDto));
+                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponse));
     }
 }

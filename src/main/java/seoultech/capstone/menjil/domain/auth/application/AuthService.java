@@ -10,8 +10,8 @@ import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -69,9 +69,9 @@ public class AuthService {
      * 회원가입 로직 수행
      */
     @Transactional
-    public int signUp(SignUpRequestDto requestDto) {
+    public int signUp(SignUpRequest request) {
         // SignUpRequestDto -> User Entity 변환
-        User user = requestDto.toUser();
+        User user = request.toUser();
 
         // 기존에 중복된 유저가 있는 지 조회
         // 이 부분은 의미없다. 처음 가입할 때 유저 확인 후 redirect 처리 하므로.
@@ -101,7 +101,7 @@ public class AuthService {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
-        // User Entity -> UserSignupResponseDto
+        // User Entity -> UserSignupResponse
         return HttpStatus.CREATED.value();
     }
 
@@ -109,7 +109,7 @@ public class AuthService {
      * 로그인 처리
      */
     @Transactional
-    public SignInResponseDto signIn(String email, String provider) {
+    public SignInResponse signIn(String email, String provider) {
         List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
 
         if (userInDb.size() > 0) {
@@ -120,7 +120,7 @@ public class AuthService {
             String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), currentDateTime);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId(), currentDateTime);
 
-            // RefreshToken 은 db 에 저장.
+            // RefreshToken은 db에 저장.
             Timestamp expiryDate = Timestamp.valueOf(currentDateTime.plusDays(refreshTokenExpiresIn)); // 만료 날짜는 +14일
             RefreshToken rfEntity = RefreshToken.builder()
                     .id(null)
@@ -145,9 +145,9 @@ public class AuthService {
             }
 
             // Created 응답과 함께 Access, Refresh token, 그 외 사용자 정보를 담아서 클라이언트에게 전달
-            return SignInResponseDto.of(accessToken, refreshToken, user.getNickname(),
-                            user.getSchool(), user.getMajor(),
-                            String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
+            return SignInResponse.of(accessToken, refreshToken, user.getNickname(),
+                    user.getSchool(), user.getMajor(),
+                    String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
         } else {
             throw new CustomException(ErrorCode.USER_NOT_EXISTED);
         }

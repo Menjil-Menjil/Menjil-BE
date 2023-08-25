@@ -11,7 +11,7 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -40,14 +40,14 @@ public class AuthServiceExceptionTest {
     @Test
     void signUp_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
-        SignUpRequestDto signUpRequestDtoA = createSignUpReqDto("google_123", "tes33t@kakao.com",
+        SignUpRequest SignUpRequestA = createSignUpReqDto("google_123", "tes33t@kakao.com",
                 "kakao", "userA");
 
         // DataIntegrityViolationException
         doThrow(DataIntegrityViolationException.class).when(userRepository).save(any(User.class));
 
         // Act and Assert
-        assertThrows(CustomException.class, () -> authService.signUp(signUpRequestDtoA));
+        assertThrows(CustomException.class, () -> authService.signUp(SignUpRequestA));
     }
 
     @Test
@@ -74,9 +74,9 @@ public class AuthServiceExceptionTest {
         assertThrows(CustomException.class, () -> authService.signIn(testEmail, testProvider));
     }
 
-    
-    private SignUpRequestDto createSignUpReqDto(String id, String email, String provider, String nickname) {
-        return new SignUpRequestDto(id, email, provider, nickname,
+
+    private SignUpRequest createSignUpReqDto(String id, String email, String provider, String nickname) {
+        return new SignUpRequest(id, email, provider, nickname,
                 UserRole.MENTEE, 2000, 3, "고려대학교",
                 3, "중반", 2021, 3, "경제학과", null, null, null,
                 "Devops", "AWS", null, null, null, null);
