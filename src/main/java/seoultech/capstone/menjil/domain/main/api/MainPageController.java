@@ -29,11 +29,11 @@ public class MainPageController {
     private final MainPageService mainPageService;
 
     @GetMapping("/mentors")
-    public ResponseEntity<ApiResponse<Page<MentorInfoResponse>>> getMentorList(@PageableDefault(size = 3, sort = {"createdDate", "nickname"},
+    public ResponseEntity<ApiResponse<Page<MentorInfoResponse>>> getMentorList(String nickname, @PageableDefault(size = 3, sort = {"createdDate", "nickname"},
             direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.GET_MENTOR_LIST_AVAILABLE, mainPageService.getMentorList(pageable)));
+                .body(ApiResponse.success(SuccessCode.GET_MENTOR_LIST_AVAILABLE, mainPageService.getMentorList(nickname, pageable)));
     }
 
     @GetMapping("/userinfo")

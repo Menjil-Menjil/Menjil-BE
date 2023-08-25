@@ -42,7 +42,7 @@ public class AuthService {
     /**
      * 회원가입 전, 유저가 이미 db에 존재하는지 조회.
      */
-    public int checkUserExistsInDb(String email, String provider) {
+    public int findUserInDb(String email, String provider) {
         List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
 
         if (userInDb.size() > 0) {
@@ -56,7 +56,7 @@ public class AuthService {
      * 닉네임 중복 조회
      */
     @Transactional(readOnly = true)
-    public int checkNicknameDuplication(String nickname) {
+    public int findNicknameInDb(String nickname) {
         User nicknameExistsInDb = userRepository.findUserByNickname(nickname)
                 .orElse(null);
         if (nicknameExistsInDb != null) {

@@ -51,11 +51,11 @@ class AuthServiceTest {
     @DisplayName("회원가입: 플랫폼 서버(google, kakao)에서 인증 받은 뒤, 추가정보 입력 전 유저 조회")
     void checkUserExistsInDb_user_already_exists_in_db() {
         // email, provider 가 같은 유저가 db에 이미 존재하면, 409 CONFLICT
-        int result = authService.checkUserExistsInDb(TEST_USER_EMAIL, TEST_USER_PROVIDER);
+        int result = authService.findUserInDb(TEST_USER_EMAIL, TEST_USER_PROVIDER);
         assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
 
         // email, provider 가 같은 유저가 db에 없다면, 200 OK
-        int result2 = authService.checkUserExistsInDb("userA@gmail.com", "kakao");
+        int result2 = authService.findUserInDb("userA@gmail.com", "kakao");
         assertThat(result2).isEqualTo(HttpStatus.OK.value());
     }
 
@@ -63,11 +63,11 @@ class AuthServiceTest {
     @DisplayName("회원가입 시에 닉네임 중복 검사")
     void checkNicknameDuplication() {
         // 닉네임 중복 시 CustomException 발생
-        int result = authService.checkNicknameDuplication(TEST_USER_NICKNAME);
+        int result = authService.findNicknameInDb(TEST_USER_NICKNAME);
         assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
 
         // 닉네임 중복이 아닐 시 정상적으로 String 결과 반환
-        int result2 = authService.checkNicknameDuplication("testB");
+        int result2 = authService.findNicknameInDb("testB");
         assertThat(result2).isEqualTo(HttpStatus.OK.value());
     }
 

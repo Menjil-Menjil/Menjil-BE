@@ -99,7 +99,7 @@ class MainPageServiceTest {
         userRepository.saveAll(List.of(users.get(5), users.get(6), users.get(7)));
 
         // when
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList(pageRequest);
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
 
         // then
         assertThat(mentorList.getSize()).isEqualTo(3);

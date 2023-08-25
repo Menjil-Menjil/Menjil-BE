@@ -141,7 +141,7 @@ public class MessageService {
                 message.getContent());
 
         // 4. Make the POST request to AWS Lambda and block to get the response
-        List<AwsLambdaResponse> flaskResponseDtoList = flaskWebClient.post()
+        List<AwsLambdaResponse> awsLambdaResponseList = flaskWebClient.post()
                 .uri("/api/lambda")
                 .body(BodyInserters.fromValue(awsLambdaRequest))
                 .retrieve()
@@ -155,7 +155,7 @@ public class MessageService {
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
                 .senderNickname(findMentorNickname(roomId, messageRequest.getSenderNickname()))
-                .messageList(flaskResponseDtoList)  // save three of summary_question and answer
+                .messageList(awsLambdaResponseList)  // save three of summary_question and answer
                 .messageType(MessageType.AI_QUESTION_RESPONSE)
                 .time(now)
                 .build();
