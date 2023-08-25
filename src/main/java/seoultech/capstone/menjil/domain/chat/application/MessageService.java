@@ -136,12 +136,10 @@ public class MessageService {
         Message message = chatGptService.getMessageFromGpt(messageRequestDto.getMessage());
 
         // 3. Create FlaskRequestDto
-        FlaskRequestDto flaskRequestDto = FlaskRequestDto.builder()
-                .mentorNickname(findMentorNickname(roomId, messageRequestDto.getSenderNickname()))     // find Mentor nickname
-                .menteeNickname(messageRequestDto.getSenderNickname())
-                .originMessage(messageRequestDto.getMessage())
-                .threeLineSummaryMessage(message.getContent())
-                .build();
+
+        FlaskRequestDto flaskRequestDto = FlaskRequestDto.of(findMentorNickname(roomId, messageRequestDto.getSenderNickname()),
+                messageRequestDto.getSenderNickname(), messageRequestDto.getMessage(),
+                message.getContent());
 
         // 4. Make the POST request to Flask Serverand block to get the response
         List<FlaskResponseDto> flaskResponseDtoList = flaskWebClient.post()

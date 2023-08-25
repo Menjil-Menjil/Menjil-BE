@@ -252,16 +252,8 @@ class RoomControllerTest {
 
         // when
         Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
-                RoomInfoDto.builder()
-                        .roomId(roomId2)
-                        .nickname(nickname2)
-                        .lastMessage("hello here~~22")
-                        .build(),
-                RoomInfoDto.builder()
-                        .roomId(roomId3)
-                        .nickname(nickname3)
-                        .lastMessage("hello there~~33")
-                        .build()
+                RoomInfoDto.of(roomId2, nickname2, "test_url", "hello here~~22", 2L),
+                RoomInfoDto.of(roomId3, nickname3, "test_url", "hello there~~33", 3L)
         ));
 
         // then

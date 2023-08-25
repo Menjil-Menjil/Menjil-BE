@@ -122,7 +122,12 @@ public class AuthService {
 
             // RefreshToken 은 db 에 저장.
             Timestamp expiryDate = Timestamp.valueOf(currentDateTime.plusDays(refreshTokenExpiresIn)); // 만료 날짜는 +14일
-            RefreshToken rfEntity = new RefreshToken(null, user, refreshToken, expiryDate);
+            RefreshToken rfEntity = RefreshToken.builder()
+                    .id(null)
+                    .userId(user)
+                    .token(refreshToken)
+                    .expiryDate(expiryDate)
+                    .build();
 
             Optional<RefreshToken> refreshTokenExistsInDb = tokenRepository.findRefreshTokenByUserId(user);
             if (refreshTokenExistsInDb.isPresent()) {
@@ -140,14 +145,9 @@ public class AuthService {
             }
 
             // Created 응답과 함께 Access, Refresh token, 그 외 사용자 정보를 담아서 클라이언트에게 전달
-            return SignInResponseDto.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .nickname(user.getNickname())
-                    .school(user.getSchool())
-                    .major(user.getMajor())
-                    .imgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))))
-                    .build();
+            return SignInResponseDto.of(accessToken, refreshToken, user.getNickname(),
+                            user.getSchool(), user.getMajor(),
+                            String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
         } else {
             throw new CustomException(ErrorCode.USER_NOT_EXISTED);
         }

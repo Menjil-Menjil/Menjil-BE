@@ -1,16 +1,12 @@
 package seoultech.capstone.menjil.domain.auth.domain;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)  // 인자 없는 기본 생성자 필요
-@AllArgsConstructor
 @Entity
 @Table(name = "refresh_token")
 public class RefreshToken {
@@ -28,4 +24,12 @@ public class RefreshToken {
 
     @Column(name = "expiry_date", nullable = false, columnDefinition = "TIMESTAMP")
     private Timestamp expiryDate;
+
+    @Builder
+    private RefreshToken(Long id, User userId, String token, Timestamp expiryDate) {
+        this.id = id;
+        this.userId = userId;
+        this.token = token;
+        this.expiryDate = expiryDate;
+    }
 }

@@ -72,7 +72,12 @@ class JwtAuthenticationFilterTest {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Timestamp expiryDate = Timestamp.valueOf(currentDateTime.plusDays(14));
 
-        RefreshToken refreshToken = new RefreshToken(null, dbUser, REFRESH_TOKEN_IN_DB, expiryDate);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .id(null)
+                .userId(dbUser)
+                .token(REFRESH_TOKEN_IN_DB)
+                .expiryDate(expiryDate)
+                .build();
         tokenRepository.save(refreshToken);
     }
 

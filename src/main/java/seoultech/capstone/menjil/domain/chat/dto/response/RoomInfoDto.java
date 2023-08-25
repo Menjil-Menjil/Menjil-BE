@@ -1,11 +1,12 @@
 package seoultech.capstone.menjil.domain.chat.dto.response;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class RoomInfoDto {
 
     private String roomId;
@@ -15,13 +16,8 @@ public class RoomInfoDto {
 
     private Long lastMessagedTimeOfHour;
 
-    @Builder
-    private RoomInfoDto(String roomId, String nickname, String imgUrl, String lastMessage,
-                        Long lastMessagedTimeOfHour) {
-        this.roomId = roomId;
-        this.nickname = nickname;
-        this.imgUrl = imgUrl;
-        this.lastMessage = lastMessage;
-        this.lastMessagedTimeOfHour = lastMessagedTimeOfHour;
+    public static RoomInfoDto of(String roomId, String nickname, String imgUrl, String lastMessage,
+                                 Long lastMessagedTimeOfHour) {
+        return new RoomInfoDto(roomId, nickname, imgUrl, lastMessage, lastMessagedTimeOfHour);
     }
 }

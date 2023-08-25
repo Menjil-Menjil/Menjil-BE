@@ -138,13 +138,8 @@ public class RoomService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.builder()
-                        .roomId(roomId)
-                        .lastMessage(lastMessage)
-                        .imgUrl(menteeImgUrl)
-                        .nickname(menteeNickname)
-                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
-                        .build());
+                result.add(RoomInfoDto.of(roomId, menteeNickname,
+                        menteeImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         }
         /* type == MENTEE 의 경우(사용자가 멘타인 경우) */
@@ -179,13 +174,8 @@ public class RoomService {
                 // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
                 Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
 
-                result.add(RoomInfoDto.builder()
-                        .roomId(roomId)
-                        .lastMessage(lastMessage)
-                        .imgUrl(mentorImgUrl)
-                        .nickname(mentorNickname)
-                        .lastMessagedTimeOfHour(lastMessagedTimeOfHour)
-                        .build());
+                result.add(RoomInfoDto.of(roomId, mentorNickname,
+                        mentorImgUrl, lastMessage, lastMessagedTimeOfHour));
             }
         } else {
             throw new CustomException(ErrorCode.TYPE_NOT_ALLOWED);
