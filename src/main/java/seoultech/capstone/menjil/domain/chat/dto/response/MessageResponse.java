@@ -42,7 +42,7 @@ public class MessageResponse {
         this.time = time;
     }
 
-    public static MessageResponse fromChatMessage(ChatMessage chatMessage, Integer order) {
+    public static MessageResponse fromChatMessageEntity(ChatMessage chatMessage, Integer order) {
         return MessageResponse.builder()
                 ._id(chatMessage.get_id())
                 .order(order)

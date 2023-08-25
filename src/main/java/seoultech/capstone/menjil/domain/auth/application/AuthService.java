@@ -71,7 +71,7 @@ public class AuthService {
     @Transactional
     public int signUp(SignUpRequest request) {
         // SignUpRequestDto -> User Entity 변환
-        User user = request.toUser();
+        User user = request.toUserEntity();
 
         // 기존에 중복된 유저가 있는 지 조회
         // 이 부분은 의미없다. 처음 가입할 때 유저 확인 후 redirect 처리 하므로.

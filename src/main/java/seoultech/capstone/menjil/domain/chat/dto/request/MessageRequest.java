@@ -39,7 +39,7 @@ public class MessageRequest {
         this.time = time;
     }
 
-    public static ChatMessage toChatMessage(MessageRequest messageRequest, LocalDateTime time) {
+    public static ChatMessage toChatMessageEntity(MessageRequest messageRequest, LocalDateTime time) {
         return ChatMessage.builder()
                 .roomId(messageRequest.getRoomId())
                 .senderType(messageRequest.getSenderType())

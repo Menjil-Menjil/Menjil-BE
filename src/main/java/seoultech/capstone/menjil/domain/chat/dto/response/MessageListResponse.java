@@ -41,7 +41,7 @@ public class MessageListResponse {
         this.time = time;
     }
 
-    public static MessageListResponse fromChatMessage(ChatMessage chatMessage, Integer order) {
+    public static MessageListResponse fromChatMessageEntity(ChatMessage chatMessage, Integer order) {
         return MessageListResponse.builder()
                 ._id(chatMessage.get_id())
                 .order(order)

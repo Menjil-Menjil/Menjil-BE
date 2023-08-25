@@ -21,7 +21,7 @@ public class MentorInfoResponse {
     private String imgUrl;
     private String lastAnsweredMessage; // 가장 최근에 답변한 질문 <- 이 부분은 추후 개발 예정
 
-    public static MentorInfoResponse from(User user) {
+    public static MentorInfoResponse fromUserEntity(User user) {
         return new MentorInfoResponse(user.getNickname(), user.getMajor(), user.getCompany(),
                 user.getField(), user.getTechStack(), null, null);
     }

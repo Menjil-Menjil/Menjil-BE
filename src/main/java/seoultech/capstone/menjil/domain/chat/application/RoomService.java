@@ -91,7 +91,7 @@ public class RoomService {
             ));
             List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
             for (int i = 0; i < messagePage.size(); i++) {
-                MessageResponse dto = MessageResponse.fromChatMessage(messagePage.get(i), messagePage.size() - i);
+                MessageResponse dto = MessageResponse.fromChatMessageEntity(messagePage.get(i), messagePage.size() - i);
                 result.add(dto);
             }
         }

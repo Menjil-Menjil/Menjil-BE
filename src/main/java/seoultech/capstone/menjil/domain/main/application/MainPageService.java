@@ -50,7 +50,7 @@ public class MainPageService {
     public Page<MentorInfoResponse> getMentorList(Pageable pageable) {
         Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
         Page<MentorInfoResponse> mentorInfoDto = page.map(user -> {
-            MentorInfoResponse dto = MentorInfoResponse.from(user);
+            MentorInfoResponse dto = MentorInfoResponse.fromUserEntity(user);
 
             // set AWS S3 presigned url
             dto.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(

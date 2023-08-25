@@ -67,7 +67,7 @@ public class SignUpRequest {
     private String activity;
 
     @Builder
-    public User toUser() {
+    public User toUserEntity() {
         return User.builder()
                 .id(userId)
                 .email(email)

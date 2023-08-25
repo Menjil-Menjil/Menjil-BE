@@ -66,7 +66,7 @@ public class MessageService {
         }
 
         // Entity -> Dto
-        return MessageResponse.fromChatMessage(welcomeMsg, null);
+        return MessageResponse.fromChatMessageEntity(welcomeMsg, null);
     }
 
     /**
@@ -85,7 +85,7 @@ public class MessageService {
         }
 
         // MessageRequest -> ChatMessage(Entity) 변환
-        ChatMessage chatMessage = MessageRequest.toChatMessage(messageRequest, dateTime);
+        ChatMessage chatMessage = MessageRequest.toChatMessageEntity(messageRequest, dateTime);
 
         // save entity to mongoDB
         // 저장이 잘된 경우 true, 그렇지 않은 경우 false 리턴
@@ -122,7 +122,7 @@ public class MessageService {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
-        return MessageResponse.fromChatMessage(message, null);
+        return MessageResponse.fromChatMessageEntity(message, null);
     }
 
     public MessageListResponse handleQuestion(String roomId, MessageRequest messageRequest) {
@@ -167,7 +167,7 @@ public class MessageService {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
-        return MessageListResponse.fromChatMessage(flaskResponseMessage, null);
+        return MessageListResponse.fromChatMessageEntity(flaskResponseMessage, null);
     }
 
     /**
