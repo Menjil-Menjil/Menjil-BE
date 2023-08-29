@@ -38,7 +38,7 @@ public class MainPageService {
     private final RoomRepository roomRepository;
     private final MessageRepository messageRepository;
 
-    private final int GET_ROOM_INFO = 1;
+    private final int GET_ROOM_INFO_SIZE = 1;
     private final int AWS_URL_DURATION = 7;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -59,7 +59,6 @@ public class MainPageService {
                     BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
 
             // set lastAnsweredMessage
-            // 우선 임의로 작성
             dto.setLastAnsweredMessage("현재 테스트 중입니다");
             return dto;
         });
@@ -70,7 +69,7 @@ public class MainPageService {
      * 사용자의 채팅방 목록을 가져온다.
      * RoomService의 getAllRooms() 메소드와 유사함
      */
-    public List<RoomInfoResponse> getUserRoomList(String nickname) {
+    public List<RoomInfoResponse> getAllRoomsOfUser(String nickname) {
         List<RoomInfoResponse> result = new ArrayList<>();
 
         User user = userRepository.findUserByNickname(nickname).orElse(null);
@@ -87,34 +86,8 @@ public class MainPageService {
                 // 채팅방이 하나도 없는 경우
                 return result;
             }
-
             for (Room room : roomList) {
-                // Get MENTOR nickname, and Room id
-                String mentorNickname = room.getMentorNickname();
-                String roomId = room.getId();
-
-                // Get MENTOR img url
-                User mentor = userRepository.findUserByNickname(mentorNickname)
-                        .orElse(null);
-                assert mentor != null;  // 멘토가 존재하지 않을 수 없다.
-
-                // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
-                String mentorImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentor.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
-
-                // Get Last Message and message time
-                PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO, Sort.by(
-                        Sort.Order.desc("time"),
-                        Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
-                ));
-                List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
-                String lastMessage = messagePage.get(0).getMessage();
-                LocalDateTime lastMessageTime = messagePage.get(0).getTime();
-
-                // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
-                Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
-
-                result.add(RoomInfoResponse.of(roomId, mentorNickname,
-                        mentorImgUrl, lastMessage, lastMessagedTimeOfHour));
+                result.add(findMentorRoomsByMentee(room));
             }
         }
         /* 사용자가 멘토인 경우 */
@@ -125,49 +98,85 @@ public class MainPageService {
                 return result;
             }
             for (Room room : roomList) {
-                // Get MENTEE nickname, and Room id
-                String menteeNickname = room.getMenteeNickname();
-                String roomId = room.getId();
-
-                // Get MENTEE img url
-                User mentee = userRepository.findUserByNickname(menteeNickname)
-                        .orElse(null);
-                assert mentee != null;  // 멘티가 존재하지 않을 수 없다.
-                // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
-                String menteeImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentee.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
-
-                // Get Last Message and message time
-                PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO, Sort.by(
-                        Sort.Order.desc("time"),
-                        Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
-                ));
-                List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
-                String lastMessage = messagePage.get(0).getMessage();
-                LocalDateTime lastMessageTime = messagePage.get(0).getTime();
-
-                // Calculate last messaged time of Hour (e.g. 2시간 전, ...)
-                Long lastMessagedTimeOfHour = timeCalculation(lastMessageTime);
-
-                result.add(RoomInfoResponse.of(roomId, menteeNickname,
-                        menteeImgUrl, lastMessage, lastMessagedTimeOfHour));
+                result.add(findMenteeRoomsByMentor(room));
             }
         }
-
-        // Sort by getLastMessagedTimeOfHour, order by ASC
-        // 가장 최근에 대화한 내용이 있는 대화방이 앞에 오도록 정렬
-        result = result.stream()
-                .sorted(Comparator.comparing(RoomInfoResponse::getLastMessagedTimeOfHour))
-                .collect(Collectors.toList());
+        result = sortByLastMessagedTimeOfHourDESC(result);
         return result;
     }
 
-    /**
-     * 마지막 대화 내용이, 현재 시간 기준으로 몇 시간 전에 대화하였는지 제공하는 메서드
-     * e.g) 2시간 전, 3시간 전, ...
-     */
-    public Long timeCalculation(LocalDateTime lastMessageTime) {
-        Duration duration = Duration.between(lastMessageTime, LocalDateTime.now());
-        return duration.toHours();
+    public void getFollowersOfUser(String nickname) {
+        // List<Follow> follows = followRepository.findFollowsByFollowerNickname(nickname);
+        // 팔로우 목록에는 멘토의 어떤 정보를 보여줘야 하는지 아직 모름..
     }
 
+    /**
+     * 사용자가 '멘티'인 경우
+     * '멘토'의 방 정보를 받아온다.
+     */
+    private RoomInfoResponse findMentorRoomsByMentee(Room room) {
+        // Get MENTOR nickname, and Room id
+        String mentorNickname = room.getMentorNickname();
+        String roomId = room.getId();
+
+        // Get MENTOR img url
+        User mentor = userRepository.findUserByNickname(mentorNickname)
+                .orElse(null);
+        assert mentor != null;  // 멘토가 존재하지 않을 수 없다.
+
+        // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
+        String mentorImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentor.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
+
+        // Get Last Message and message time
+        PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
+                Sort.Order.desc("time"),
+                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+        ));
+        List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
+        String lastMessage = messagePage.get(0).getMessage();
+        LocalDateTime lastMessageTime = messagePage.get(0).getTime();
+
+        return RoomInfoResponse.of(roomId, mentorNickname,
+                mentorImgUrl, lastMessage, lastMessageTime);
+    }
+
+    /**
+     * 사용자가 '멘토'인 경우
+     * '멘티'의 방 정보를 받아온다.
+     */
+    private RoomInfoResponse findMenteeRoomsByMentor(Room room) {
+        // Get MENTEE nickname, and Room id
+        String menteeNickname = room.getMenteeNickname();
+        String roomId = room.getId();
+
+        // Get MENTEE img url
+        User mentee = userRepository.findUserByNickname(menteeNickname)
+                .orElse(null);
+        assert mentee != null;  // 멘티가 존재하지 않을 수 없다.
+        // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
+        String menteeImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentee.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
+
+        // Get Last Message and message time
+        PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
+                Sort.Order.desc("time"),
+                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+        ));
+        List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
+        String lastMessage = messagePage.get(0).getMessage();
+        LocalDateTime lastMessageTime = messagePage.get(0).getTime();
+
+        return RoomInfoResponse.of(roomId, menteeNickname,
+                menteeImgUrl, lastMessage, lastMessageTime);
+    }
+
+    /**
+     * Sort by LastMessageTime, order by DESC
+     * 클라이언트에서 처리를 원활하게 하기 위해서 정렬하였음.
+     */
+    private List<RoomInfoResponse> sortByLastMessagedTimeOfHourDESC(List<RoomInfoResponse> result) {
+        result = result.stream()
+                .sorted(Comparator.comparing(RoomInfoResponse::getLastMessageTime).reversed())
+                .collect(Collectors.toList());
+        return result;
+    }
 }

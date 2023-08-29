@@ -1,8 +1,11 @@
 package seoultech.capstone.menjil.domain.chat.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -14,10 +17,11 @@ public class RoomInfoResponse {
     private String imgUrl;
     private String lastMessage;
 
-    private Long lastMessagedTimeOfHour;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+    private LocalDateTime lastMessageTime;
 
     public static RoomInfoResponse of(String roomId, String nickname, String imgUrl, String lastMessage,
-                                      Long lastMessagedTimeOfHour) {
-        return new RoomInfoResponse(roomId, nickname, imgUrl, lastMessage, lastMessagedTimeOfHour);
+                                      LocalDateTime lastMessageTime) {
+        return new RoomInfoResponse(roomId, nickname, imgUrl, lastMessage, lastMessageTime);
     }
 }

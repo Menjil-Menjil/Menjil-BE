@@ -217,7 +217,7 @@ class MainPageServiceTest {
         String menteeNickname = "mentee_nickname_not_exists_in_db";
 
         // when
-        assertThrows(CustomException.class, () -> mainPageService.getUserRoomList(menteeNickname));
+        assertThrows(CustomException.class, () -> mainPageService.getAllRoomsOfUser(menteeNickname));
     }
 
     @Test
@@ -227,7 +227,7 @@ class MainPageServiceTest {
         String menteeNickname = TEST_MENTEE_NICKNAME;
 
         // when
-        List<RoomInfoResponse> result = mainPageService.getUserRoomList(menteeNickname);
+        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(menteeNickname);
 
         // then
         assertThat(result.size()).isZero();
@@ -240,7 +240,7 @@ class MainPageServiceTest {
         String mentorNickname = TEST_MENTOR_NICKNAME;
 
         // when
-        List<RoomInfoResponse> result = mainPageService.getUserRoomList(mentorNickname);
+        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(mentorNickname);
 
         // then
         assertThat(result.size()).isZero();
@@ -295,7 +295,7 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfoResponse> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
+        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(menteeNickname);    // here is menteenickname
 
         // then
         assertThat(result.size()).isEqualTo(1);
@@ -303,9 +303,7 @@ class MainPageServiceTest {
         RoomInfoResponse oneRoom = result.get(0);
         assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
         assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
-
-        // LocalDateTime.now() - 테스트 데이터를 입력한 시간 = Hour 값이 0일 것임
-        assertThat(oneRoom.getLastMessagedTimeOfHour()).isZero();
+        assertThat(oneRoom.getLastMessageTime()).isNotNull();
     }
 
     @Test
@@ -357,7 +355,7 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfoResponse> result = mainPageService.getUserRoomList(mentorNickname);    // here is mentornickname
+        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(mentorNickname);    // here is mentornickname
 
         // then
         assertThat(result.size()).isEqualTo(1);
@@ -365,9 +363,7 @@ class MainPageServiceTest {
         RoomInfoResponse oneRoom = result.get(0);
         assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
         assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
-
-        // LocalDateTime.now() - 테스트 데이터를 입력한 시간 = Hour 값이 0일 것임
-        assertThat(oneRoom.getLastMessagedTimeOfHour()).isZero();
+        assertThat(oneRoom.getLastMessageTime()).isNotNull();
     }
 
     /* 이 경우는 '멘티'의 경우만 검증해도 '멘토'의 경우도 함께 검증할 수 있을 것으로 판단하여,
@@ -426,7 +422,7 @@ class MainPageServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<RoomInfoResponse> result = mainPageService.getUserRoomList(menteeNickname);    // here is menteenickname
+        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(menteeNickname);    // here is menteenickname
 
         // then
         assertThat(result.size()).isEqualTo(5);
@@ -436,10 +432,10 @@ class MainPageServiceTest {
         RoomInfoResponse middleRoom = result.get((result.size() - 1) / 2);
         RoomInfoResponse lastRoom = result.get(result.size() - 1);
 
-        assertThat(firstRoom.getLastMessagedTimeOfHour())
-                .isLessThanOrEqualTo(middleRoom.getLastMessagedTimeOfHour());
-        assertThat(middleRoom.getLastMessagedTimeOfHour())
-                .isLessThanOrEqualTo(lastRoom.getLastMessagedTimeOfHour());
+        assertThat(firstRoom.getLastMessageTime())
+                .isAfterOrEqualTo(middleRoom.getLastMessageTime());
+        assertThat(middleRoom.getLastMessageTime())
+                .isAfterOrEqualTo(lastRoom.getLastMessageTime());
     }
 
 

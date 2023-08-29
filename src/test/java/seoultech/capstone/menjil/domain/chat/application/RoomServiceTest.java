@@ -334,7 +334,7 @@ class RoomServiceTest {
         userRepository.saveAll(mentors);
 
         // when
-        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(TEST_MENTEE_NICKNAME, TYPE_MENTEE);
 
         // then
         // test if size is 3
@@ -350,18 +350,18 @@ class RoomServiceTest {
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfoResponse 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
-        assertThat(getRoomList.get(0).getLastMessagedTimeOfHour())
-                .isLessThanOrEqualTo(getRoomList.get(1).getLastMessagedTimeOfHour());
-        assertThat(getRoomList.get(1).getLastMessagedTimeOfHour())
-                .isLessThanOrEqualTo(getRoomList.get(2).getLastMessagedTimeOfHour());
+        // getRoomList의 결과로, RoomInfoResponse 데이터의 LastMessageTime 값이, 인덱스가 작을 수록 나중 시간인지 검증
+        assertThat(getRoomList.get(0).getLastMessageTime())
+                .isAfterOrEqualTo(getRoomList.get(1).getLastMessageTime());
+        assertThat(getRoomList.get(1).getLastMessageTime())
+                .isAfterOrEqualTo(getRoomList.get(2).getLastMessageTime());
     }
 
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTEE_when_data_is_Null() {
         String notExistsMenteeNickname = "mentee_haha_hoho";
-        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(notExistsMenteeNickname, TYPE_MENTEE);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMenteeNickname, TYPE_MENTEE);
 
         assertThat(getRoomList.size()).isZero();
     }
@@ -433,7 +433,7 @@ class RoomServiceTest {
         userRepository.saveAll(mentors);
 
         // when
-        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(TEST_MENTOR_NICKNAME, TYPE_MENTOR);
 
         // then
         // test if size is 3
@@ -450,17 +450,17 @@ class RoomServiceTest {
         assertThat(room3MsgExists).isTrue();
 
         // getRoomList의 결과로, RoomInfoResponse 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
-        assertThat(getRoomList.get(0).getLastMessagedTimeOfHour())
-                .isLessThanOrEqualTo(getRoomList.get(1).getLastMessagedTimeOfHour());
-        assertThat(getRoomList.get(1).getLastMessagedTimeOfHour())
-                .isLessThanOrEqualTo(getRoomList.get(2).getLastMessagedTimeOfHour());
+        assertThat(getRoomList.get(0).getLastMessageTime())
+                .isAfterOrEqualTo(getRoomList.get(1).getLastMessageTime());
+        assertThat(getRoomList.get(1).getLastMessageTime())
+                .isAfterOrEqualTo(getRoomList.get(2).getLastMessageTime());
     }
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
     void getAllRooms_By_MENTOR_when_data_is_Null() {
         String notExistsMentorNickname = "mentor_haha_hoho";
-        List<RoomInfoResponse> getRoomList = roomService.getAllRooms(notExistsMentorNickname, TYPE_MENTOR);
+        List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMentorNickname, TYPE_MENTOR);
 
         assertThat(getRoomList.size()).isZero();
     }
@@ -469,7 +469,7 @@ class RoomServiceTest {
     @DisplayName("type이 MENTEE, MENTOR가 아닌 경우 CustomException 리턴")
     void getAllRooms_type_mismatch() {
         String typeMismatch = "MENTORWA";
-        assertThrows(CustomException.class, () -> roomService.getAllRooms(TEST_MENTEE_NICKNAME, typeMismatch));
+        assertThrows(CustomException.class, () -> roomService.getAllRoomsOfUser(TEST_MENTEE_NICKNAME, typeMismatch));
     }
 
 
