@@ -33,7 +33,7 @@ public class MessageController {
         if (MessageType.QUESTION.equals(messageRequest.getMessageType())) {
             // 이 부분은 추후 비동기 처리 고려
             MessageResponse responseDto = messageService.sendAIMessage(roomId, messageRequest);
-            simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId,
+            simpMessagingTemplate.convertAndSend("/pub/chat/room/" + roomId,
                     ResponseEntity.status(HttpStatus.OK)
                             .body(ApiResponse.success(SuccessCode.AI_QUESTION_RESPONSE, responseDto)));
 
@@ -41,7 +41,7 @@ public class MessageController {
         }
 
         // /queue/chat/room/{room id}로 메세지 보냄
-        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, result);
+        simpMessagingTemplate.convertAndSend("/pub/chat/room/" + roomId, result);
     }
 
     // 메시지 테스트를 위한 메소드. 테스트 이후 제거할 계획
