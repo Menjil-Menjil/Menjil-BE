@@ -8,6 +8,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -17,13 +18,13 @@ public class MessageRequest {
 
     @NotBlank
     private String roomId;
-    @NotBlank
+    @NotNull
     private SenderType senderType;
     @NotBlank
     private String senderNickname;
     @NotNull
     private String message;
-    @NotBlank
+    @NotNull
     private MessageType messageType;
     @NotBlank
     private String time;
