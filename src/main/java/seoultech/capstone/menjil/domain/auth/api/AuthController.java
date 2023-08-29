@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequestDto;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponseDto;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequest;
+import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
+import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -32,15 +32,15 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * 사용자의 SNS 회원가입 요청을 받은 뒤, db와 조회한 뒤 사용자가 있으면 Exception
-     * 사용자가 없으면 register 페이지로 redirect 처리
+     * 사용자의 SNS 회원가입 요청을 받은 뒤, db와 조회한 뒤 사용자가 있으면 CustomException 리턴
+     * 사용자가 없으면 OK message 리턴
      */
     @GetMapping(value = "/signup", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<ApiResponse<?>> checkSignupIsAvailable(@RequestParam("email") String email,
-                                                                 @RequestParam("provider") String provider) {
+    public ResponseEntity<ApiResponse<?>> checkSignUpAvailability(@RequestParam("email") String email,
+                                                                  @RequestParam("provider") String provider) {
         log.info(">> 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
-        int httpStatusValue = authService.checkUserExistsInDb(email, provider);
+        int httpStatusValue = authService.findUserInDb(email, provider);
         if (httpStatusValue == HttpStatus.OK.value()) {
             return ResponseEntity.status(HttpStatus.OK).body(success(SIGNUP_AVAILABLE));
 //          return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE), HttpStatus.OK);
@@ -53,7 +53,7 @@ public class AuthController {
      * 닉네임 중복 확인
      */
     @GetMapping(value = "/check-nickname")
-    public ResponseEntity<ApiResponse<?>> checkNicknameDuplicate(@RequestParam("nickname") String nickname) {
+    public ResponseEntity<ApiResponse<?>> isNicknameAvailable(@RequestParam("nickname") String nickname) {
         String pattern1 = "^[가-힣a-zA-Z0-9]*$";    // 특수문자, 공백 모두 체크 가능
 
         if (nickname.replaceAll(" ", "").equals("")) { // 먼저 공백 확인
@@ -62,7 +62,7 @@ public class AuthController {
         if (!Pattern.matches(pattern1, nickname)) {
             throw new CustomException(NICKNAME_CONTAINS_SPECIAL_CHARACTER);
         }
-        int httpStatusValue = authService.checkNicknameDuplication(nickname);
+        int httpStatusValue = authService.findNicknameInDb(nickname);
 
         if (httpStatusValue == HttpStatus.OK.value()) {
             return ResponseEntity.status(HttpStatus.OK)
@@ -77,7 +77,7 @@ public class AuthController {
      * 사용자가 입력한 데이터를 클라이언트로부터 전달 받는다.
      */
     @PostMapping(value = "/signup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody final SignUpRequestDto signUpRequestDto,
+    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody final SignUpRequest signUpRequest,
                                                       BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
@@ -95,8 +95,8 @@ public class AuthController {
             throw exception;
         }
 
-        return ResponseEntity.status(authService.signUp(signUpRequestDto))
-                .body(success(SIGNUP_SUCCESS, signUpRequestDto.getEmail()));
+        return ResponseEntity.status(authService.signUp(signUpRequest))
+                .body(success(SIGNUP_SUCCESS, signUpRequest.getEmail()));
     }
 
     /**
@@ -107,7 +107,7 @@ public class AuthController {
      * 가입된 유저가 없으면, CustomException 처리
      */
     @PostMapping(value = "/signin", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<SignInResponseDto>> signIn(@RequestBody SignInRequestDto dto) {
+    public ResponseEntity<ApiResponse<SignInResponse>> signIn(@RequestBody SignInRequest dto) {
 
         String provider = dto.getProvider();
 
@@ -115,10 +115,10 @@ public class AuthController {
             throw new CustomException(PROVIDER_NOT_ALLOWED);
         }
 
-        SignInResponseDto signInResponseDto = authService.signIn(dto.getEmail(),
+        SignInResponse signInResponse = authService.signIn(dto.getEmail(),
                 dto.getProvider());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponseDto));
+                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponse));
     }
 }

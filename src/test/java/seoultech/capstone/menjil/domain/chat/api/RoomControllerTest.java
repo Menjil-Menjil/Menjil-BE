@@ -22,8 +22,8 @@ import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessagesResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -72,8 +72,7 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessagesResponse> messageList = Collections.singletonList(MessagesResponse
-                .builder()
+        List<MessageResponse> messageList = Collections.singletonList(MessageResponse.builder()
                 ._id("test_uuid_3")
                 .order(null)
                 .roomId(roomDto.getRoomId())
@@ -81,7 +80,7 @@ class RoomControllerTest {
                 .senderNickname("test_mentor_nickname")
                 .message("Welcome Message")
                 .messageType(MessageType.ENTER)
-                .time(now.toString())
+                .time(now)
                 .build());
 
         Gson gson = new Gson();
@@ -101,7 +100,7 @@ class RoomControllerTest {
         ArgumentCaptor<ResponseEntity> responseEntityCaptor = ArgumentCaptor.forClass(ResponseEntity.class);
         verify(simpMessagingTemplate, times(1)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()), responseEntityCaptor.capture());
 
-        ResponseEntity<ApiResponse<List<MessagesResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
+        ResponseEntity<ApiResponse<List<MessageResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
         assertThat(capturedResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_CREATED.getCode());
         assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_CREATED.getMessage());
@@ -118,8 +117,7 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessagesResponse> messageFirstList = Collections.singletonList(MessagesResponse
-                .builder()
+        List<MessageResponse> messageFirstList = Collections.singletonList(MessageResponse.builder()
                 ._id("test_uuid_3")
                 .order(null)    // here is null
                 .roomId(roomDto.getRoomId())
@@ -127,11 +125,10 @@ class RoomControllerTest {
                 .senderNickname("test_mentor_nickname")
                 .message("Welcome Message")
                 .messageType(MessageType.ENTER)
-                .time(now.toString())
+                .time(now)
                 .build());
 
-        List<MessagesResponse> messageSecondList = Collections.singletonList(MessagesResponse
-                .builder()
+        List<MessageResponse> messageSecondList = Collections.singletonList(MessageResponse.builder()
                 ._id("test_uuid_3")
                 .order(1)   // here is not null
                 .roomId(roomDto.getRoomId())
@@ -139,7 +136,7 @@ class RoomControllerTest {
                 .senderNickname("test_mentor_nickname")
                 .message("Welcome Message")
                 .messageType(MessageType.ENTER)
-                .time(now.toString())
+                .time(now)
                 .build());
 
         Gson gson = new Gson();
@@ -165,7 +162,7 @@ class RoomControllerTest {
         verify(simpMessagingTemplate, times(2)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()),
                 responseEntityCaptor.capture());
 
-        ResponseEntity<ApiResponse<List<MessagesResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
+        ResponseEntity<ApiResponse<List<MessageResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
         assertThat(capturedResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode());
         assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage());
@@ -181,8 +178,8 @@ class RoomControllerTest {
                 .roomId("test_room_id_1")
                 .build();
         LocalDateTime now = LocalDateTime.now();
-        List<MessagesResponse> messageList = Arrays.asList(
-                MessagesResponse.builder()
+        List<MessageResponse> messageList = Arrays.asList(
+                MessageResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)
                         .roomId(roomDto.getRoomId())
@@ -190,9 +187,9 @@ class RoomControllerTest {
                         .senderNickname("test_mentor_nickname")
                         .message("mentor's response")
                         .messageType(MessageType.TALK)
-                        .time(now.toString())
+                        .time(now)
                         .build(),
-                MessagesResponse.builder()
+                MessageResponse.builder()
                         ._id("test_uuid_2")
                         .roomId(roomDto.getRoomId())
                         .order(2)
@@ -200,9 +197,9 @@ class RoomControllerTest {
                         .senderNickname("test_mentee_nickname")
                         .message("test message 2")
                         .messageType(MessageType.TALK)
-                        .time(now.plusSeconds(3000).toString())
+                        .time(now.plusSeconds(3000))
                         .build(),
-                MessagesResponse.builder()
+                MessageResponse.builder()
                         ._id("test_uuid_3")
                         .roomId(roomDto.getRoomId())
                         .order(3)
@@ -210,7 +207,7 @@ class RoomControllerTest {
                         .senderNickname("test_mentor_nickname")
                         .message("mentor's response")
                         .messageType(MessageType.TALK)
-                        .time(now.plusSeconds(5000).toString())
+                        .time(now.plusSeconds(5000))
                         .build()
         );
 
@@ -232,7 +229,7 @@ class RoomControllerTest {
         verify(simpMessagingTemplate, times(1)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()),
                 responseEntityCaptor.capture());
 
-        ResponseEntity<ApiResponse<List<MessagesResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
+        ResponseEntity<ApiResponse<List<MessageResponse>>> capturedResponseEntity = responseEntityCaptor.getValue();
         assertThat(capturedResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode());
         assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage());
@@ -247,33 +244,33 @@ class RoomControllerTest {
     void getAllRooms() throws Exception {
         // given
         String targetNickname = "test_HOHO";
+        String roomId2 = "test_room_2";
+        String roomId3 = "test_room_3";
         String nickname2 = "서울과기대2123";
         String nickname3 = "서울시립1873";
         String type = "MENTEE";
+        LocalDateTime now = LocalDateTime.now();
 
-        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
-                RoomListResponse.builder()
-                        .nickname(nickname2)
-                        .lastMessage("hello here~~")
-                        .build(),
-                RoomListResponse.builder()
-                        .nickname(nickname3)
-                        .lastMessage("hello there~~")
-                        .build()
+        // when
+        Mockito.when(roomService.getAllRoomsOfUser(targetNickname, type)).thenReturn(Arrays.asList(
+                RoomInfoResponse.of(roomId2, nickname2, "test_url", "hello here~~22", now),
+                RoomInfoResponse.of(roomId3, nickname3, "test_url", "hello there~~33", now.plusSeconds(1L))
         ));
 
-        // Act
+        // then
         mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
                         .queryParam("nickname", targetNickname)
                         .queryParam("type", type))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AVAILABLE.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data").exists())     // check data is not null
+                .andExpect(jsonPath("$.data[0]").exists())     // check data is not null
+                .andExpect(jsonPath("$.data[0].roomId", is(roomId2)))
+                .andExpect(jsonPath("$.data[1]").exists())     // check data is not null
+                .andExpect(jsonPath("$.data[1].roomId", is(roomId3)))
                 .andDo(print());
 
-        // Assert
-        verify(roomService, times(1)).getAllRooms(targetNickname, type);
+        verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
     }
 
     @Test
@@ -282,22 +279,22 @@ class RoomControllerTest {
         // given
         String targetNickname = "test_HOHO";
         String type = "MENTEE";
-        List<RoomListResponse> result = new ArrayList<>();
+        List<RoomInfoResponse> result = new ArrayList<>();
 
-        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(result);
+        // when
+        Mockito.when(roomService.getAllRoomsOfUser(targetNickname, type)).thenReturn(result);
 
-        // Act
+        // then
         mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
                         .queryParam("nickname", targetNickname)
                         .queryParam("type", type))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getMessage())))
-                .andExpect(jsonPath("$.data", is(result)))
+                .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 
-        // Assert
-        verify(roomService, times(1)).getAllRooms(targetNickname, type);
+        verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
     }
 
 }

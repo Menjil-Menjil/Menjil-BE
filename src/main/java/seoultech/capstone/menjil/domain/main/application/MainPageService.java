@@ -1,20 +1,22 @@
-package seoultech.capstone.menjil.domain.chat.application;
+package seoultech.capstone.menjil.domain.main.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
-import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
@@ -29,87 +31,56 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class RoomService {
+public class MainPageService {
 
-    private final MessageService messageService;
     private final AwsS3Handler awsS3Handler;
+    private final UserRepository userRepository;
     private final RoomRepository roomRepository;
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;    // img_url 정보 조회를 위해, 부득이하게 userRepository 사용
-    private final int PAGE_SIZE = 10;
+
     private final int GET_ROOM_INFO_SIZE = 1;
     private final int AWS_URL_DURATION = 7;
-    private final String TYPE_MENTEE = "MENTEE";
-    private final String TYPE_MENTOR = "MENTOR";
 
     @Value("${cloud.aws.s3.bucket}")
     private String BUCKET_NAME;
 
     /**
-     * 채팅방 입장
-     * case 1: 채팅 내역이 존재하지 않는 경우(처음 입장)
-     * case 2: 채팅 내역이 존재하는 경우
+     * 멘토 리스트를 가져오는 메서드
+     * nickname은, 추후 멘토 추천 알고리즘 사용시 필요할 수 있으므로, 우선 받도록 하였으나.
+     * 현재 수행하는 기능은 없다.
      */
-    public List<MessageResponse> enterTheRoom(RoomDto roomDto) {
-        List<MessageResponse> result = new ArrayList<>();
+    public Page<MentorInfoResponse> getMentorList(String nickname, Pageable pageable) {
+        Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
+        Page<MentorInfoResponse> mentorInfoResponse = page.map(user -> {
+            MentorInfoResponse dto = MentorInfoResponse.fromUserEntity(user);
 
-        // case 0: 멘티 혹은 멘토 id가 db에 존재하지 않는 경우 CustomException
-        User menteeInDb = userRepository.findUserByNickname(roomDto.getMenteeNickname())
-                .orElse(null);
-        User mentorInDb = userRepository.findUserByNickname(roomDto.getMentorNickname())
-                .orElse(null);
-        if (menteeInDb == null) {
-            throw new CustomException(ErrorCode.MENTEE_NICKNAME_NOT_EXISTED);
-        }
-        if (mentorInDb == null) {
-            throw new CustomException(ErrorCode.MENTOR_NICKNAME_NOT_EXISTED);
-        }
+            // set AWS S3 presigned url
+            dto.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(
+                    BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
 
-        Room room = roomRepository.findRoomById(roomDto.getRoomId());
-        if (room == null) {
-            // case 1: 채팅방이 존재하지 않는 경우
-            // 먼저 채팅방을 db에 저장한다.
-            Room newRoom = Room.builder()
-                    .roomId(roomDto.getRoomId())
-                    .menteeNickname(roomDto.getMenteeNickname())
-                    .mentorNickname(roomDto.getMentorNickname())
-                    .build();
-            try {
-                roomRepository.save(newRoom);
-            } catch (RuntimeException e) {
-                throw new CustomException(ErrorCode.SERVER_ERROR);
-            }
-
-            RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
-            MessageResponse messageResponse = messageService.sendWelcomeMessage(newRoomDto);
-            result.add(messageResponse);
-        } else {
-            // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
-            // 최대 10개의 메시지를 클라이언트로 보낸다.
-            PageRequest pageRequest = PageRequest.of(0, PAGE_SIZE, Sort.by(
-                    Sort.Order.desc("time"),
-                    Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
-            ));
-            List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
-            for (int i = 0; i < messagePage.size(); i++) {
-                MessageResponse dto = MessageResponse.fromChatMessageEntity(messagePage.get(i), messagePage.size() - i);
-                result.add(dto);
-            }
-        }
-        return result;
+            // set lastAnsweredMessage
+            dto.setLastAnsweredMessage("현재 테스트 중입니다");
+            return dto;
+        });
+        return mentorInfoResponse;
     }
 
     /**
-     * 사용자의 채팅방 전체 데이터를 불러오는 경우
-     * 멘티는 방 id, 멘토의 닉네임과 img_url, 마지막 대화내용,
-     * 멘토는 방 Id, 멘티의 닉네임과 img_url, 마지막 대화내용
-     * 리스트 정보가 필요하다.
+     * 사용자의 채팅방 목록을 가져온다.
+     * RoomService의 getAllRooms() 메소드와 유사함
      */
-    public List<RoomInfoResponse> getAllRoomsOfUser(String nickname, String type) {
+    public List<RoomInfoResponse> getAllRoomsOfUser(String nickname) {
         List<RoomInfoResponse> result = new ArrayList<>();
 
-        /* type == MENTEE 의 경우(사용자가 멘타인 경우) */
-        if (type.equals(TYPE_MENTEE)) {
+        User user = userRepository.findUserByNickname(nickname).orElse(null);
+        if (user == null) {
+            throw new CustomException(ErrorCode.NICKNAME_NOT_EXISTED);
+        }
+        UserRole role = user.getRole();
+
+        /* 사용자가 멘티인 경우 */
+        if (role.equals(UserRole.MENTEE)) {
+            // 1. 우선 사용자인 멘티의 닉네임으로 전체 채탕방을 조회한다.
             List<Room> roomList = roomRepository.findRoomsByMenteeNickname(nickname);
             if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
@@ -119,8 +90,8 @@ public class RoomService {
                 result.add(findMentorRoomsByMentee(room));
             }
         }
-        /* type == Mentor 의 경우(사용자가 멘토인 경우) */
-        else if (type.equals(TYPE_MENTOR)) {
+        /* 사용자가 멘토인 경우 */
+        else {
             List<Room> roomList = roomRepository.findRoomsByMentorNickname(nickname);
             if (roomList.isEmpty()) {
                 // 채팅방이 하나도 없는 경우
@@ -129,12 +100,14 @@ public class RoomService {
             for (Room room : roomList) {
                 result.add(findMenteeRoomsByMentor(room));
             }
-        } else {
-            throw new CustomException(ErrorCode.TYPE_NOT_ALLOWED);
         }
-
         result = sortByLastMessagedTimeOfHourDESC(result);
         return result;
+    }
+
+    public void getFollowersOfUser(String nickname) {
+        // List<Follow> follows = followRepository.findFollowsByFollowerNickname(nickname);
+        // 팔로우 목록에는 멘토의 어떤 정보를 보여줘야 하는지 아직 모름..
     }
 
     /**
@@ -145,9 +118,6 @@ public class RoomService {
         // Get MENTOR nickname, and Room id
         String mentorNickname = room.getMentorNickname();
         String roomId = room.getId();
-
-        System.out.println("roomId = " + roomId);
-
 
         // Get MENTOR img url
         User mentor = userRepository.findUserByNickname(mentorNickname)

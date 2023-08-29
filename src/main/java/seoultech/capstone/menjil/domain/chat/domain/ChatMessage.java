@@ -30,6 +30,9 @@ public class ChatMessage {
     @Field("message")
     private String message;
 
+    @Field("message_list")
+    private Object messageList;
+
     @Field("message_type")
     private MessageType messageType;
 
@@ -49,12 +52,13 @@ public class ChatMessage {
     @Builder
     private ChatMessage(String _id, String roomId,
                         SenderType senderType, String senderNickname,
-                        String message, MessageType messageType, LocalDateTime time) {
+                        String message, Object messageList, MessageType messageType, LocalDateTime time) {
         this._id = _id;
         this.roomId = roomId;
         this.senderType = senderType;
         this.senderNickname = senderNickname;
         this.message = message;
+        this.messageList = messageList;
         this.messageType = messageType;
         this.time = time;
     }

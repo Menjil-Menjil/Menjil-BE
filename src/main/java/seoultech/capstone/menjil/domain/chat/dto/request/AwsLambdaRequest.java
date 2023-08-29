@@ -1,13 +1,14 @@
 package seoultech.capstone.menjil.domain.chat.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class FlaskRequestDto {
+@AllArgsConstructor
+public class AwsLambdaRequest {
 
     @JsonProperty(value = "mentee_nickname")
     private String menteeNickname;
@@ -21,12 +22,9 @@ public class FlaskRequestDto {
     @JsonProperty(value = "question_summary")
     private String threeLineSummaryMessage;
 
-    @Builder
-    private FlaskRequestDto(String menteeNickname, String mentorNickname,
-                            String originMessage, String threeLineSummaryMessage) {
-        this.menteeNickname = menteeNickname;
-        this.mentorNickname = mentorNickname;
-        this.originMessage = originMessage;
-        this.threeLineSummaryMessage = threeLineSummaryMessage;
+    public static AwsLambdaRequest of(String menteeNickname, String mentorNickname,
+                                      String originMessage, String threeLineSummaryMessage) {
+        return new AwsLambdaRequest(menteeNickname, mentorNickname,
+                originMessage, threeLineSummaryMessage);
     }
 }

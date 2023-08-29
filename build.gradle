@@ -131,6 +131,11 @@ dependencies {
     implementation 'org.webjars:sockjs-client:1.1.2'
     implementation 'org.webjars:stomp-websocket:2.3.3-1'
 
+    // AWS
+//    implementation platform('software.amazon.awssdk:bom:2.20.56') // 파일의 종속성 섹션에 BOM (재료 명세서) 을 추가합니다.
+//    implementation 'software.amazon.awssdk:s3' // 종속성 섹션에 사용할 SDK 모듈을 지정합니다(S3).
+    implementation group: 'io.awspring.cloud', name: 'spring-cloud-starter-aws', version: '2.4.2'
+
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

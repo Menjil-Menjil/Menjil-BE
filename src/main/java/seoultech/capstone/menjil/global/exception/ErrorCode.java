@@ -22,9 +22,15 @@ public enum ErrorCode {
     PROVIDER_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "A006", "가입 양식이 잘못되었습니다. 구글이나 카카오로 가입 요청을 해주세요"),
     USER_NOT_EXISTED(HttpStatus.BAD_REQUEST, "A007", "가입된 사용자가 존재하지 않습니다"),
 
+    // main
+    NICKNAME_NOT_EXISTED(HttpStatus.CONFLICT, "m001", "잘못된 닉네임을 요청하셨습니다"),
+
     // chat
     ROOM_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH01", "채팅방의 정보를 가져올 수 없습니다. 채팅방 아이디를 다시 확인해주세요"),
-    TYPE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CH02", "사용자의 타입이 \"MENTEE\" 또는 \"MENTOR\" 가 아닙니다");
+    TYPE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CH02", "사용자의 타입이 \"MENTEE\" 또는 \"MENTOR\" 가 아닙니다"),
+    TIME_INPUT_INVALID(HttpStatus.BAD_REQUEST, "CH03", "time 형식을 yyyy-MM-dd HH:mm:ss으로 작성해 주세요"),
+    MENTEE_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH04", "멘티의 닉네임 정보가 존재하지 않습니다"),
+    MENTOR_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH05", "멘토의 닉네임 정보가 존재하지 않습니다");
 
     private final HttpStatus httpStatus;
     private final String type;
