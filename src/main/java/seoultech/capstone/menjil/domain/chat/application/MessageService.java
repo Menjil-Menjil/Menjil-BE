@@ -118,7 +118,7 @@ public class MessageService {
         try {
             messageRepository.save(message);
         } catch (RuntimeException e) {
-            log.error(">> messageRepository.save() error occured ", e);
+            log.error(">> sendAIMessage] save() error occured ", e);
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 
@@ -131,18 +131,18 @@ public class MessageService {
         if (!saveMsg) {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
+        String mentorNickname = findMentorNickname(roomId, messageRequest.getSenderNickname());
 
         // 2. ChatGPT에게 질문 데이터 전달하여 세줄 요약 결과를 받아온다.
         Message message = chatGptService.getMessageFromGpt(messageRequest.getMessage());
 
         // 3. Create AwsLambdaRequest
-        AwsLambdaRequest awsLambdaRequest = AwsLambdaRequest.of(findMentorNickname(roomId, messageRequest.getSenderNickname()),
-                messageRequest.getSenderNickname(), messageRequest.getMessage(),
-                message.getContent());
+        AwsLambdaRequest awsLambdaRequest = AwsLambdaRequest.of(messageRequest.getSenderNickname(),
+                mentorNickname, messageRequest.getMessage(), message.getContent());
 
         // 4. Make the POST request to AWS Lambda and block to get the response
-        List<AwsLambdaResponse> flaskResponseDtoList = flaskWebClient.post()
-                .uri("/api/lambda")
+        List<AwsLambdaResponse> awsLambdaResponseList = flaskWebClient.post()
+                .uri("/api/lambda/question")
                 .body(BodyInserters.fromValue(awsLambdaRequest))
                 .retrieve()
                 .bodyToFlux(AwsLambdaResponse.class)
@@ -154,16 +154,16 @@ public class MessageService {
         ChatMessage flaskResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
-                .senderNickname(findMentorNickname(roomId, messageRequest.getSenderNickname()))
-                .messageList(flaskResponseDtoList)  // save three of summary_question and answer
-                .messageType(MessageType.AI_QUESTION_RESPONSE)
+                .senderNickname(mentorNickname)
+                .messageList(awsLambdaResponseList)  // save three of summary_question and answer
+                .messageType(MessageType.AI_SUMMARY)
                 .time(now)
                 .build();
 
         try {
             messageRepository.save(flaskResponseMessage);
         } catch (RuntimeException e) {
-            log.error(">> messageRepository.save() error occured ", e);
+            log.error(">> handleQuestion] save() error occured ", e);
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
 

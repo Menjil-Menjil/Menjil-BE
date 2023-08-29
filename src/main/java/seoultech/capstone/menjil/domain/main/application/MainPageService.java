@@ -46,10 +46,12 @@ public class MainPageService {
 
     /**
      * 멘토 리스트를 가져오는 메서드
+     * nickname은, 추후 멘토 추천 알고리즘 사용시 필요할 수 있으므로, 우선 받도록 하였으나.
+     * 현재 수행하는 기능은 없다.
      */
-    public Page<MentorInfoResponse> getMentorList(Pageable pageable) {
+    public Page<MentorInfoResponse> getMentorList(String nickname, Pageable pageable) {
         Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
-        Page<MentorInfoResponse> mentorInfoDto = page.map(user -> {
+        Page<MentorInfoResponse> mentorInfoResponse = page.map(user -> {
             MentorInfoResponse dto = MentorInfoResponse.fromUserEntity(user);
 
             // set AWS S3 presigned url
@@ -61,7 +63,7 @@ public class MainPageService {
             dto.setLastAnsweredMessage("현재 테스트 중입니다");
             return dto;
         });
-        return mentorInfoDto;
+        return mentorInfoResponse;
     }
 
     /**

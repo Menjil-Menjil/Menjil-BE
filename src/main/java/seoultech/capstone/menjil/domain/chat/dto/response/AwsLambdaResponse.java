@@ -1,12 +1,13 @@
 package seoultech.capstone.menjil.domain.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class AwsLambdaResponse {
     @JsonProperty(value = "question_summary")
     private String threeLineSummaryMessage;
@@ -14,9 +15,7 @@ public class AwsLambdaResponse {
     @JsonProperty(value = "answer")
     private String answer;
 
-    @Builder
-    private AwsLambdaResponse(String threeLineSummaryMessage, String answer) {
-        this.threeLineSummaryMessage = threeLineSummaryMessage;
-        this.answer = answer;
-    }
+    @JsonProperty(value = "similarity_percent")
+    private double similarityPercent;
+
 }

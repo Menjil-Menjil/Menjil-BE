@@ -65,7 +65,7 @@ class AuthControllerTest {
         String email = "Junit-test@gmail.com";
         String provider = "google";
 
-        Mockito.when(authService.checkUserExistsInDb(email, provider)).thenReturn(200);
+        Mockito.when(authService.findUserInDb(email, provider)).thenReturn(200);
 
         mvc.perform(get("/api/auth/signup")
                         .queryParam("email", email)
@@ -75,7 +75,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message", is(SuccessCode.SIGNUP_AVAILABLE.getMessage())))
                 .andDo(print());
 
-        verify(authService).checkUserExistsInDb(email, provider);
+        verify(authService).findUserInDb(email, provider);
     }
 
     @Test
@@ -85,7 +85,7 @@ class AuthControllerTest {
         String email = "Junit-test@gmail.com";
         String provider = "google";
 
-        Mockito.when(authService.checkUserExistsInDb(email, provider)).thenReturn(409);
+        Mockito.when(authService.findUserInDb(email, provider)).thenReturn(409);
 
         mvc.perform(get("/api/auth/signup")
                         .queryParam("email", email)
@@ -97,7 +97,7 @@ class AuthControllerTest {
                         is(ErrorCode.USER_DUPLICATED.getMessage())))
                 .andDo(print());
 
-        verify(authService).checkUserExistsInDb(email, provider);
+        verify(authService).findUserInDb(email, provider);
     }
 
     /**
@@ -109,7 +109,7 @@ class AuthControllerTest {
         String nickname = "test33AA가나마";
         int httpOkValue = HttpStatus.OK.value();
 
-        Mockito.when(authService.checkNicknameDuplication(nickname)).thenReturn(httpOkValue);
+        Mockito.when(authService.findNicknameInDb(nickname)).thenReturn(httpOkValue);
 
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", nickname))
@@ -118,7 +118,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message", is(SuccessCode.NICKNAME_AVAILABLE.getMessage())))
                 .andDo(print());
 
-        verify(authService).checkNicknameDuplication(nickname);
+        verify(authService).findNicknameInDb(nickname);
     }
 
     @Test
@@ -153,7 +153,7 @@ class AuthControllerTest {
         String nickname = "NicknameExistsInDB";
         int httpConflictValue = HttpStatus.CONFLICT.value();
 
-        Mockito.when(authService.checkNicknameDuplication(nickname)).thenReturn(httpConflictValue);
+        Mockito.when(authService.findNicknameInDb(nickname)).thenReturn(httpConflictValue);
 
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", nickname))
@@ -162,7 +162,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message", is(ErrorCode.NICKNAME_DUPLICATED.getMessage())))
                 .andDo(print());
 
-        verify(authService).checkNicknameDuplication(nickname);
+        verify(authService).findNicknameInDb(nickname);
     }
 
     /**
