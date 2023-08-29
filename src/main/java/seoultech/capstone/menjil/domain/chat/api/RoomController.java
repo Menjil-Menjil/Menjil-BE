@@ -56,9 +56,9 @@ public class RoomController {
      * 사용자의 전체 Room 목록을 불러온다
      */
     @GetMapping("/rooms")
-    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllRooms(@RequestParam("nickname") String nickname,
-                                                                           @RequestParam("type") String type) {
-        List<RoomInfoResponse> result = roomService.getAllRooms(nickname, type);
+    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllRoomsOfUser(@RequestParam("nickname") String nickname,
+                                                                                 @RequestParam("type") String type) {
+        List<RoomInfoResponse> result = roomService.getAllRoomsOfUser(nickname, type);
 
         if (result.size() == 0) {
             return ResponseEntity.status(HttpStatus.OK)

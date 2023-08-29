@@ -21,6 +21,7 @@ import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -123,7 +124,7 @@ class MainPageControllerTest {
     }
 
     /**
-     * getUserInfo()
+     * getAllRoomsOfUser()
      */
     @Test
     @DisplayName("mainPageService의 roomInfoList의 결과로 빈 List가 반환되는 경우(생성된 채팅방이 존재하지 않는 경우)")
@@ -133,7 +134,7 @@ class MainPageControllerTest {
         List<RoomInfoResponse> roomList = new ArrayList<>();
 
         // when
-        Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
+        Mockito.when(mainPageService.getAllRoomsOfUser(nickname)).thenReturn(roomList);
 
         // then
         mvc.perform(get("/api/main/userinfo")
@@ -144,7 +145,7 @@ class MainPageControllerTest {
                 .andExpect(jsonPath("$.data").isEmpty())   // 빈 리스트
                 .andDo(print());
 
-        verify(mainPageService, times(1)).getUserRoomList(nickname);
+        verify(mainPageService, times(1)).getAllRoomsOfUser(nickname);
     }
 
     @Test
@@ -152,15 +153,16 @@ class MainPageControllerTest {
     void getUserInfo_room_exists_in_db() throws Exception {
         // given
         String nickname = "test1";
+        LocalDateTime now = LocalDateTime.now();
         List<RoomInfoResponse> roomList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
             roomList.add(RoomInfoResponse.of("room_" + i, nickname, "test_url",
-                    "message_" + i, (long) i));
+                    "message_" + i, now.plusSeconds(1000L)));
         }
 
         // when
         // 내가 넣는 대로 Mocking되므로, 방의 순서를 보장하지는 않는다.(내림차순)
-        Mockito.when(mainPageService.getUserRoomList(nickname)).thenReturn(roomList);
+        Mockito.when(mainPageService.getAllRoomsOfUser(nickname)).thenReturn(roomList);
 
         // then
         mvc.perform(get("/api/main/userinfo")
@@ -171,7 +173,7 @@ class MainPageControllerTest {
                 .andExpect(jsonPath("$.data").isNotEmpty())   // 데이터가 존재하는 리스트
                 .andDo(print());
 
-        verify(mainPageService, times(1)).getUserRoomList(nickname);
+        verify(mainPageService, times(1)).getAllRoomsOfUser(nickname);
     }
 
     private User createUser(String id, String email, String nickname, UserRole role) {

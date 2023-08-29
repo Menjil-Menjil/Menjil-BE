@@ -249,11 +249,12 @@ class RoomControllerTest {
         String nickname2 = "서울과기대2123";
         String nickname3 = "서울시립1873";
         String type = "MENTEE";
+        LocalDateTime now = LocalDateTime.now();
 
         // when
-        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(Arrays.asList(
-                RoomInfoResponse.of(roomId2, nickname2, "test_url", "hello here~~22", 2L),
-                RoomInfoResponse.of(roomId3, nickname3, "test_url", "hello there~~33", 3L)
+        Mockito.when(roomService.getAllRoomsOfUser(targetNickname, type)).thenReturn(Arrays.asList(
+                RoomInfoResponse.of(roomId2, nickname2, "test_url", "hello here~~22", now),
+                RoomInfoResponse.of(roomId3, nickname3, "test_url", "hello there~~33", now.plusSeconds(1L))
         ));
 
         // then
@@ -269,7 +270,7 @@ class RoomControllerTest {
                 .andExpect(jsonPath("$.data[1].roomId", is(roomId3)))
                 .andDo(print());
 
-        verify(roomService, times(1)).getAllRooms(targetNickname, type);
+        verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
     }
 
     @Test
@@ -281,7 +282,7 @@ class RoomControllerTest {
         List<RoomInfoResponse> result = new ArrayList<>();
 
         // when
-        Mockito.when(roomService.getAllRooms(targetNickname, type)).thenReturn(result);
+        Mockito.when(roomService.getAllRoomsOfUser(targetNickname, type)).thenReturn(result);
 
         // then
         mvc.perform(MockMvcRequestBuilders.get("/api/chat/rooms/")
@@ -293,7 +294,7 @@ class RoomControllerTest {
                 .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 
-        verify(roomService, times(1)).getAllRooms(targetNickname, type);
+        verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
     }
 
 }

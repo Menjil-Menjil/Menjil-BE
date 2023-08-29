@@ -37,11 +37,19 @@ public class MainPageController {
     }
 
     @GetMapping("/userinfo")
-    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getUserInfo(@RequestParam("nickname") String nickname) {
-        List<RoomInfoResponse> roomInfoResponseList = mainPageService.getUserRoomList(nickname);
+    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllRoomsOfUser(@RequestParam("nickname") String nickname) {
+        List<RoomInfoResponse> roomInfoResponseList = mainPageService.getAllRoomsOfUser(nickname);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(SuccessCode.GET_USER_ROOMS_AVAILABLE, roomInfoResponseList));
+    }
+
+    /**
+     * 관심 멘토의 목록을 불러온다
+     */
+    @GetMapping("/my/mentors")
+    public void getFollowersOfUser(@RequestParam("nickname") String nickname) {
+
     }
 
 }
