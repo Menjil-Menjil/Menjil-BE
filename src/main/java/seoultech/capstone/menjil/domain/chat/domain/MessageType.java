@@ -7,5 +7,10 @@ public enum MessageType {
      * TALK: 사용자의 자유 대화
      * QUIT: 채팅방 퇴장
      */
-    ENTER, QUESTION, AI_QUESTION_RESPONSE, TALK, QUIT
+    ENTER,
+    QUESTION,
+    AI_QUESTION_RESPONSE,
+    AI_SUMMARY,
+    TALK,
+    QUIT
 }
