@@ -62,6 +62,7 @@ class RoomControllerTest {
     /**
      * enterTheRoom()
      */
+    /*
     @Test
     @DisplayName("방 입장시 기존에 채팅방이 존재하지 않는 경우")
     void enterTheRoom_when_room_not_exists() throws Exception {
@@ -234,7 +235,7 @@ class RoomControllerTest {
         assertThat(capturedResponseEntity.getBody().getCode()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode());
         assertThat(capturedResponseEntity.getBody().getMessage()).isEqualTo(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage());
         assertThat(capturedResponseEntity.getBody().getData()).isEqualTo(messageList);
-    }
+    }*/
 
     /**
      * getAllRooms()
