@@ -111,6 +111,30 @@ public class MessageService {
     /**
      * MessageType: QUESTION
      */
+    public MessageResponse sendClientMessage(MessageRequest messageRequest) {
+        // messageDto의 time format 검증
+        LocalDateTime dateTime;
+        try {
+            String time = messageRequest.getTime();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            dateTime = LocalDateTime.parse(time, formatter);
+        } catch (RuntimeException e) {
+            log.error(">> Failed to parse date-time string.", e);
+            return null;
+        }
+
+        return MessageResponse.builder()
+                .order(null)
+                .roomId(messageRequest.getRoomId())
+                .senderType(messageRequest.getSenderType())
+                .senderNickname(messageRequest.getSenderNickname())
+                .message(messageRequest.getMessage())
+                .messageList(null)
+                .messageType(messageRequest.getMessageType())
+                .time(dateTime)
+                .build();
+    }
+
     public MessageResponse sendAIMessage(String roomId, MessageRequest messageRequest) {
         String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와줄 AI 서포터입니다.\n" +
                 "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
