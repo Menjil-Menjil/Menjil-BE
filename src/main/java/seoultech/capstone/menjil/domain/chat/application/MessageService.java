@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
@@ -13,15 +14,15 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.Message;
+import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.AwsLambdaRequest;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
-import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -30,16 +31,16 @@ import java.util.List;
 @Service
 public class MessageService {
 
-    private final WebClient flaskWebClient;
+    private final WebClient apiGatewayClient;
     private final ChatGptService chatGptService;
     private final MessageRepository messageRepository;
     private final RoomRepository roomRepository;
 
     @Autowired
-    public MessageService(@Qualifier("flaskWebClient") WebClient flaskWebClient,
+    public MessageService(@Qualifier("apiGatewayClient") WebClient apiGatewayClient,
                           ChatGptService chatGptService, MessageRepository messageRepository,
                           RoomRepository roomRepository) {
-        this.flaskWebClient = flaskWebClient;
+        this.apiGatewayClient = apiGatewayClient;
         this.chatGptService = chatGptService;
         this.messageRepository = messageRepository;
         this.roomRepository = roomRepository;
@@ -50,12 +51,18 @@ public class MessageService {
      */
     public MessageResponse sendWelcomeMessage(RoomDto roomDto) {
         ChatMessage welcomeMsg = new ChatMessage();
+        String roomId = roomDto.getRoomId();
+        SenderType type = SenderType.MENTOR;
+        String mentorNickname = roomDto.getMentorNickname();
         String welcomeMessage = "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
                 + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
-
+        Object messageList = null;
+        MessageType messageType = MessageType.ENTER;
         LocalDateTime now = LocalDateTime.now().withNano(0);     // ignore milliseconds
-        welcomeMsg.setWelcomeMessage(roomDto.getRoomId(), SenderType.MENTOR,
-                roomDto.getMentorNickname(), welcomeMessage, MessageType.ENTER, now);
+
+        // Create Welcome Message
+        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname,
+                welcomeMessage, messageList, messageType, now);
 
         // save entity to mongoDB
         try {
@@ -72,7 +79,11 @@ public class MessageService {
     /**
      * 채팅 메시지를 저장한다.
      */
-    public boolean saveChatMessage(MessageRequest messageRequest) {
+    public int saveChatMessage(MessageRequest messageRequest) {
+        int TIME_INPUT_INVALID = 0;
+        int INTERNAL_SERVER_ERROR = 1;
+        int SAVE_SUCCESS = 100;
+
         // messageDto의 time format 검증
         LocalDateTime dateTime;
         try {
@@ -81,21 +92,20 @@ public class MessageService {
             dateTime = LocalDateTime.parse(time, formatter);
         } catch (RuntimeException e) {
             log.error(">> Failed to parse date-time string.", e);
-            throw new CustomException(ErrorCode.TIME_INPUT_INVALID);
+            return TIME_INPUT_INVALID;
         }
 
         // MessageRequest -> ChatMessage(Entity) 변환
         ChatMessage chatMessage = MessageRequest.toChatMessageEntity(messageRequest, dateTime);
 
         // save entity to mongoDB
-        // 저장이 잘된 경우 true, 그렇지 않은 경우 false 리턴
         try {
             messageRepository.save(chatMessage);
         } catch (RuntimeException e) {
             log.error(">> messageRepository.save() error occured ", e);
-            return false;
+            return INTERNAL_SERVER_ERROR;
         }
-        return true;
+        return SAVE_SUCCESS;
     }
 
     /**
@@ -119,55 +129,75 @@ public class MessageService {
             messageRepository.save(message);
         } catch (RuntimeException e) {
             log.error(">> sendAIMessage] save() error occured ", e);
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            return null;
         }
 
         return MessageResponse.fromChatMessageEntity(message, null);
     }
 
-    public MessageListResponse handleQuestion(String roomId, MessageRequest messageRequest) {
-        // 1. 사용자가 입력한 채팅 메시지 저장
-        boolean saveMsg = saveChatMessage(messageRequest);
-        if (!saveMsg) {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
-        }
+    public MessageResponse handleQuestion(String roomId, MessageRequest messageRequest) {
         String mentorNickname = findMentorNickname(roomId, messageRequest.getSenderNickname());
 
-        // 2. ChatGPT에게 질문 데이터 전달하여 세줄 요약 결과를 받아온다.
+        // 1. ChatGPT에게 질문 데이터 전달하여 세줄 요약 결과를 받아온다.
         Message message = chatGptService.getMessageFromGpt(messageRequest.getMessage());
 
-        // 3. Create AwsLambdaRequest
+        // 2. Create AwsLambdaRequest
         AwsLambdaRequest awsLambdaRequest = AwsLambdaRequest.of(messageRequest.getSenderNickname(),
                 mentorNickname, messageRequest.getMessage(), message.getContent());
 
-        // 4. Make the POST request to AWS Lambda and block to get the response
-        List<AwsLambdaResponse> awsLambdaResponseList = flaskWebClient.post()
-                .uri("/api/lambda/question")
-                .body(BodyInserters.fromValue(awsLambdaRequest))
-                .retrieve()
-                .bodyToFlux(AwsLambdaResponse.class)
-                .collectList()
-                .block();  // Use block() for a non-reactive application*/
+        // 3. Make the POST request to AWS Lambda and block to get the response
+        List<AwsLambdaResponse> awsLambdaResponseList = null;
+        try {
+            awsLambdaResponseList = apiGatewayClient.post()
+                    .uri("/api/lambda/question")
+                    .body(BodyInserters.fromValue(awsLambdaRequest))
+                    .retrieve()
+                    .bodyToFlux(AwsLambdaResponse.class)
+                    .timeout(Duration.ofSeconds(180))  // throws TimeoutException if no items are emitted within 180 seconds
+                    .onErrorResume(e -> {
+                        if (e instanceof java.util.concurrent.TimeoutException) {
+                            log.error("Request to Lambda timed out", e);
+                            return Mono.empty();
+                        } else {
+                            log.error("An error occurred", e);
+                            return Mono.empty();
+                        }
+                    })
+                    .collectList()
+                    .block();  // Use block() for a non-reactive application*/
+        } catch (Exception e) {
+            log.error(">> An exception occurred while making the AWS Lambda request", e);
+            // Handle the exception
+            return null;
+        }
 
-        // 5. 응답 메시지 db에 저장
+        // 4. 응답 메시지 db에 저장
+        String awsMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록입니다";
         LocalDateTime now = LocalDateTime.now().withNano(0);     // ignore milliseconds
-        ChatMessage flaskResponseMessage = ChatMessage.builder()
+        ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
                 .senderNickname(mentorNickname)
+                .message(awsMessage)
                 .messageList(awsLambdaResponseList)  // save three of summary_question and answer
                 .messageType(MessageType.AI_SUMMARY)
                 .time(now)
                 .build();
 
-        try {
-            messageRepository.save(flaskResponseMessage);
-        } catch (RuntimeException e) {
-            log.error(">> handleQuestion] save() error occured ", e);
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+        if (awsLambdaResponseList.size() == 1) {
+            String awsListMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
+            awsLambdaResponseMessage.setLambdaMessage(awsListMessage);
+            awsLambdaResponseMessage.setLambdaMessageList(null);
         }
 
-        return MessageListResponse.fromChatMessageEntity(flaskResponseMessage, null);
+        try {
+            messageRepository.save(awsLambdaResponseMessage);
+        } catch (RuntimeException e) {
+            log.error(">> handleQuestion] save() error occured ", e);
+            return null;
+        }
+
+        return MessageResponse.fromChatMessageEntity(awsLambdaResponseMessage, null);
     }
 
     /**

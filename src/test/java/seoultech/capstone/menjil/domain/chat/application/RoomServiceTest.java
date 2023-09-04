@@ -25,6 +25,7 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +88,7 @@ class RoomServiceTest {
         String mentorNickname = TEST_MENTOR_NICKNAME;
         String roomId = TEST_ROOM_ID + "no";
 
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(mentorNickname)
                 .menteeNickname(menteeNickname)
                 .roomId(roomId)
@@ -105,7 +106,7 @@ class RoomServiceTest {
         String mentorNickname = TEST_MENTOR_NICKNAME + "no";
         String roomId = TEST_ROOM_ID + "no";
 
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(mentorNickname)
                 .menteeNickname(menteeNickname)
                 .roomId(roomId)
@@ -121,7 +122,7 @@ class RoomServiceTest {
         // given
         String roomId = TEST_ROOM_ID + "no";
 
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(TEST_MENTEE_NICKNAME)
                 .roomId(roomId)
@@ -141,7 +142,7 @@ class RoomServiceTest {
     @Test
     @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 3개 존재하는 경우")
     void enterTheRoom_when_Room_already_exists() {
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(TEST_MENTEE_NICKNAME)
                 .roomId(TEST_ROOM_ID)
@@ -213,7 +214,7 @@ class RoomServiceTest {
     @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 다수 존재하는 경우")
     void enterTheRoom_when_Room_already_exists_2() {
         // given
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(TEST_MENTEE_NICKNAME)
                 .roomId(TEST_ROOM_ID)
@@ -264,11 +265,11 @@ class RoomServiceTest {
     }
 
     /**
-     * getAllRooms()
+     * getAllRoomsOfUser()
      */
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하면, RoomInfo 객체 3개가 리턴된다")
-    void getAllRooms_By_MENTEE() {
+    void getAllRoomsOfUser_By_MENTEE() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
         String room2MentorNickname = TEST_MENTOR_NICKNAME + "room2";
@@ -359,7 +360,7 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
-    void getAllRooms_By_MENTEE_when_data_is_Null() {
+    void getAllRoomsOfUser_By_MENTEE_when_data_is_Null() {
         String notExistsMenteeNickname = "mentee_haha_hoho";
         List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMenteeNickname, TYPE_MENTEE);
 
@@ -368,7 +369,7 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하면, RoomInfo 객체 3개가 리턴된다")
-    void getAllRooms_By_MENTOR() {
+    void getAllRoomsOfUser_By_MENTOR() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
         String room2MenteeNickname = TEST_MENTEE_NICKNAME + "room2";
@@ -458,7 +459,7 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("멘토가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
-    void getAllRooms_By_MENTOR_when_data_is_Null() {
+    void getAllRoomsOfUser_By_MENTOR_when_data_is_Null() {
         String notExistsMentorNickname = "mentor_haha_hoho";
         List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMentorNickname, TYPE_MENTOR);
 
@@ -467,11 +468,120 @@ class RoomServiceTest {
 
     @Test
     @DisplayName("type이 MENTEE, MENTOR가 아닌 경우 CustomException 리턴")
-    void getAllRooms_type_mismatch() {
+    void getAllRoomsOfUser_type_mismatch() {
         String typeMismatch = "MENTORWA";
         assertThrows(CustomException.class, () -> roomService.getAllRoomsOfUser(TEST_MENTEE_NICKNAME, typeMismatch));
     }
 
+    /**
+     * chatMessageIsMoreThanOne
+     */
+    @Test
+    @DisplayName("List의 개수가 2개이면 true 리턴")
+    void chatMessageIsMoreThanOne_return_true() {
+        // given
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<MessageResponse> messageResponses = Arrays.asList(
+                MessageResponse.builder()
+                        ._id("test_uuid_1")
+                        .order(1)
+                        .roomId("test_room_1")
+                        .senderType(SenderType.MENTOR)
+                        .senderNickname("test_mentor_nickname")
+                        .message("mentor's response")
+                        .messageType(MessageType.TALK)
+                        .time(now)
+                        .build(),
+                MessageResponse.builder()
+                        ._id("test_uuid_2")
+                        .roomId("test_room_2")
+                        .order(2)
+                        .senderType(SenderType.MENTEE)
+                        .senderNickname("test_mentee_nickname")
+                        .message("test message 2")
+                        .messageType(MessageType.TALK)
+                        .time(now.plusSeconds(3000))
+                        .build()
+        );
+
+        // when
+        boolean result = roomService.chatMessageIsMoreThanOne(messageResponses);
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("List의 개수가 1 이하면 false 리턴")
+    void chatMessageIsMoreThanOne_return_false() {
+        // given
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
+                ._id("test_uuid_1")
+                .order(null)   // here is null
+                .roomId("test_room_id")
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now)
+                .build());
+
+        // when
+        boolean result = roomService.chatMessageIsMoreThanOne(response);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    /**
+     * firstEnterTheRoom
+     */
+    @Test
+    @DisplayName("order가 null이면 true 리턴")
+    void firstEnterTheRoom_order_is_null_return_true() {
+        // given
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
+                ._id("test_uuid_1")
+                .order(null)   // here is null
+                .roomId("test_room_id")
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now)
+                .build());
+
+        // when
+        boolean result = roomService.firstEnterTheRoom(response);
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("order가 1이면 false 리턴")
+    void firstEnterTheRoom_order_is_one_return_false() {
+        // given
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
+                ._id("test_uuid_1")
+                .order(1)   // here is not null
+                .roomId("test_room_id")
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now)
+                .build());
+
+        // when
+        boolean result = roomService.firstEnterTheRoom(response);
+
+        // then
+        assertThat(result).isFalse();
+    }
 
     private User createUser(String id, String email, String nickname, UserRole role) {
         return User.builder()

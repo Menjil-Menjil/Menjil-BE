@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Value("${flask.url}")
-    private String FLASK_SERVER_URL;
+    private String AWS_API_GATEWAY_URL;
 
     @Value("${openai.api.url}")
     private String OPEN_AI_URL;
@@ -19,10 +19,10 @@ public class WebClientConfig {
     @Value("${openai.api.secret-key}")
     private String OPEN_AI_SECRET_KEY;
 
-    @Bean(name = "flaskWebClient")
-    public WebClient flaskWebClient() {
+    @Bean(name = "apiGatewayClient")
+    public WebClient apiGatewayClient() {
         return WebClient.builder()
-                .baseUrl(FLASK_SERVER_URL)
+                .baseUrl(AWS_API_GATEWAY_URL)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }

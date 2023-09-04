@@ -33,24 +33,19 @@ public class RoomController {
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
         List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
 
-        ResponseEntity<ApiResponse<List<MessageResponse>>> messageResponse;
-        if (messageList.size() > 1) {
-            messageResponse = ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
+        ApiResponse<List<MessageResponse>> messageResponse;
+        if (roomService.chatMessageIsMoreThanOne(messageList)) {
+            messageResponse = ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList);
         } else {
-            // messageList의 개수가 1개인 경우는, 처음 입장했을 때와, 재입장했을 때 두 가지 경우가 동시에 존재한다
-            if (messageList.get(0).getOrder() == null) {
-                // This case is when the user enters the room at the first time.
-                messageResponse = ResponseEntity.status(HttpStatus.OK)
-                        .body(ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList));
+            if (roomService.firstEnterTheRoom(messageList)) {
+                messageResponse = ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList);
             } else {
-                messageResponse = ResponseEntity.status(HttpStatus.CREATED)
-                        .body(ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList));
+                messageResponse = ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList);
             }
         }
 
         // /queue/chat/room/{room id}로 메세지 보냄
-        simpMessagingTemplate.convertAndSend("/pub/chat/room/" + roomDto.getRoomId(), messageResponse);
+        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomDto.getRoomId(), messageResponse);
     }
 
     /**
@@ -68,13 +63,6 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.success(SuccessCode.GET_ROOMS_AVAILABLE, result));
         }
-    }
-
-    /**
-     * 사용자가 방에서 퇴장한다
-     */
-    public void quitRoom() {
-
     }
 
 }

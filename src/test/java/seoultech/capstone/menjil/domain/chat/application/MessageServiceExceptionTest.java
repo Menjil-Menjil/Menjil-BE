@@ -17,8 +17,7 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -31,13 +30,17 @@ public class MessageServiceExceptionTest {
     @Mock
     private MessageRepository messageRepository;
 
+    private final int TIME_INPUT_INVALID = 0;
+    private final int INTERNAL_SERVER_ERROR = 1;
+    private final int SAVE_SUCCESS = 100;
+
     /**
      * sendWelcomeMessage()
      */
     @Test
     void sendWelcomeMessage_Should_Throw_CustomException_WhenSaveFails() {
         // Arrange
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .mentorNickname("test_mentor")
                 .menteeNickname("test_mentee")
                 .roomId("test_room_id")
@@ -70,10 +73,10 @@ public class MessageServiceExceptionTest {
         when(messageRepository.save(any(ChatMessage.class))).thenThrow(new DataIntegrityViolationException("Error"));
 
         // Act
-        boolean result = messageService.saveChatMessage(messageDto);
+        int result = messageService.saveChatMessage(messageDto);
 
         // Assert
-        assertFalse(result);
+        assertEquals(result, INTERNAL_SERVER_ERROR);
         verify(messageRepository, times(1)).save(any(ChatMessage.class));
     }
 

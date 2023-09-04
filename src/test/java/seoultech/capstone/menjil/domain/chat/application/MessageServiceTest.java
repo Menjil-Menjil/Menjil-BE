@@ -13,13 +13,11 @@ import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
-import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
@@ -30,6 +28,9 @@ class MessageServiceTest {
     private MessageService messageService;
     @Autowired
     private MessageRepository messageRepository;
+
+    private final int TIME_INPUT_INVALID = 0;
+    private final int SAVE_SUCCESS = 100;
 
     @AfterEach
     void resetData() {
@@ -48,7 +49,7 @@ class MessageServiceTest {
         String menteeNickname = "test_mentee_one";
         String mentorNickname = "test_mentor_one";
 
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .menteeNickname(menteeNickname)
                 .mentorNickname(mentorNickname)
                 .roomId(roomId)
@@ -70,7 +71,7 @@ class MessageServiceTest {
      * saveChatMessage()
      */
     @Test
-    @DisplayName("클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 true 리턴")
+    @DisplayName("클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 int 100 리턴")
     void saveChatMessage() {
         // given
         LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
@@ -87,19 +88,20 @@ class MessageServiceTest {
                 .build();
 
         // when
-        boolean result = messageService.saveChatMessage(messageDto);
+        int result = messageService.saveChatMessage(messageDto);
 
         // then
-        assertThat(result).isTrue();
+        assertThat(result).isEqualTo(SAVE_SUCCESS);
     }
 
     @Test
-    @DisplayName("MessageDto에서 time 형식이 올바르지 않은 경우 CustomException 발생")
+    @DisplayName("MessageDto에서 time 형식이 올바르지 않은 경우 int 0 리턴")
     void saveChatMessage_time_format_is_not_alright() {
         // given
         String format_is_wrong = "2023:08:14T12:23:00";
+        String format_is_wrong_v2 = "2023:08:14  12:23:00"; // 공백 2칸
 
-        MessageRequest messageDto = MessageRequest.builder()
+        MessageRequest messageDto1 = MessageRequest.builder()
                 .roomId("test_room_3")
                 .senderType(SenderType.MENTOR)
                 .senderNickname("test_mentor_nickname")
@@ -108,8 +110,21 @@ class MessageServiceTest {
                 .time(format_is_wrong)
                 .build();
 
-        // when
-        assertThrows(CustomException.class, () -> messageService.saveChatMessage(messageDto));
-    }
+        MessageRequest messageDto2 = MessageRequest.builder()
+                .roomId("test_room_3")
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(format_is_wrong_v2)
+                .build();
 
+        // when
+        int result1 = messageService.saveChatMessage(messageDto1);
+        int result2 = messageService.saveChatMessage(messageDto2);
+
+        // then
+        assertThat(result1).isEqualTo(TIME_INPUT_INVALID);
+        assertThat(result2).isEqualTo(TIME_INPUT_INVALID);
+    }
 }

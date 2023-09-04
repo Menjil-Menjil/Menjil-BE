@@ -80,6 +80,7 @@ public class RoomService {
                 throw new CustomException(ErrorCode.SERVER_ERROR);
             }
 
+            // Welcome Message를 전달한다.
             RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
             MessageResponse messageResponse = messageService.sendWelcomeMessage(newRoomDto);
             result.add(messageResponse);
@@ -146,9 +147,6 @@ public class RoomService {
         String mentorNickname = room.getMentorNickname();
         String roomId = room.getId();
 
-        System.out.println("roomId = " + roomId);
-
-
         // Get MENTOR img url
         User mentor = userRepository.findUserByNickname(mentorNickname)
                 .orElse(null);
@@ -166,8 +164,7 @@ public class RoomService {
         String lastMessage = messagePage.get(0).getMessage();
         LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
-        return RoomInfoResponse.of(roomId, mentorNickname,
-                mentorImgUrl, lastMessage, lastMessageTime);
+        return RoomInfoResponse.of(roomId, mentorNickname, mentorImgUrl, lastMessage, lastMessageTime);
     }
 
     /**
@@ -195,8 +192,7 @@ public class RoomService {
         String lastMessage = messagePage.get(0).getMessage();
         LocalDateTime lastMessageTime = messagePage.get(0).getTime();
 
-        return RoomInfoResponse.of(roomId, menteeNickname,
-                menteeImgUrl, lastMessage, lastMessageTime);
+        return RoomInfoResponse.of(roomId, menteeNickname, menteeImgUrl, lastMessage, lastMessageTime);
     }
 
     /**
@@ -208,5 +204,23 @@ public class RoomService {
                 .sorted(Comparator.comparing(RoomInfoResponse::getLastMessageTime).reversed())
                 .collect(Collectors.toList());
         return result;
+    }
+
+    /**
+     * Use in RoomController
+     * db에 저장된 대화 내용을 불러올 때, 대화 내용의 개수를 판단한다.
+     */
+    public boolean chatMessageIsMoreThanOne(List<MessageResponse> messages) {
+        int MESSAGE_IS_MORE_THAN_ONE = 1;
+        return messages.size() > MESSAGE_IS_MORE_THAN_ONE;
+    }
+
+    /**
+     * Use in RoomController
+     * When the user enters the room at the first time; @return true
+     * else;  @return false
+     */
+    public boolean firstEnterTheRoom(List<MessageResponse> messages) {
+        return messages.get(0).getOrder() == null;
     }
 }
