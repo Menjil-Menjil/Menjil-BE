@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
+import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 
 import java.time.LocalDateTime;
 

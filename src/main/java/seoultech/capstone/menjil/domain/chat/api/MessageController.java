@@ -33,10 +33,9 @@ public class MessageController {
         int SAVE_SUCCESS = 100;
 
         if (MessageType.QUESTION.equals(messageRequest.getMessageType())) {
-            // 1. save Chat Message
+            // 1. Save Client's Chat Message
             int saveChatMessage = messageService.saveChatMessage(messageRequest);
             ApiResponse<?> errorApiResponse;
-
             // Exception Handling
             if (saveChatMessage == TIME_INPUT_INVALID) {
                 errorApiResponse = ApiResponse.error(ErrorCode.TIME_INPUT_INVALID);
@@ -48,7 +47,20 @@ public class MessageController {
                 return;
             }
 
-            // 2. Send AI message
+            // 2. Send Client's Chat Message
+            // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
+            // 서버에서 다시 보내주는 식으로 처리하였음.x
+            MessageResponse clientMessageResponse = messageService.sendClientMessage(messageRequest);
+            ApiResponse<?> clientApiResponse = null;
+            if (clientMessageResponse == null) {
+                clientApiResponse = ApiResponse.error(ErrorCode.SERVER_ERROR);
+                simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, clientApiResponse);
+                return;
+            }
+            clientApiResponse = ApiResponse.success(SuccessCode.MESSAGE_SEND_SUCCESS, clientMessageResponse);
+            simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, clientApiResponse);
+
+            // 3. Send AI message
             // 이 부분은 추후 비동기 처리 고려
             MessageResponse response = messageService.sendAIMessage(roomId, messageRequest);
             ApiResponse<?> apiResponse = null;
@@ -59,7 +71,7 @@ public class MessageController {
             }
             simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, apiResponse);
 
-            // 3. Handle Question
+            // 4. Handle Question
             MessageResponse resultResponse = messageService.handleQuestion(roomId, messageRequest);
             ApiResponse<?> apiResponse2 = null;
             if (resultResponse == null) {
