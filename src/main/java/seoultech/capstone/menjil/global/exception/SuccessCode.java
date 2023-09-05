@@ -39,7 +39,11 @@ public enum SuccessCode {
     // chat
     MESSAGE_LOAD_SUCCESS(HttpStatus.CREATED.value(), "채팅 내역을 불러오는데 성공하였습니다"),
     MESSAGE_SEND_SUCCESS(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 입력되었습니다"),
-    AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다");
+    AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다"),
+
+    // follow
+    FOLLOW_CREATED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 생성되었습니다"),
+    FOLLOW_DELETED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 제거되었습니다");
 
     private final int code;
     private final String message;
