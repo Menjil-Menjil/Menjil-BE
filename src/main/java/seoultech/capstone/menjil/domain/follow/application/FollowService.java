@@ -42,6 +42,11 @@ public class FollowService {
         }
     }
 
+    public boolean checkFollowStatus(String userNickname, String followNickname) {
+        Optional<Follow> follow = followRepository.findFollowByUserNicknameAndFollowNickname(userNickname, followNickname);
+        return followIsExist(follow);
+    }
+
     public boolean followIsExist(Optional<Follow> follow) {
         return follow.isPresent();
     }

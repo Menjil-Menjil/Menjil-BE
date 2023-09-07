@@ -22,6 +22,9 @@ import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,11 +68,13 @@ class FollowControllerTest {
         mvc.perform(MockMvcRequestBuilders.post("/api/follow/request")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code", is(SuccessCode.FOLLOW_CREATED.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.FOLLOW_CREATED.getMessage())))
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
+
+        verify(followService, times(1)).followRequest(followRequest);
     }
 
     @Test
@@ -87,11 +92,13 @@ class FollowControllerTest {
         mvc.perform(MockMvcRequestBuilders.post("/api/follow/request")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code", is(SuccessCode.FOLLOW_DELETED.getCode())))
                 .andExpect(jsonPath("$.message", is(SuccessCode.FOLLOW_DELETED.getMessage())))
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
+
+        verify(followService, times(1)).followRequest(followRequest);
     }
 
     @Test
@@ -114,5 +121,54 @@ class FollowControllerTest {
                 .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
+
+        verify(followService, times(1)).followRequest(followRequest);
+    }
+
+    /**
+     * checkFollowStatus
+     */
+    @Test
+    @DisplayName("case 1: follow가 이미 존재하는 경우")
+    void checkFollowStatus_return_true() throws Exception {
+        // given
+        boolean FOLLOW_EXISTS = true;
+
+        // when
+        Mockito.when(followService.checkFollowStatus(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME)).thenReturn(FOLLOW_EXISTS);
+
+        // then
+        mvc.perform(MockMvcRequestBuilders.get("/api/follow/check-status/")
+                        .queryParam("userNickname", TEST_USER_NICKNAME)
+                        .queryParam("followNickname", TEST_FOLLOW_NICKNAME))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.FOLLOW_CHECK_SUCCESS.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.FOLLOW_CHECK_SUCCESS.getMessage())))
+                .andExpect(jsonPath("$.data").value(is(FOLLOW_EXISTS)))
+                .andDo(print());
+
+        verify(followService, times(1)).checkFollowStatus(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
+    }
+
+    @Test
+    @DisplayName("case 2: follow가 존재하지 않는 경우")
+    void checkFollowStatus_return_false() throws Exception {
+        // given
+        boolean FOLLOW_NOT_EXISTS = false;
+
+        // when
+        Mockito.when(followService.checkFollowStatus(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME)).thenReturn(FOLLOW_NOT_EXISTS);
+
+        // then
+        mvc.perform(MockMvcRequestBuilders.get("/api/follow/check-status/")
+                        .queryParam("userNickname", TEST_USER_NICKNAME)
+                        .queryParam("followNickname", TEST_FOLLOW_NICKNAME))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.FOLLOW_CHECK_SUCCESS.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.FOLLOW_CHECK_SUCCESS.getMessage())))
+                .andExpect(jsonPath("$.data").value(is(FOLLOW_NOT_EXISTS)))
+                .andDo(print());
+
+        verify(followService, times(1)).checkFollowStatus(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
     }
 }

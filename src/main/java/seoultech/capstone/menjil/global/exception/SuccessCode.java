@@ -30,6 +30,9 @@ public enum SuccessCode {
     FOLLOWS_NOT_EXISTS(HttpStatus.OK.value(), "관심 멘토 목록이 존재하지 않습니다"),
     FOLLOWS_EXISTS(HttpStatus.OK.value(), "관심 멘토 목록을 불러오는데 성공하였습니다"),
 
+    // follow
+    FOLLOW_CHECK_SUCCESS(HttpStatus.OK.value(), "팔로우 조회에 성공하셨습니다"),
+
 
     /**
      * 201 CREATED
