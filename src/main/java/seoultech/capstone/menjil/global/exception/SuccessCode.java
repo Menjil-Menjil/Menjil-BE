@@ -27,6 +27,8 @@ public enum SuccessCode {
     // main
     GET_USER_ROOMS_AVAILABLE(HttpStatus.OK.value(), "사용자의 채팅방 목록을 불러오는데 성공하였습니다"),
     GET_MENTOR_LIST_AVAILABLE(HttpStatus.OK.value(), "멘토 리스트를 불러오는데 성공하였습니다"),
+    FOLLOWS_NOT_EXISTS(HttpStatus.OK.value(), "관심 멘토 목록이 존재하지 않습니다"),
+    FOLLOWS_EXISTS(HttpStatus.OK.value(), "관심 멘토 목록을 불러오는데 성공하였습니다"),
 
 
     /**

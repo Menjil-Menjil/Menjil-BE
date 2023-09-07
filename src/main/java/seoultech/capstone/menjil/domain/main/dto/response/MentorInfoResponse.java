@@ -23,7 +23,7 @@ public class MentorInfoResponse {
 
     public static MentorInfoResponse fromUserEntity(User user) {
         return new MentorInfoResponse(user.getNickname(), user.getMajor(), user.getCompany(),
-                user.getField(), user.getTechStack(), null, null);
+                user.getField(), user.getTechStack(), user.getImgUrl(), null);
     }
 
     public void setImgUrl(String imgUrl) {

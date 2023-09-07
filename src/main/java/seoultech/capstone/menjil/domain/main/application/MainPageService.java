@@ -16,6 +16,9 @@ import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.follow.dao.Follow;
+import seoultech.capstone.menjil.domain.follow.domain.FollowRepository;
+import seoultech.capstone.menjil.domain.main.dto.response.FollowListResponse;
 import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -26,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +39,7 @@ public class MainPageService {
 
     private final AwsS3Handler awsS3Handler;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
     private final RoomRepository roomRepository;
     private final MessageRepository messageRepository;
 
@@ -105,9 +110,23 @@ public class MainPageService {
         return result;
     }
 
-    public void getFollowersOfUser(String nickname) {
-        // List<Follow> follows = followRepository.findFollowsByFollowerNickname(nickname);
-        // 팔로우 목록에는 멘토의 어떤 정보를 보여줘야 하는지 아직 모름..
+    public List<FollowListResponse> getFollowersOfUser(String nickname) {
+        List<User> followUsers = followRepository.findFollowsByUserNickname(nickname)
+                .stream()
+                .map(Follow::getFollowNickname)
+                .map(userRepository::findUserByNickname)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        return followUsers.stream()
+                .map(user -> {
+                    FollowListResponse response = FollowListResponse.fromUserEntity(user);
+                    response.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(
+                            BUCKET_NAME, response.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
     /**
