@@ -43,7 +43,7 @@ class FollowServiceTest {
      * followRequest
      */
     @Test
-    @DisplayName("이미 팔로우 내용이 존재하는 경우, FOLLOW_DELETED=1 을 리턴한다")
+    @DisplayName("db에 이미 팔로우 내용이 존재하는 경우, FOLLOW_DELETED=1 을 리턴한다")
     void followRequest_return_FOLLOW_DELETED() {
         // given
         FollowRequest followRequest = FollowRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
@@ -62,7 +62,7 @@ class FollowServiceTest {
     }
 
     @Test
-    @DisplayName("팔로우 내용이 존재하지 않는 경우, FOLLOW_CRETAED=0 을 리턴한다")
+    @DisplayName("팔로우 내용이 db에 존재하지 않는 경우, FOLLOW_CRETAED=0 을 리턴한다")
     void followRequest_return_FOLLOW_CRETAED() {
         // given
         String testUser = "testUser";
@@ -79,6 +79,38 @@ class FollowServiceTest {
 
         // db에 추가되었는지 검증
         assertThat(followRepository.findAll().size()).isEqualTo(2);
+    }
+
+    /**
+     * checkFollowStatus
+     */
+    @Test
+    @DisplayName("팔로우가 db에 이미 존재하는 경우 True 리턴")
+    void checkFollowStatus_return_true() {
+        // when
+        boolean result = followService.checkFollowStatus(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("팔로우가 db에 존재하지 않는 경우 False 리턴")
+    void checkFollowStatus_return_false() {
+        // given
+        String testUser = "testLala";
+        String testFollow = "testFollow";
+
+        // when
+        // user가 존재하지 않는 경우
+        boolean result1 = followService.checkFollowStatus(testUser, TEST_FOLLOW_NICKNAME);
+
+        // follow가 존재하지 않는 경우
+        boolean result2 = followService.checkFollowStatus(TEST_USER_NICKNAME, testFollow);
+
+        // then
+        assertThat(result1).isFalse();
+        assertThat(result2).isFalse();
     }
 
     /**
