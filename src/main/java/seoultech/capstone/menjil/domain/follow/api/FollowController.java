@@ -29,9 +29,9 @@ public class FollowController {
 
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<?>> followRequest(@Valid @RequestBody FollowRequest followRequest) {
-        int INTERNAL_SERVER_ERROR = 1;
-        int FOLLOW_CREATED = 100;
-        int FOLLOW_DELETED = 101;
+        int FOLLOW_CREATED = 0;
+        int FOLLOW_DELETED = 1;
+        int INTERNAL_SERVER_ERROR = -100;
 
         int result = followService.followRequest(followRequest);
         if (result == FOLLOW_CREATED) {
