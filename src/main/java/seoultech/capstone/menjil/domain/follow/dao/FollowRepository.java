@@ -1,7 +1,7 @@
-package seoultech.capstone.menjil.domain.follow.domain;
+package seoultech.capstone.menjil.domain.follow.dao;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import seoultech.capstone.menjil.domain.follow.dao.Follow;
+import seoultech.capstone.menjil.domain.follow.domain.Follow;
 
 import java.util.List;
 import java.util.Optional;

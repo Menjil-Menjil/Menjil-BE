@@ -3,8 +3,8 @@ package seoultech.capstone.menjil.domain.follow.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import seoultech.capstone.menjil.domain.follow.dao.Follow;
-import seoultech.capstone.menjil.domain.follow.domain.FollowRepository;
+import seoultech.capstone.menjil.domain.follow.domain.Follow;
+import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.dto.request.FollowRequest;
 
 import java.time.LocalDateTime;
