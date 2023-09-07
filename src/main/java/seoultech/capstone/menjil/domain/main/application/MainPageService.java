@@ -26,10 +26,7 @@ import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -118,6 +115,9 @@ public class MainPageService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
+
+        // 팔로우를 가장 최근에 한 사용자를 리스트 인덱스 0에 두도록 변경.
+        Collections.reverse(followUsers);
 
         return followUsers.stream()
                 .map(user -> {
