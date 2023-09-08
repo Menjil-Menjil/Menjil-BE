@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +21,7 @@ public class MentorInfoResponse {
     private String field;       // 관심 분야
     private String techStack;   // 기술 스택
     private String imgUrl;
-    private String lastAnsweredMessage; // 가장 최근에 답변한 질문 <- 이 부분은 추후 개발 예정
+    private List<String> lastAnsweredMessages; // 가장 최근에 답변한 질문(최대 2개)
 
     public static MentorInfoResponse fromUserEntity(User user) {
         return new MentorInfoResponse(user.getNickname(), user.getMajor(), user.getCompany(),
@@ -30,7 +32,7 @@ public class MentorInfoResponse {
         this.imgUrl = imgUrl;
     }
 
-    public void setLastAnsweredMessage(String lastAnsweredMessage) {
-        this.lastAnsweredMessage = lastAnsweredMessage;
+    public void setLastAnsweredMessage(List<String> lastAnsweredMessages) {
+        this.lastAnsweredMessages = lastAnsweredMessages;
     }
 }
