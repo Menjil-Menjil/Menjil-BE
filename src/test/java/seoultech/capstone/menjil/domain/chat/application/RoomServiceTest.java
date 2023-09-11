@@ -25,11 +25,10 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -55,15 +54,16 @@ class RoomServiceTest {
     private final String TYPE_MENTEE = "MENTEE";
 
     @BeforeEach
-    void init() {
-        // save Room
+    void setUp() {
+        // Save Room
         Room room = Room.builder()
-                .roomId(TEST_ROOM_ID).menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .build();
         roomRepository.save(room);
 
-        // save Mentee, Mentor
+        // Save Mentee and Mentor
         User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME,
                 UserRole.MENTEE);
         User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME,
@@ -78,46 +78,42 @@ class RoomServiceTest {
     }
 
     /**
-     * enterTheRoom()
+     * enterTheRoom
      */
     @Test
-    @DisplayName("'멘티'의 데이터가 db에 없는 경우, 방 입장 전에 CustomException 리턴")
+    @DisplayName("case 1: 멘티의 정보가 db에 없는 경우, 방 입장 시에 예외발생")
     void enterTheRoom_mentee_not_in_db() {
         // given
         String menteeNickname = TEST_MENTEE_NICKNAME + "no";
-        String mentorNickname = TEST_MENTOR_NICKNAME;
-        String roomId = TEST_ROOM_ID + "no";
 
         RoomDto roomDto = RoomDto.builder()
-                .mentorNickname(mentorNickname)
+                .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(menteeNickname)
-                .roomId(roomId)
+                .roomId(TEST_ROOM_ID)
                 .build();
 
-        // when
+        // then
         assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto));
     }
 
     @Test
-    @DisplayName("'멘토'의 데이터가 db에 없는 경우, 방 입장 전에 CustomException 리턴")
+    @DisplayName("case 1-1: 멘토의 정보가 db에 없는 경우, 방 입장 시에 예외발생")
     void enterTheRoom_mentor_not_in_db() {
         // given
-        String menteeNickname = TEST_MENTEE_NICKNAME;
         String mentorNickname = TEST_MENTOR_NICKNAME + "no";
-        String roomId = TEST_ROOM_ID + "no";
 
         RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(mentorNickname)
-                .menteeNickname(menteeNickname)
-                .roomId(roomId)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
 
-        // when
+        // then
         assertThrows(CustomException.class, () -> roomService.enterTheRoom(roomDto));
     }
 
     @Test
-    @DisplayName("방 입장시 채팅방이 db에 존재하지 않는 경우, Welcome Message를 보내준다")
+    @DisplayName("case 2: 방 입장시 채팅방이 db에 존재하지 않는 경우, Welcome Message를 보내준다")
     void enterTheRoom_Room_Not_Exists() {
         // given
         String roomId = TEST_ROOM_ID + "no";
@@ -128,7 +124,10 @@ class RoomServiceTest {
                 .roomId(roomId)
                 .build();
 
+        // when
         List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+
+        // then
         assertThat(messageList.size()).isEqualTo(1);
 
         MessageResponse response = messageList.get(0);
@@ -140,14 +139,14 @@ class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 3개 존재하는 경우")
+    @DisplayName("case 3 : 방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 3개 존재하는 경우")
     void enterTheRoom_when_Room_already_exists() {
         RoomDto roomDto = RoomDto.builder()
                 .mentorNickname(TEST_MENTOR_NICKNAME)
                 .menteeNickname(TEST_MENTEE_NICKNAME)
                 .roomId(TEST_ROOM_ID)
                 .build();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().withNano(0); // ignore milliseconds
 
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
@@ -180,7 +179,10 @@ class RoomServiceTest {
         );
         messageRepository.saveAll(saveThreeMessages);
 
+        // when
         List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+
+        // then
         assertThat(messageList.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.
@@ -208,10 +210,15 @@ class RoomServiceTest {
         assertThat(order2Exists).isTrue();
         assertThat(order3Exists).isTrue();
         assertThat(order4Exists).isFalse(); // order 4 not exists because of the number of data is 3
+
+        // 가장 나중에 작성된, 즉 시간이 가장 나중인 메시지가 order=3인지 확인
+        MessageResponse firstMsg = messageList.get(0);
+        assertThat(firstMsg.getOrder()).isEqualTo(3);
+        assertEquals(firstMsg.getTime().withNano(0), now.plusSeconds(5000));
     }
 
     @Test
-    @DisplayName("방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 다수 존재하는 경우")
+    @DisplayName("case 3-1 : 방 입장시 채팅방이 db에 존재하는 경우, db에 저장된 메시지들을 응답으로 보낸다: 메시지가 다수 존재하는 경우")
     void enterTheRoom_when_Room_already_exists_2() {
         // given
         RoomDto roomDto = RoomDto.builder()
@@ -268,7 +275,7 @@ class RoomServiceTest {
      * getAllRoomsOfUser()
      */
     @Test
-    @DisplayName("멘티가 멘토링 페이지를 조회하면, RoomInfo 객체 3개가 리턴된다")
+    @DisplayName("case 'MENTEE': 멘티가 멘토링 페이지를 조회하면, 멘토의 정보와 RoomInfo 객체 3개가 리턴된다.")
     void getAllRoomsOfUser_By_MENTEE() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
@@ -293,7 +300,7 @@ class RoomServiceTest {
 
         // save messages
         // 주의: roomId가 room, room2, room3의 아이디와 동일해야 한다.
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().withNano(0);
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
                         ._id("test_uuid_1")
@@ -327,7 +334,7 @@ class RoomServiceTest {
 
         // save mentor data to users table
         List<User> mentors = Arrays.asList(
-                // @BeforeEach에서 TEST_MENTOR_NICKNAME 유저를 저장하므로, 여기서 저장하면 DataIntegrityViolationException 발생함
+//                 @BeforeEach에서 TEST_MENTOR_NICKNAME 유저를 저장하므로, 여기서 저장하면 DataIntegrityViolationException 발생함
 //                createUser("test_1", "testmentor1@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR),
                 createUser("test_2", "testmentor2@google.com", room2MentorNickname, UserRole.MENTOR),
                 createUser("test_3", "testmentor3@google.com", room3MentorNickname, UserRole.MENTOR)
@@ -343,32 +350,33 @@ class RoomServiceTest {
 
         // test if room2Msg, room3Msg contains correctly
         List<String> messageList = Arrays.asList(getRoomList.get(0).getLastMessage(),
-                getRoomList.get(1).getLastMessage(), getRoomList.get(2).getLastMessage());
-        boolean room2MsgExists = messageList.stream().anyMatch(
-                msg -> msg.equals(room2Msg));
-        boolean room3MsgExists = messageList.stream().anyMatch(
-                msg -> msg.equals(room2Msg));
+                getRoomList.get(1).getLastMessage(),
+                getRoomList.get(2).getLastMessage());
+        boolean room2MsgExists = messageList.stream().anyMatch(msg -> msg.equals(room2Msg));
+        boolean room3MsgExists = messageList.stream().anyMatch(msg -> msg.equals(room3Msg));
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfoResponse 데이터의 LastMessageTime 값이, 인덱스가 작을 수록 나중 시간인지 검증
+        // 멘토에 대한 RoomInfo인지 검증
+        List<String> mentorList = Arrays.asList(getRoomList.get(0).getNickname(),
+                getRoomList.get(1).getNickname(),
+                getRoomList.get(2).getNickname());
+        boolean room1NicknameIsMentor = mentorList.stream().anyMatch(msg -> msg.equals(TEST_MENTOR_NICKNAME));
+        boolean room2NicknameIsMentor = mentorList.stream().anyMatch(msg -> msg.equals(room2MentorNickname));
+        boolean room3NicknameIsMentor = mentorList.stream().anyMatch(msg -> msg.equals(room3MentorNickname));
+        assertThat(room1NicknameIsMentor).isTrue();
+        assertThat(room2NicknameIsMentor).isTrue();
+        assertThat(room3NicknameIsMentor).isTrue();
+
+        // getRoomList의 결과로, RoomInfoResponse 데이터의 LastMessageTime 값이, 인덱스가 작을 수록 빠른 시간인지 검증
         assertThat(getRoomList.get(0).getLastMessageTime())
-                .isAfterOrEqualTo(getRoomList.get(1).getLastMessageTime());
+                .isBeforeOrEqualTo(getRoomList.get(1).getLastMessageTime());
         assertThat(getRoomList.get(1).getLastMessageTime())
-                .isAfterOrEqualTo(getRoomList.get(2).getLastMessageTime());
+                .isBeforeOrEqualTo(getRoomList.get(2).getLastMessageTime());
     }
 
     @Test
-    @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
-    void getAllRoomsOfUser_By_MENTEE_when_data_is_Null() {
-        String notExistsMenteeNickname = "mentee_haha_hoho";
-        List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMenteeNickname, TYPE_MENTEE);
-
-        assertThat(getRoomList.size()).isZero();
-    }
-
-    @Test
-    @DisplayName("멘토가 멘토링 페이지를 조회하면, RoomInfo 객체 3개가 리턴된다")
+    @DisplayName("case 'MENTOR': 멘토가 멘토링 페이지를 조회하면, 멘티의 정보와 RoomInfo 객체 3개가 리턴된다.")
     void getAllRoomsOfUser_By_MENTOR() {
         // given
         String room2Id = TEST_ROOM_ID + "room2";
@@ -392,7 +400,7 @@ class RoomServiceTest {
 
         // save messages
         // 주의: roomId가 room, room2, room3의 아이디와 동일해야 한다.
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().withNano(0);
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
                         ._id("test_uuid_1")
@@ -442,7 +450,8 @@ class RoomServiceTest {
 
         // test if room2Msg, room3Msg contains correctly
         List<String> messageList = Arrays.asList(getRoomList.get(0).getLastMessage(),
-                getRoomList.get(1).getLastMessage(), getRoomList.get(2).getLastMessage());
+                getRoomList.get(1).getLastMessage(),
+                getRoomList.get(2).getLastMessage());
         boolean room2MsgExists = messageList.stream().anyMatch(
                 msg -> msg.equals(room2Msg));
         boolean room3MsgExists = messageList.stream().anyMatch(
@@ -450,11 +459,31 @@ class RoomServiceTest {
         assertThat(room2MsgExists).isTrue();
         assertThat(room3MsgExists).isTrue();
 
-        // getRoomList의 결과로, RoomInfoResponse 데이터의 getLastMessagedTimeOfHour 값이, 인덱스가 작을 수록 값이 작은지 검증
+        // 멘티에 대한 RoomInfo인지 검증
+        List<String> mentorList = Arrays.asList(getRoomList.get(0).getNickname(),
+                getRoomList.get(1).getNickname(),
+                getRoomList.get(2).getNickname());
+        boolean room1NicknameIsMentee = mentorList.stream().anyMatch(msg -> msg.equals(TEST_MENTEE_NICKNAME));
+        boolean room2NicknameIsMentee = mentorList.stream().anyMatch(msg -> msg.equals(room2MenteeNickname));
+        boolean room3NicknameIsMentee = mentorList.stream().anyMatch(msg -> msg.equals(room3MenteeNickname));
+        assertThat(room1NicknameIsMentee).isTrue();
+        assertThat(room2NicknameIsMentee).isTrue();
+        assertThat(room3NicknameIsMentee).isTrue();
+
+        // getRoomList의 결과로, RoomInfoResponse 데이터의 LastMessageTime 값이, 인덱스가 작을 수록 빠른 시간인지 검증
         assertThat(getRoomList.get(0).getLastMessageTime())
-                .isAfterOrEqualTo(getRoomList.get(1).getLastMessageTime());
+                .isBeforeOrEqualTo(getRoomList.get(1).getLastMessageTime());
         assertThat(getRoomList.get(1).getLastMessageTime())
-                .isAfterOrEqualTo(getRoomList.get(2).getLastMessageTime());
+                .isBeforeOrEqualTo(getRoomList.get(2).getLastMessageTime());
+    }
+
+    @Test
+    @DisplayName("멘티가 멘토링 페이지를 조회하였으나, 데이터가 없는 경우 size가 0이다")
+    void getAllRoomsOfUser_By_MENTEE_when_data_is_Null() {
+        String notExistsMenteeNickname = "mentee_haha_hoho";
+        List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMenteeNickname, TYPE_MENTEE);
+
+        assertThat(getRoomList.isEmpty()).isTrue();
     }
 
     @Test
@@ -463,7 +492,7 @@ class RoomServiceTest {
         String notExistsMentorNickname = "mentor_haha_hoho";
         List<RoomInfoResponse> getRoomList = roomService.getAllRoomsOfUser(notExistsMentorNickname, TYPE_MENTOR);
 
-        assertThat(getRoomList.size()).isZero();
+        assertThat(getRoomList.isEmpty()).isTrue();
     }
 
     @Test
@@ -474,113 +503,100 @@ class RoomServiceTest {
     }
 
     /**
-     * chatMessageIsMoreThanOne
+     * validateUserIsExist
      */
     @Test
-    @DisplayName("List의 개수가 2개이면 true 리턴")
-    void chatMessageIsMoreThanOne_return_true() {
+    @DisplayName("case 1: 멘티와 멘토가 존재하는 경우 예외가 발생하지 않는다.")
+    void validateUserIsExist_bothUsersExist() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> messageResponses = Arrays.asList(
-                MessageResponse.builder()
-                        ._id("test_uuid_1")
-                        .order(1)
-                        .roomId("test_room_1")
-                        .senderType(SenderType.MENTOR)
-                        .senderNickname("test_mentor_nickname")
-                        .message("mentor's response")
-                        .messageType(MessageType.TALK)
-                        .time(now)
-                        .build(),
-                MessageResponse.builder()
-                        ._id("test_uuid_2")
-                        .roomId("test_room_2")
-                        .order(2)
-                        .senderType(SenderType.MENTEE)
-                        .senderNickname("test_mentee_nickname")
-                        .message("test message 2")
-                        .messageType(MessageType.TALK)
-                        .time(now.plusSeconds(3000))
-                        .build()
-        );
-
-        // when
-        boolean result = roomService.chatMessageIsMoreThanOne(messageResponses);
+        RoomDto roomDto = RoomDto.builder()
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
 
         // then
-        assertThat(result).isTrue();
+        assertDoesNotThrow(() -> roomService.validateUserIsExist(roomDto));
     }
 
     @Test
-    @DisplayName("List의 개수가 1 이하면 false 리턴")
-    void chatMessageIsMoreThanOne_return_false() {
+    @DisplayName("case 2: 멘티가 존재하지 않는 경우 예외 발생")
+    void validateUserIsExist_menteeDoesNotExist() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(null)   // here is null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
-
-        // when
-        boolean result = roomService.chatMessageIsMoreThanOne(response);
+        String menteeNotInDb = "mentee33";
+        RoomDto menteeIsNotInDb = RoomDto.builder()
+                .menteeNickname(menteeNotInDb)
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
 
         // then
-        assertThat(result).isFalse();
+        assertThrows(CustomException.class, () -> roomService.validateUserIsExist(menteeIsNotInDb));
+    }
+
+    @Test
+    @DisplayName("case 2-1: 멘토가 존재하지 않는 경우 예외 발생")
+    void validateUserIsExist_mentorDoesNotExist() {
+        // given
+        String mentorNotInDb = "mentor33";
+        RoomDto mentorIsNotInDb = RoomDto.builder()
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .mentorNickname(mentorNotInDb)
+                .roomId(TEST_ROOM_ID)
+                .build();
+
+        // then
+        assertThrows(CustomException.class, () -> roomService.validateUserIsExist(mentorIsNotInDb));
     }
 
     /**
-     * firstEnterTheRoom
+     * findLastChatMessageByRoomId
      */
     @Test
-    @DisplayName("order가 null이면 true 리턴")
-    void firstEnterTheRoom_order_is_null_return_true() {
+    @DisplayName("가장 시간이 나중인 메시지가 리턴되는지 테스트")
+    void findLastChatMessageByRoomId() {
         // given
+        int FIXED_NUM = 8;
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(null)   // here is null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
+
+        List<ChatMessage> chatMessageList = new ArrayList<>();
+        for (int i = 1; i <= FIXED_NUM; i++) {
+            String _id = "id_" + i;
+            SenderType senderType;
+            String senderNickname;
+            if (i % 2 == 0) {
+                senderType = SenderType.MENTOR;
+                senderNickname = TEST_MENTOR_NICKNAME;
+            } else {
+                senderType = SenderType.MENTEE;
+                senderNickname = TEST_MENTEE_NICKNAME;
+            }
+            String message = "message_" + i;
+            MessageType messageType = MessageType.TALK;
+            LocalDateTime time = now.plusSeconds(i * 1000L);
+
+            // Add list
+            chatMessageList.add(ChatMessage.builder()
+                    ._id(_id)
+                    .roomId(TEST_ROOM_ID)
+                    .senderType(senderType)
+                    .senderNickname(senderNickname)
+                    .message(message)
+                    .messageType(messageType)
+                    .time(time)
+                    .build());
+        }
+        messageRepository.saveAll(chatMessageList);
 
         // when
-        boolean result = roomService.firstEnterTheRoom(response);
+        ChatMessage lastMessage = roomService.findLastChatMessageByRoomId(TEST_ROOM_ID);
 
         // then
-        assertThat(result).isTrue();
-    }
+        assertThat(lastMessage.getMessage()).isEqualTo("message_" + FIXED_NUM);
 
-    @Test
-    @DisplayName("order가 1이면 false 리턴")
-    void firstEnterTheRoom_order_is_one_return_false() {
-        // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(1)   // here is not null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
-
-        // when
-        boolean result = roomService.firstEnterTheRoom(response);
-
-        // then
-        assertThat(result).isFalse();
+        // 작거나 같고, 크거나 같은 두 조건을 만족하는 경우는 같은 경우 뿐이다.
+        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000));
+        assertThat(lastMessage.getTime()).isBeforeOrEqualTo(now.plusSeconds(FIXED_NUM * 1000));
     }
 
     private User createUser(String id, String email, String nickname, UserRole role) {

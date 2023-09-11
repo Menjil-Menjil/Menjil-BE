@@ -12,6 +12,7 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import java.util.List;
@@ -27,17 +28,23 @@ public class RoomController {
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     /**
-     * 채팅방을 입장한다
+     * 채팅방에 입장한다
      */
     @PostMapping("/room/enter")
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
         List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        if (messageList == null) {
+            ApiResponse<?> errorApiResponse = ApiResponse.error(ErrorCode.TIME_INPUT_INVALID);
+            simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomDto.getRoomId(), errorApiResponse);
+            return;
+        }
 
         ApiResponse<List<MessageResponse>> messageResponse;
-        if (roomService.chatMessageIsMoreThanOne(messageList)) {
+        if (chatMessageIsMoreThanOne(messageList)) {
             messageResponse = ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList);
         } else {
-            if (roomService.firstEnterTheRoom(messageList)) {
+            // 채팅 메시지가 하나인 경우
+            if (checkIfUserEnterTheRoomAtFirstTime(messageList)) {
                 messageResponse = ApiResponse.success(SuccessCode.MESSAGE_CREATED, messageList);
             } else {
                 messageResponse = ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList);
@@ -56,7 +63,7 @@ public class RoomController {
                                                                                  @RequestParam("type") String type) {
         List<RoomInfoResponse> result = roomService.getAllRoomsOfUser(nickname, type);
 
-        if (result.size() == 0) {
+        if (userHasNoRooms(result)) {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.success(SuccessCode.GET_ROOMS_AND_NOT_EXISTS, result));
         } else {
@@ -65,4 +72,16 @@ public class RoomController {
         }
     }
 
+    protected boolean chatMessageIsMoreThanOne(List<MessageResponse> messages) {
+        int MESSAGE_IS_MORE_THAN_ONE = 1;
+        return messages.size() > MESSAGE_IS_MORE_THAN_ONE;
+    }
+
+    protected boolean checkIfUserEnterTheRoomAtFirstTime(List<MessageResponse> messages) {
+        return messages.get(0).getOrder() == null;
+    }
+
+    protected boolean userHasNoRooms(List<RoomInfoResponse> list) {
+        return list.isEmpty();
+    }
 }

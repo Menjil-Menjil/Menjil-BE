@@ -54,6 +54,7 @@ class RoomControllerTest {
 
     @MockBean
     private SimpMessagingTemplate simpMessagingTemplate;
+
     @MockBean
     private RoomService roomService;
 
@@ -61,124 +62,7 @@ class RoomControllerTest {
      * enterTheRoom()
      */
     @Test
-    @DisplayName("처음 방에 입장하는 경우")
-    void enterTheRoom_when_room_not_exists() throws Exception {
-        // given
-        RoomDto roomDto = RoomDto.builder()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .roomId("test_room_id_1")
-                .build();
-
-        LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> messageResponse = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(null)
-                .roomId(roomDto.getRoomId())
-                .senderType(SenderType.MENTOR)
-                .senderNickname(roomDto.getMentorNickname())
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
-
-        Gson gson = new Gson();
-        String content = gson.toJson(roomDto);
-
-        // when
-        Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(messageResponse);
-        Mockito.when(roomService.firstEnterTheRoom(messageResponse)).thenReturn(true);
-
-        // then
-        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
-                        .content(content)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andDo(print());
-
-        verify(roomService, times(1)).enterTheRoom(roomDto);
-
-        ArgumentCaptor<ApiResponse<List<MessageResponse>>> argumentCaptor = ArgumentCaptor.forClass(ApiResponse.class);
-        verify(simpMessagingTemplate, times(1)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()), argumentCaptor.capture());
-        ApiResponse<List<MessageResponse>> capturedApiResponse = argumentCaptor.getValue();
-
-        // Here you can validate that `capturedApiResponse` contains the data you expect
-        assertThat(SuccessCode.MESSAGE_CREATED.getCode()).isEqualTo(capturedApiResponse.getCode());
-        assertThat(SuccessCode.MESSAGE_CREATED.getMessage()).isEqualTo(capturedApiResponse.getMessage());
-
-        assertThat(messageResponse).isEqualTo(capturedApiResponse.getData());
-    }
-
-    @Test
-    @DisplayName("방 입장 이후 따로 대화를 치지 않은 상황에서, 다시 입장하는 경우(db에 메시지가 하나만 존재하는 경우)")
-    void enterTheRoom_when_db_has_one_message() throws Exception {
-        // given
-        RoomDto roomDto = RoomDto.builder()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .roomId("test_room_id_1")
-                .build();
-
-        LocalDateTime now = LocalDateTime.now();
-        List<MessageResponse> firstMessageResponse = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_3")
-                .order(null)    // here is null
-                .roomId(roomDto.getRoomId())
-                .senderType(SenderType.MENTOR)
-                .senderNickname(roomDto.getMentorNickname())
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
-
-        List<MessageResponse> secondMessageResponse = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_3")
-                .order(1)   // here is not null
-                .roomId(roomDto.getRoomId())
-                .senderType(SenderType.MENTOR)
-                .senderNickname(roomDto.getMentorNickname())
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
-
-        Gson gson = new Gson();
-        String content = gson.toJson(roomDto);
-
-        // when
-        Mockito.when(roomService.enterTheRoom(roomDto))
-                .thenReturn(firstMessageResponse) // the first time enterTheRoom() is called, return firstMessageResponse
-                .thenReturn(secondMessageResponse); // the second time enterTheRoom() is called, return secondMessageResponse
-
-        Mockito.when(roomService.firstEnterTheRoom(secondMessageResponse)).thenReturn(false);
-
-        // then
-        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
-                        .content(content)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
-                        .content(content)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-
-        verify(roomService, times(2)).enterTheRoom(roomDto);
-
-        ArgumentCaptor<ApiResponse<List<MessageResponse>>> argumentCaptor = ArgumentCaptor.forClass(ApiResponse.class);
-        verify(simpMessagingTemplate, times(2)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()), argumentCaptor.capture());
-        ApiResponse<List<MessageResponse>> capturedApiResponse = argumentCaptor.getValue();
-
-        // Here you can validate that `capturedApiResponse` contains the data you expect
-        assertThat(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode()).isEqualTo(capturedApiResponse.getCode());
-        assertThat(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage()).isEqualTo(capturedApiResponse.getMessage());
-
-        // secondMessageResponse
-        assertThat(secondMessageResponse).isEqualTo(capturedApiResponse.getData());
-    }
-
-    @Test
-    @DisplayName("방 입장시 기존에 채팅방이 존재하며, 채팅 메시지가 1개 보다 많이 존재하는 경우")
+    @DisplayName("case 1: 방 입장시 기존에 채팅방이 존재하며, 채팅 메시지가 1개보다 많이 존재하는 경우")
     void enterTheRoom_when_db_has_three_message() throws Exception {
         // given
         RoomDto roomDto = RoomDto.builder()
@@ -187,7 +71,7 @@ class RoomControllerTest {
                 .roomId("test_room_id_1")
                 .build();
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
         List<MessageResponse> messageResponses = Arrays.asList(
                 MessageResponse.builder()
                         ._id("test_uuid_1")
@@ -226,14 +110,13 @@ class RoomControllerTest {
 
         // when
         Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(messageResponses);
-        Mockito.when(roomService.chatMessageIsMoreThanOne(messageResponses)).thenReturn(true);
 
+        // then
         mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
                         .content(content)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // then
         verify(roomService, times(1)).enterTheRoom(roomDto);
 
         // ArgumentCaptor setup
@@ -248,12 +131,128 @@ class RoomControllerTest {
         assertThat(messageResponses).isEqualTo(capturedApiResponse.getData());
     }
 
+
+    @Test
+    @DisplayName("case 2: 처음 방에 입장하는 경우")
+    void enterTheRoom_SingleMessage_FirstTime() throws Exception {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_mentee_1")
+                .roomId("test_room_id_1")
+                .build();
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        List<MessageResponse> messageResponse = Collections.singletonList(MessageResponse.builder()
+                ._id("test_uuid_1")
+                .order(null)
+                .roomId(roomDto.getRoomId())
+                .senderType(SenderType.MENTOR)
+                .senderNickname(roomDto.getMentorNickname())
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now)
+                .build());
+
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        // when
+        Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(messageResponse);
+
+        // then
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        verify(roomService, times(1)).enterTheRoom(roomDto);
+
+        ArgumentCaptor<ApiResponse<List<MessageResponse>>> argumentCaptor = ArgumentCaptor.forClass(ApiResponse.class);
+        verify(simpMessagingTemplate, times(1)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()), argumentCaptor.capture());
+        ApiResponse<List<MessageResponse>> capturedApiResponse = argumentCaptor.getValue();
+
+        // Here you can validate that `capturedApiResponse` contains the data you expect
+        assertThat(SuccessCode.MESSAGE_CREATED.getCode()).isEqualTo(capturedApiResponse.getCode());
+        assertThat(SuccessCode.MESSAGE_CREATED.getMessage()).isEqualTo(capturedApiResponse.getMessage());
+
+        assertThat(messageResponse).isEqualTo(capturedApiResponse.getData());
+    }
+
+    @Test
+    @DisplayName("case 3: 방 입장 이후 따로 대화를 입력하지 않은 상황에서, 다시 입장하는 경우(db에 메시지가 하나만 존재하는 경우)")
+    void enterTheRoom_SingleMessage_NotFirstTime() throws Exception {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname("test_mentor_1")
+                .menteeNickname("test_mentee_1")
+                .roomId("test_room_id_1")
+                .build();
+
+        LocalDateTime now = LocalDateTime.now();
+        List<MessageResponse> firstMessageResponse = Collections.singletonList(MessageResponse.builder()
+                ._id("test_uuid_3")
+                .order(null)    // here is null
+                .roomId(roomDto.getRoomId())
+                .senderType(SenderType.MENTOR)
+                .senderNickname(roomDto.getMentorNickname())
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now)
+                .build());
+
+        List<MessageResponse> secondMessageResponse = Collections.singletonList(MessageResponse.builder()
+                ._id("test_uuid_3")
+                .order(1)   // here is not null
+                .roomId(roomDto.getRoomId())
+                .senderType(SenderType.MENTOR)
+                .senderNickname(roomDto.getMentorNickname())
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(now)
+                .build());
+
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        // when
+        Mockito.when(roomService.enterTheRoom(roomDto))
+                .thenReturn(firstMessageResponse) // the first time enterTheRoom() is called, return firstMessageResponse
+                .thenReturn(secondMessageResponse); // the second time enterTheRoom() is called, return secondMessageResponse
+
+        // then
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+
+        verify(roomService, times(2)).enterTheRoom(roomDto);
+
+        ArgumentCaptor<ApiResponse<List<MessageResponse>>> argumentCaptor = ArgumentCaptor.forClass(ApiResponse.class);
+        verify(simpMessagingTemplate, times(2)).convertAndSend(eq("/queue/chat/room/" + roomDto.getRoomId()), argumentCaptor.capture());
+        ApiResponse<List<MessageResponse>> capturedApiResponse = argumentCaptor.getValue();
+
+        // Here you can validate that `capturedApiResponse` contains the data you expect
+        assertThat(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode()).isEqualTo(capturedApiResponse.getCode());
+        assertThat(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage()).isEqualTo(capturedApiResponse.getMessage());
+
+        // secondMessageResponse
+        assertThat(secondMessageResponse).isEqualTo(capturedApiResponse.getData());
+    }
+
+
     /**
-     * getAllRooms()
+     * getAllRoomsOfUser()
      */
     @Test
     @DisplayName("사용자의 전체 방 목록을 불러온다")
-    void getAllRooms() throws Exception {
+    void getAllRoomsOfUser() throws Exception {
         // given
         String targetNickname = "test_HOHO";
         String roomId2 = "test_room_2";
@@ -286,8 +285,8 @@ class RoomControllerTest {
     }
 
     @Test
-    @DisplayName("사용자의 전체 방 목록을 불러오는데, 방 목록이 존재하지 않는 경우")
-    void getAllRooms_room_not_exists() throws Exception {
+    @DisplayName("사용자의 채팅방 목록이 존재하지 않는 경우")
+    void getAllRoomsOfUser_when_room_not_exists() throws Exception {
         // given
         String targetNickname = "test_HOHO";
         String type = "MENTEE";

@@ -23,12 +23,8 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> success(SuccessCode successCode, T data) {
         return new ApiResponse<T>(successCode.getCode(), successCode.getMessage(), data);
     }
-    
+
     public static ApiResponse<?> error(ErrorCode errorCode) {
         return new ApiResponse<>(errorCode.getHttpStatus().value(), errorCode.getMessage());
     }
-
-//    public static ApiResponse error(ErrorCode errorCode, String message) {
-//        return new ApiResponse<>(errorCode.getHttpStatusCode(), message);
-//    }
 }
