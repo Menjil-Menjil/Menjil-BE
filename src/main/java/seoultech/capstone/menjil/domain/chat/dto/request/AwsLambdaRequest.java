@@ -20,11 +20,11 @@ public class AwsLambdaRequest {
     private String originMessage;
 
     @JsonProperty(value = "question_summary")
-    private String question_summary;
+    private String threeLineSummaryMessage;
 
     public static AwsLambdaRequest of(String menteeNickname, String mentorNickname,
-                                      String originMessage, String question_summary) {
+                                      String originMessage, String threeLineSummaryMessage) {
         return new AwsLambdaRequest(menteeNickname, mentorNickname,
-                originMessage, question_summary);
+                originMessage, threeLineSummaryMessage);
     }
 }

@@ -130,6 +130,7 @@ public class MessageService {
         Message message = fetchGptMessage(messageRequest.getMessage());
 
         List<AwsLambdaResponse> awsLambdaResponses = fetchLambdaResponses(messageRequest, mentorNickname, message);
+
         if (awsLambdaResponses == null) {
             return null; // Handle appropriately
         }
@@ -142,57 +143,10 @@ public class MessageService {
         if (!saveChatMessageInDb(lambdaResponseChatMessage)) {
             return null;  // handle the failure case appropriately
         }
+
         return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage, null);
     }
 
-    /**
-     * 멘토의 닉네임을 가져오는 메서드
-     * 방 id로 채팅 내역을 조회한 다음, messageType: ENTER 인 값을 찾는다.
-     */
-    // 그런데 RoomRepository에서, roomId와 menteeNickname으로 조회하는게 더 낫지 않을까? 추후 생각해보기
-    public String findMentorNickname(String roomId, String menteeNickname) {
-//        ChatMessage message = messageRepository.findChatMessageByRoomIdAndMessageType(roomId, MessageType.ENTER);
-//        return message.getSenderNickname();
-        Room room = roomRepository.findRoomByIdAndMenteeNickname(roomId, menteeNickname);
-        return room.getMentorNickname();
-    }
-
-    /**
-     * Used by sendWelcomeMessage
-     */
-    private ChatMessage createWelcomeMessage(RoomDto roomDto) {
-        ChatMessage welcomeMsg = new ChatMessage();
-        String roomId = roomDto.getRoomId();
-        SenderType type = SenderType.MENTOR;
-        String mentorNickname = roomDto.getMentorNickname();
-        String welcomeMessage = buildWelcomeMessageText(roomDto);
-        Object messageList = null;
-        MessageType messageType = MessageType.ENTER;
-        LocalDateTime now = getCurrentTimeWithoutNanos();
-
-        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
-        return welcomeMsg;
-    }
-
-    private String buildWelcomeMessageText(RoomDto roomDto) {
-        return "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
-                + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
-    }
-
-    private MessageResponse convertChatMessageToDto(ChatMessage message) {
-        return MessageResponse.fromChatMessageEntity(message, null);
-    }
-
-    /**
-     * Used by saveChatMessage
-     */
-    private ChatMessage convertMessageRequestToChatMessageEntity(MessageRequest messageRequest, LocalDateTime dateTime) {
-        return MessageRequest.toChatMessageEntity(messageRequest, dateTime);
-    }
-
-    /**
-     * Used by handleQuestion
-     */
     private Message fetchGptMessage(String userMessage) {
         return chatGptService.getMessageFromGpt(userMessage);
     }
@@ -232,11 +186,6 @@ public class MessageService {
                                                 List<AwsLambdaResponse> awsLambdaResponses) {
         String awsMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록입니다";
         LocalDateTime now = getCurrentTimeWithoutNanos();
-
-        // add 4th response
-        awsLambdaResponses.add(AwsLambdaResponse.of(
-                "4. 멘토에게 질문하고 답변을 기다릴래요", null, null));
-
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
@@ -247,7 +196,7 @@ public class MessageService {
                 .time(now)
                 .build();
 
-        if (similarMessageDoesNotExists(awsLambdaResponses)) {
+        if (awsLambdaResponses.size() == 1) {
             String similarDoesNotExists = messageRequest.getSenderNickname()
                     + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
             awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);
@@ -256,13 +205,28 @@ public class MessageService {
         return awsLambdaResponseMessage;
     }
 
-    public boolean similarMessageDoesNotExists(List<AwsLambdaResponse> awsLambdaResponses) {
-        return awsLambdaResponses.size() == 1;
+    /**
+     * Used By sendWelcomeMessage
+     */
+    private ChatMessage createWelcomeMessage(RoomDto roomDto) {
+        ChatMessage welcomeMsg = new ChatMessage();
+        String roomId = roomDto.getRoomId();
+        SenderType type = SenderType.MENTOR;
+        String mentorNickname = roomDto.getMentorNickname();
+        String welcomeMessage = buildWelcomeMessageText(roomDto);
+        Object messageList = null;
+        MessageType messageType = MessageType.ENTER;
+        LocalDateTime now = getCurrentTimeWithoutNanos();
+
+        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
+        return welcomeMsg;
     }
 
-    /**
-     * Used in Common
-     */
+    private String buildWelcomeMessageText(RoomDto roomDto) {
+        return "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
+                + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
+    }
+
     private boolean saveChatMessageInDb(ChatMessage message) {
         try {
             messageRepository.save(message);
@@ -271,6 +235,21 @@ public class MessageService {
             log.error(">> messageRepository.save() error occured ", e);
             return false;
         }
+    }
+
+    private MessageResponse convertChatMessageToDto(ChatMessage message) {
+        return MessageResponse.fromChatMessageEntity(message, null);
+    }
+
+    private LocalDateTime getCurrentTimeWithoutNanos() {
+        return LocalDateTime.now().withNano(0); // ignore milliseconds
+    }
+
+    /**
+     * Used by saveChatMessage
+     */
+    private ChatMessage convertMessageRequestToChatMessageEntity(MessageRequest messageRequest, LocalDateTime dateTime) {
+        return MessageRequest.toChatMessageEntity(messageRequest, dateTime);
     }
 
     public Optional<LocalDateTime> parseDateTime(String timeString) {
@@ -283,7 +262,17 @@ public class MessageService {
         }
     }
 
-    private LocalDateTime getCurrentTimeWithoutNanos() {
-        return LocalDateTime.now().withNano(0); // ignore milliseconds
+    /**
+     * 멘토의 닉네임을 가져오는 메서드
+     * 방 id로 채팅 내역을 조회한 다음, messageType: ENTER 인 값을 찾는다.
+     */
+    // 그런데 RoomRepository에서, roomId와 menteeNickname으로 조회하는게 더 낫지 않을까? 추후 생각해보기
+    public String findMentorNickname(String roomId, String menteeNickname) {
+//        ChatMessage message = messageRepository.findChatMessageByRoomIdAndMessageType(roomId, MessageType.ENTER);
+//        return message.getSenderNickname();
+        Room room = roomRepository.findRoomByIdAndMenteeNickname(roomId, menteeNickname);
+        return room.getMentorNickname();
     }
+
+
 }
