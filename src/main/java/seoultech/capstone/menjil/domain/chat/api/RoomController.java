@@ -12,6 +12,7 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import java.util.List;
@@ -32,6 +33,11 @@ public class RoomController {
     @PostMapping("/room/enter")
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
         List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        if (messageList == null) {
+            ApiResponse<?> errorApiResponse = ApiResponse.error(ErrorCode.TIME_INPUT_INVALID);
+            simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomDto.getRoomId(), errorApiResponse);
+            return;
+        }
 
         ApiResponse<List<MessageResponse>> messageResponse;
         if (chatMessageIsMoreThanOne(messageList)) {

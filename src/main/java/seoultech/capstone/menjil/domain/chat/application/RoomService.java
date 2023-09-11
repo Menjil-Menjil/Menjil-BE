@@ -92,9 +92,12 @@ public class RoomService {
 
         Room newRoom = saveNewRoom(roomDto);
 
-        MessageResponse messageResponse = messageService.sendWelcomeMessage(RoomDto.fromRoom(newRoom));
-        result.add(messageResponse);
-
+        Optional<MessageResponse> messageResponse = messageService.sendWelcomeMessage(RoomDto.fromRoom(newRoom));
+        if (messageResponse.isEmpty()) {
+            return null;
+        } else {
+            result.add(messageResponse.get());
+        }
         return result;
     }
 

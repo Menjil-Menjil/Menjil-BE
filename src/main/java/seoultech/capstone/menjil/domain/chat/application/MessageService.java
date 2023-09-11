@@ -19,13 +19,13 @@ import seoultech.capstone.menjil.domain.chat.dto.request.AwsLambdaRequest;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
-import seoultech.capstone.menjil.global.exception.CustomException;
-import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -46,64 +46,33 @@ public class MessageService {
         this.roomRepository = roomRepository;
     }
 
-    /**
-     * 사용자에게 첫 응답 메시지를 보낸다.
-     */
-    public MessageResponse sendWelcomeMessage(RoomDto roomDto) {
-        ChatMessage welcomeMsg = new ChatMessage();
-        String roomId = roomDto.getRoomId();
-        SenderType type = SenderType.MENTOR;
-        String mentorNickname = roomDto.getMentorNickname();
-        String welcomeMessage = "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
-                + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
-        Object messageList = null;
-        MessageType messageType = MessageType.ENTER;
-        LocalDateTime now = LocalDateTime.now().withNano(0);     // ignore milliseconds
-
-        // Create Welcome Message
-        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname,
-                welcomeMessage, messageList, messageType, now);
-
-        // save entity to mongoDB
-        try {
-            messageRepository.save(welcomeMsg);
-        } catch (RuntimeException e) {
-            log.error(">> messageRepository.save() error occured ", e);
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+    public Optional<MessageResponse> sendWelcomeMessage(RoomDto roomDto) {
+        ChatMessage welcomeMsg = createWelcomeMessage(roomDto);
+        if (saveChatMessageInDb(welcomeMsg)) {
+            return Optional.of(convertChatMessageToDto(welcomeMsg));
         }
-
-        // Entity -> Dto
-        return MessageResponse.fromChatMessageEntity(welcomeMsg, null);
+        return Optional.empty();
     }
 
-    /**
-     * 채팅 메시지를 저장한다.
-     */
     public int saveChatMessage(MessageRequest messageRequest) {
-        int TIME_INPUT_INVALID = 0;
-        int INTERNAL_SERVER_ERROR = 1;
-        int SAVE_SUCCESS = 100;
+        int SAVE_SUCCESS = 0;
+        int TIME_INPUT_INVALID = -1;
+        int INTERNAL_SERVER_ERROR = -100;
 
-        // messageDto의 time format 검증
-        LocalDateTime dateTime;
-        try {
-            String time = messageRequest.getTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            dateTime = LocalDateTime.parse(time, formatter);
-        } catch (RuntimeException e) {
-            log.error(">> Failed to parse date-time string.", e);
-            return TIME_INPUT_INVALID;
+        // MessageRequest time format 검증
+        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
+
+        if (dateTimeOptional.isEmpty()) {
+            return TIME_INPUT_INVALID; // or handle the error differently
         }
+        LocalDateTime dateTime = dateTimeOptional.get();
 
         // MessageRequest -> ChatMessage(Entity) 변환
-        ChatMessage chatMessage = MessageRequest.toChatMessageEntity(messageRequest, dateTime);
+        ChatMessage chatMessage = convertMessageRequestToChatMessageEntity(messageRequest, dateTime);
 
         // save entity to mongoDB
-        try {
-            messageRepository.save(chatMessage);
-        } catch (RuntimeException e) {
-            log.error(">> messageRepository.save() error occured ", e);
-            return INTERNAL_SERVER_ERROR;
+        if (!saveChatMessageInDb(chatMessage)) {
+            return INTERNAL_SERVER_ERROR;  // handle the failure case appropriately
         }
         return SAVE_SUCCESS;
     }
@@ -112,16 +81,12 @@ public class MessageService {
      * MessageType: QUESTION
      */
     public MessageResponse sendClientMessage(MessageRequest messageRequest) {
-        // messageDto의 time format 검증
-        LocalDateTime dateTime;
-        try {
-            String time = messageRequest.getTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            dateTime = LocalDateTime.parse(time, formatter);
-        } catch (RuntimeException e) {
-            log.error(">> Failed to parse date-time string.", e);
-            return null;
+        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
+
+        if (dateTimeOptional.isEmpty()) {
+            return null; // or handle the error differently
         }
+        LocalDateTime dateTime = dateTimeOptional.get();
 
         return MessageResponse.builder()
                 .order(null)
@@ -140,7 +105,9 @@ public class MessageService {
                 "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
                 "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
 
-        LocalDateTime now = LocalDateTime.now().withNano(0);     // ignore milliseconds
+        LocalDateTime now = getCurrentTimeWithoutNanos();
+
+        // Build AI Message from messageRequest
         ChatMessage message = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
@@ -149,13 +116,10 @@ public class MessageService {
                 .messageType(MessageType.AI_QUESTION_RESPONSE)
                 .time(now)
                 .build();
-        try {
-            messageRepository.save(message);
-        } catch (RuntimeException e) {
-            log.error(">> sendAIMessage] save() error occured ", e);
-            return null;
-        }
 
+        if (!saveChatMessageInDb(message)) {
+            return null;  // handle the failure case appropriately
+        }
         return MessageResponse.fromChatMessageEntity(message, null);
     }
 
@@ -163,65 +127,139 @@ public class MessageService {
         String mentorNickname = findMentorNickname(roomId, messageRequest.getSenderNickname());
 
         // 1. ChatGPT에게 질문 데이터 전달하여 세줄 요약 결과를 받아온다.
-        Message message = chatGptService.getMessageFromGpt(messageRequest.getMessage());
+        Message message = fetchGptMessage(messageRequest.getMessage());
 
-        // 2. Create AwsLambdaRequest
-        AwsLambdaRequest awsLambdaRequest = AwsLambdaRequest.of(messageRequest.getSenderNickname(),
-                mentorNickname, messageRequest.getMessage(), message.getContent());
+        List<AwsLambdaResponse> awsLambdaResponses = fetchLambdaResponses(messageRequest, mentorNickname, message);
 
-        // 3. Make the POST request to AWS Lambda and block to get the response
-        List<AwsLambdaResponse> awsLambdaResponseList = null;
+        if (awsLambdaResponses == null) {
+            return null; // Handle appropriately
+        }
+
+        // 4. create Lambda ChatMessage Entity
+        ChatMessage lambdaResponseChatMessage = createLambdaChatMessage(roomId, mentorNickname,
+                messageRequest, awsLambdaResponses);
+
+        // 5. 응답 메시지 db에 저장
+        if (!saveChatMessageInDb(lambdaResponseChatMessage)) {
+            return null;  // handle the failure case appropriately
+        }
+
+        return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage, null);
+    }
+
+    private Message fetchGptMessage(String userMessage) {
+        return chatGptService.getMessageFromGpt(userMessage);
+    }
+
+    private List<AwsLambdaResponse> fetchLambdaResponses(MessageRequest messageRequest, String mentorNickname, Message message) {
+        // 2. Create Request
+        AwsLambdaRequest awsLambdaRequest = AwsLambdaRequest.of(
+                messageRequest.getSenderNickname(),
+                mentorNickname,
+                messageRequest.getMessage(),
+                message.getContent()
+        );
+
+        // 3. Send Request
         try {
-            awsLambdaResponseList = apiGatewayClient.post()
+            return apiGatewayClient.post()
                     .uri("/api/lambda/question")
                     .body(BodyInserters.fromValue(awsLambdaRequest))
                     .retrieve()
                     .bodyToFlux(AwsLambdaResponse.class)
-                    .timeout(Duration.ofSeconds(180))  // throws TimeoutException if no items are emitted within 180 seconds
+                    .timeout(Duration.ofSeconds(180))
                     .onErrorResume(e -> {
-                        if (e instanceof java.util.concurrent.TimeoutException) {
-                            log.error("Request to Lambda timed out", e);
-                            return Mono.empty();
-                        } else {
-                            log.error("An error occurred", e);
-                            return Mono.empty();
-                        }
+                        log.error("An error occurred while fetching from Lambda", e);
+                        return Mono.empty();
                     })
                     .collectList()
-                    .block();  // Use block() for a non-reactive application*/
+                    .block();
         } catch (Exception e) {
             log.error(">> An exception occurred while making the AWS Lambda request", e);
-            // Handle the exception
             return null;
         }
+    }
 
-        // 4. 응답 메시지 db에 저장
+    private ChatMessage createLambdaChatMessage(String roomId,
+                                                String mentorNickname,
+                                                MessageRequest messageRequest,
+                                                List<AwsLambdaResponse> awsLambdaResponses) {
         String awsMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록입니다";
-        LocalDateTime now = LocalDateTime.now().withNano(0);     // ignore milliseconds
+        LocalDateTime now = getCurrentTimeWithoutNanos();
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
                 .senderNickname(mentorNickname)
                 .message(awsMessage)
-                .messageList(awsLambdaResponseList)  // save three of summary_question and answer
+                .messageList(awsLambdaResponses)  // save three of summary_question and answer
                 .messageType(MessageType.AI_SUMMARY)
                 .time(now)
                 .build();
 
-        if (awsLambdaResponseList.size() == 1) {
-            String awsListMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
-            awsLambdaResponseMessage.setLambdaMessage(awsListMessage);
+        if (awsLambdaResponses.size() == 1) {
+            String similarDoesNotExists = messageRequest.getSenderNickname()
+                    + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
+            awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);
             awsLambdaResponseMessage.setLambdaMessageList(null);
         }
+        return awsLambdaResponseMessage;
+    }
 
+    /**
+     * Used By sendWelcomeMessage
+     */
+    private ChatMessage createWelcomeMessage(RoomDto roomDto) {
+        ChatMessage welcomeMsg = new ChatMessage();
+        String roomId = roomDto.getRoomId();
+        SenderType type = SenderType.MENTOR;
+        String mentorNickname = roomDto.getMentorNickname();
+        String welcomeMessage = buildWelcomeMessageText(roomDto);
+        Object messageList = null;
+        MessageType messageType = MessageType.ENTER;
+        LocalDateTime now = getCurrentTimeWithoutNanos();
+
+        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
+        return welcomeMsg;
+    }
+
+    private String buildWelcomeMessageText(RoomDto roomDto) {
+        return "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
+                + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
+    }
+
+    private boolean saveChatMessageInDb(ChatMessage message) {
         try {
-            messageRepository.save(awsLambdaResponseMessage);
+            messageRepository.save(message);
+            return true;
         } catch (RuntimeException e) {
-            log.error(">> handleQuestion] save() error occured ", e);
-            return null;
+            log.error(">> messageRepository.save() error occured ", e);
+            return false;
         }
+    }
 
-        return MessageResponse.fromChatMessageEntity(awsLambdaResponseMessage, null);
+    private MessageResponse convertChatMessageToDto(ChatMessage message) {
+        return MessageResponse.fromChatMessageEntity(message, null);
+    }
+
+    private LocalDateTime getCurrentTimeWithoutNanos() {
+        return LocalDateTime.now().withNano(0); // ignore milliseconds
+    }
+
+    /**
+     * Used by saveChatMessage
+     */
+    private ChatMessage convertMessageRequestToChatMessageEntity(MessageRequest messageRequest, LocalDateTime dateTime) {
+        return MessageRequest.toChatMessageEntity(messageRequest, dateTime);
+    }
+
+    public Optional<LocalDateTime> parseDateTime(String timeString) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return Optional.of(LocalDateTime.parse(timeString, formatter));
+        } catch (DateTimeParseException e) {
+            log.error(">> Failed to parse date-time string.", e);
+            return Optional.empty();
+        }
     }
 
     /**
@@ -235,4 +273,6 @@ public class MessageService {
         Room room = roomRepository.findRoomByIdAndMenteeNickname(roomId, menteeNickname);
         return room.getMentorNickname();
     }
+
+
 }
