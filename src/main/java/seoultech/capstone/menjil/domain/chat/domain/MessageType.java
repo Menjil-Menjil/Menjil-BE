@@ -9,8 +9,7 @@ public enum MessageType {
      */
     ENTER,
     QUESTION,
-    AI_QUESTION_RESPONSE,
-    AI_SUMMARY,
+    AI_QUESTION_RESPONSE, AI_SUMMARY,
     TALK,
     QUIT
 }
