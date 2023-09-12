@@ -272,7 +272,7 @@ class RoomServiceTest {
     }
 
     /**
-     * getAllRoomsOfUser()
+     * getAllRoomsOfUser
      */
     @Test
     @DisplayName("case 'MENTEE': 멘티가 멘토링 페이지를 조회하면, 멘토의 정보와 RoomInfo 객체 3개가 리턴된다.")
@@ -500,6 +500,58 @@ class RoomServiceTest {
     void getAllRoomsOfUser_type_mismatch() {
         String typeMismatch = "MENTORWA";
         assertThrows(CustomException.class, () -> roomService.getAllRoomsOfUser(TEST_MENTEE_NICKNAME, typeMismatch));
+    }
+
+    /**
+     * quitRoom
+     */
+    @Test
+    @DisplayName("채팅방과 채팅방에 포함된 대화 메시지가 정상적으로 제거되는지 검증")
+    void quitRoom_success() {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
+        LocalDateTime now = LocalDateTime.now();
+        int FIXED_NUM = 9;
+        List<ChatMessage> chatMessageList = new ArrayList<>();
+        for (int i = 1; i <= FIXED_NUM; i++) {
+            String _id = "id_" + i;
+            SenderType senderType;
+            String senderNickname;
+            if (i % 2 == 0) {
+                senderType = SenderType.MENTOR;
+                senderNickname = TEST_MENTOR_NICKNAME;
+            } else {
+                senderType = SenderType.MENTEE;
+                senderNickname = TEST_MENTEE_NICKNAME;
+            }
+            String message = "message_" + i;
+            MessageType messageType = MessageType.TALK;
+            LocalDateTime time = now.plusSeconds(i * 1000L);
+
+            // Add list
+            chatMessageList.add(ChatMessage.builder()
+                    ._id(_id)
+                    .roomId(TEST_ROOM_ID)
+                    .senderType(senderType)
+                    .senderNickname(senderNickname)
+                    .message(message)
+                    .messageType(messageType)
+                    .time(time)
+                    .build());
+        }
+        messageRepository.saveAll(chatMessageList);
+
+        // when
+        boolean result = roomService.quitRoom(roomDto);
+
+        // then
+        assertThat(result).isTrue();
+        assertThat(messageRepository.findAll().size()).isZero();    // Delete Messages
+        assertThat(roomRepository.findAll().size()).isZero(); // Delete Room
     }
 
     /**
