@@ -233,14 +233,14 @@ public class MessageService {
 
         // add 4th response
         awsLambdaResponses.add(AwsLambdaResponse.of(
-                "4. 멘토에게 질문하고 답변을 기다릴래요", null, null));
+                "멘토에게 질문하고 답변을 기다릴래요", null, null));
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
                 .senderNickname(mentorNickname)
                 .message(awsMessage)
-                .messageList(awsLambdaResponses)  // save three of summary_question and answer
-                .messageType(MessageType.AI_SUMMARY)
+                .messageList(awsLambdaResponses)  // save three of summary question and answer
+                .messageType(MessageType.AI_SUMMARY_LIST)
                 .time(now)
                 .build();
 
