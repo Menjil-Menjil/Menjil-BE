@@ -12,6 +12,7 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
+import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -55,9 +56,6 @@ public class RoomController {
         simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomDto.getRoomId(), messageResponse);
     }
 
-    /**
-     * 사용자의 전체 Room 목록을 불러온다
-     */
     @GetMapping("/rooms")
     public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllRoomsOfUser(@RequestParam("nickname") String nickname,
                                                                                  @RequestParam("type") String type) {
@@ -69,6 +67,17 @@ public class RoomController {
         } else {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.success(SuccessCode.GET_ROOMS_AVAILABLE, result));
+        }
+    }
+
+    @PostMapping("/room/quit")
+    public ResponseEntity<ApiResponse<?>> quitRoom(@RequestBody RoomDto roomDto) {
+        boolean result = roomService.quitRoom(roomDto);
+        if (result) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(SuccessCode.ROOM_DELETE_SUCCESS));
+        } else {
+            throw new CustomException(ErrorCode.SERVER_ERROR);
         }
     }
 

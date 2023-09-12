@@ -42,6 +42,7 @@ public enum SuccessCode {
     TOKEN_CREATED(HttpStatus.CREATED.value(), "Access Token, Refresh Token이 정상적으로 생성되었습니다"),
 
     // chat
+    ROOM_DELETE_SUCCESS(HttpStatus.CREATED.value(), "채팅방 퇴장이 정상적으로 처리되었습니다"),
     MESSAGE_SEND_SUCCESS(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 입력되었습니다"),
     AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다"),
 

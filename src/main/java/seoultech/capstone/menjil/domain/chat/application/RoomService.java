@@ -76,6 +76,18 @@ public class RoomService {
         }
     }
 
+    public boolean quitRoom(RoomDto roomDto) {
+        String roomId = roomDto.getRoomId();
+
+        // 1. ChatMessage 데이터 제거
+        boolean deleteChatMessagesByRoomId = deleteChatMessagesByRoomId(roomId);
+
+        // 2. Room 제거
+        boolean deleteRoom = deleteRoomByRoomId(roomId);
+
+        return deleteChatMessagesByRoomId && deleteRoom;
+    }
+
     /**
      * Used By enterTheRoom
      */
@@ -228,6 +240,26 @@ public class RoomService {
                 .sorted(Comparator.comparing(RoomInfoResponse::getLastMessageTime))
                 .collect(Collectors.toList());
         return result;
+    }
+
+    boolean deleteChatMessagesByRoomId(String roomId) {
+        try {
+            messageRepository.deleteChatMessagesByRoomId(roomId);
+            return true;
+        } catch (Exception e) {
+            log.error("error : ", e);
+            return false;
+        }
+    }
+
+    boolean deleteRoomByRoomId(String roomId) {
+        try {
+            roomRepository.deleteRoomById(roomId);
+            return true;
+        } catch (Exception e) {
+            log.error("error : ", e);
+            return false;
+        }
     }
 
 }
