@@ -20,10 +20,12 @@ import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import java.time.LocalDateTime;
@@ -58,6 +60,10 @@ class RoomControllerTest {
     @MockBean
     private RoomService roomService;
 
+    private final String TEST_ROOM_ID = "test_room_1";
+    private final String TEST_MENTEE_NICKNAME = "test_mentee_1";
+    private final String TEST_MENTOR_NICKNAME = "test_mentor_1";
+
     /**
      * enterTheRoom()
      */
@@ -66,14 +72,14 @@ class RoomControllerTest {
     void enterTheRoom_when_db_has_three_message() throws Exception {
         // given
         RoomDto roomDto = RoomDto.builder()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .roomId("test_room_id_1")
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
 
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
-        List<MessageResponse> messageResponses = Arrays.asList(
-                MessageResponse.builder()
+        LocalDateTime now = LocalDateTime.now();
+        List<MessageListResponse> messageResponses = Arrays.asList(
+                MessageListResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)
                         .roomId(roomDto.getRoomId())
@@ -83,7 +89,7 @@ class RoomControllerTest {
                         .messageType(MessageType.TALK)
                         .time(now)
                         .build(),
-                MessageResponse.builder()
+                MessageListResponse.builder()
                         ._id("test_uuid_2")
                         .roomId(roomDto.getRoomId())
                         .order(2)
@@ -93,7 +99,7 @@ class RoomControllerTest {
                         .messageType(MessageType.TALK)
                         .time(now.plusSeconds(3000))
                         .build(),
-                MessageResponse.builder()
+                MessageListResponse.builder()
                         ._id("test_uuid_3")
                         .roomId(roomDto.getRoomId())
                         .order(3)
@@ -137,13 +143,13 @@ class RoomControllerTest {
     void enterTheRoom_SingleMessage_FirstTime() throws Exception {
         // given
         RoomDto roomDto = RoomDto.builder()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .roomId("test_room_id_1")
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
 
-        LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> messageResponse = Collections.singletonList(MessageResponse.builder()
+        LocalDateTime now = LocalDateTime.now();
+        List<MessageListResponse> messageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_1")
                 .order(null)
                 .roomId(roomDto.getRoomId())
@@ -185,13 +191,13 @@ class RoomControllerTest {
     void enterTheRoom_SingleMessage_NotFirstTime() throws Exception {
         // given
         RoomDto roomDto = RoomDto.builder()
-                .mentorNickname("test_mentor_1")
-                .menteeNickname("test_mentee_1")
-                .roomId("test_room_id_1")
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessageResponse> firstMessageResponse = Collections.singletonList(MessageResponse.builder()
+        List<MessageListResponse> firstMessageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_3")
                 .order(null)    // here is null
                 .roomId(roomDto.getRoomId())
@@ -202,7 +208,7 @@ class RoomControllerTest {
                 .time(now)
                 .build());
 
-        List<MessageResponse> secondMessageResponse = Collections.singletonList(MessageResponse.builder()
+        List<MessageListResponse> secondMessageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_3")
                 .order(1)   // here is not null
                 .roomId(roomDto.getRoomId())
@@ -248,7 +254,7 @@ class RoomControllerTest {
 
 
     /**
-     * getAllRoomsOfUser()
+     * getAllRoomsOfUser
      */
     @Test
     @DisplayName("사용자의 전체 방 목록을 불러온다")
@@ -308,4 +314,64 @@ class RoomControllerTest {
         verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
     }
 
+    /**
+     * quitRoom
+     */
+    @Test
+    @DisplayName("case 1: 정상적으로 대화방을 나온 경우")
+    void quitRoom_success() throws Exception {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
+
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        // when
+        Mockito.when(roomService.quitRoom(roomDto)).thenReturn(true);
+
+        // then
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/quit/")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code", is(SuccessCode.ROOM_DELETE_SUCCESS.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.ROOM_DELETE_SUCCESS.getMessage())))
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andDo(print());
+
+        verify(roomService, times(1)).quitRoom(roomDto);
+    }
+
+    @Test
+    @DisplayName("case 2: 서버 내부 오류 등으로 인해, 정상적으로 데이터가 지워지지 못한 경우")
+    void quitRoom_fail() throws Exception {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
+
+        Gson gson = new Gson();
+        String content = gson.toJson(roomDto);
+
+        // when
+        Mockito.when(roomService.quitRoom(roomDto)).thenReturn(false);
+
+        // then
+        mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/quit/")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.code", is(ErrorCode.SERVER_ERROR.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andDo(print());
+
+        verify(roomService, times(1)).quitRoom(roomDto);
+    }
 }

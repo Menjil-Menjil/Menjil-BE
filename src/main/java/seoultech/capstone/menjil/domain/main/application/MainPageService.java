@@ -153,7 +153,7 @@ public class MainPageService {
         // Get Last Message and message time
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
         String lastMessage = messagePage.get(0).getMessage();
@@ -182,7 +182,7 @@ public class MainPageService {
         // Get Last Message and message time
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
         String lastMessage = messagePage.get(0).getMessage();

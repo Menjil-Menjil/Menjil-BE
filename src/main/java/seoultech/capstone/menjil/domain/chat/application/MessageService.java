@@ -18,6 +18,7 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.AwsLambdaRequest;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 
 import java.time.Duration;
@@ -46,7 +47,7 @@ public class MessageService {
         this.roomRepository = roomRepository;
     }
 
-    public Optional<MessageResponse> sendWelcomeMessage(RoomDto roomDto) {
+    public Optional<MessageListResponse> sendWelcomeMessage(RoomDto roomDto) {
         ChatMessage welcomeMsg = createWelcomeMessage(roomDto);
         if (saveChatMessageInDb(welcomeMsg)) {
             return Optional.of(convertChatMessageToDto(welcomeMsg));
@@ -84,12 +85,12 @@ public class MessageService {
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
 
         if (dateTimeOptional.isEmpty()) {
-            return null; // or handle the error differently
+            // datetime parse exception
+            return null;
         }
         LocalDateTime dateTime = dateTimeOptional.get();
 
         return MessageResponse.builder()
-                .order(null)
                 .roomId(messageRequest.getRoomId())
                 .senderType(messageRequest.getSenderType())
                 .senderNickname(messageRequest.getSenderNickname())
@@ -105,7 +106,7 @@ public class MessageService {
                 "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
                 "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
 
-        LocalDateTime now = getCurrentTimeWithoutNanos();
+        LocalDateTime now = getCurrentTimeWithNanos();
 
         // Build AI Message from messageRequest
         ChatMessage message = ChatMessage.builder()
@@ -118,9 +119,9 @@ public class MessageService {
                 .build();
 
         if (!saveChatMessageInDb(message)) {
-            return null;  // handle the failure case appropriately
+            return null;  // DB save error: server error
         }
-        return MessageResponse.fromChatMessageEntity(message, null);
+        return MessageResponse.fromChatMessageEntity(message);
     }
 
     public MessageResponse handleQuestion(String roomId, MessageRequest messageRequest) {
@@ -144,7 +145,7 @@ public class MessageService {
             return null;  // handle the failure case appropriately
         }
 
-        return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage, null);
+        return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage);
     }
 
     /**
@@ -170,7 +171,7 @@ public class MessageService {
         String welcomeMessage = buildWelcomeMessageText(roomDto);
         Object messageList = null;
         MessageType messageType = MessageType.ENTER;
-        LocalDateTime now = getCurrentTimeWithoutNanos();
+        LocalDateTime now = getCurrentTimeWithNanos();
 
         welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
         return welcomeMsg;
@@ -229,18 +230,18 @@ public class MessageService {
                                                 MessageRequest messageRequest,
                                                 List<AwsLambdaResponse> awsLambdaResponses) {
         String awsMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록입니다";
-        LocalDateTime now = getCurrentTimeWithoutNanos();
+        LocalDateTime now = getCurrentTimeWithNanos();
 
         // add 4th response
         awsLambdaResponses.add(AwsLambdaResponse.of(
-                "4. 멘토에게 질문하고 답변을 기다릴래요", null, null));
+                "멘토에게 질문하고 답변을 기다릴래요", null, null));
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
                 .senderNickname(mentorNickname)
                 .message(awsMessage)
-                .messageList(awsLambdaResponses)  // save three of summary_question and answer
-                .messageType(MessageType.AI_SUMMARY)
+                .messageList(awsLambdaResponses)  // save three of summary question and answer
+                .messageType(MessageType.AI_SUMMARY_LIST)
                 .time(now)
                 .build();
 
@@ -260,8 +261,8 @@ public class MessageService {
     /**
      * Used in Common
      */
-    private MessageResponse convertChatMessageToDto(ChatMessage message) {
-        return MessageResponse.fromChatMessageEntity(message, null);
+    private MessageListResponse convertChatMessageToDto(ChatMessage message) {
+        return MessageListResponse.fromChatMessageEntity(message, null);
     }
 
     public Optional<LocalDateTime> parseDateTime(String timeString) {
@@ -284,7 +285,7 @@ public class MessageService {
         }
     }
 
-    private LocalDateTime getCurrentTimeWithoutNanos() {
-        return LocalDateTime.now().withNano(0); // ignore milliseconds
+    private LocalDateTime getCurrentTimeWithNanos() {
+        return LocalDateTime.now(); // not ignore milliseconds
     }
 }

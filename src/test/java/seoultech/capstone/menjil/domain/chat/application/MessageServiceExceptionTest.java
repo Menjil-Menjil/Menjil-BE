@@ -114,7 +114,7 @@ public class MessageServiceExceptionTest {
 //        verify(messageRepository, times(1)).save(any(ChatMessage.class));
 //    }
     private String createTimeFormatOfMessageResponse(LocalDateTime time) {
-        time = time.withNano(0);    // ignore milliseconds
+        time = time;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return time.format(formatter);
     }

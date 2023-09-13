@@ -49,7 +49,7 @@ public class ChatMessage {
         this.message = message;
         this.messageList = messageList;
         this.messageType = messageType;
-        this.time = time.truncatedTo(ChronoUnit.SECONDS);   // truncate milliseconds
+        this.time = time;
     }
 
     public void setLambdaMessage(String message) {

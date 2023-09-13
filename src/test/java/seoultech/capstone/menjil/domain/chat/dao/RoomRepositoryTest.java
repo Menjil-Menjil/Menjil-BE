@@ -50,8 +50,8 @@ class RoomRepositoryTest {
         assertThat(roomB.getMentorNickname()).isEqualTo("멘토2");
 
         // remove nanoseconds in MySQL datetime(6) column
-        LocalDateTime roomATime = roomA.getCreatedDate().withNano(0);
-        LocalDateTime roomBTime = roomB.getCreatedDate().withNano(0);
+        LocalDateTime roomATime = roomA.getCreatedDate();
+        LocalDateTime roomBTime = roomB.getCreatedDate();
         assertThat(roomATime.isBefore(roomBTime)).isTrue();
     }
 

@@ -18,6 +18,7 @@ import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 
 import java.time.LocalDateTime;
@@ -76,7 +77,7 @@ class MessageServiceTest {
      * sendWelcomeMessage
      */
     @Test
-    @DisplayName("정상적으로 응답 메시지가 생성되며, MessagesResponse Dto 객체가 리턴된다")
+    @DisplayName("정상적으로 응답 메시지가 생성되며, MessageListResponse Dto 객체가 리턴된다")
     void sendWelcomeMessage() {
         // given
         String roomId = "room_id_one";
@@ -90,7 +91,7 @@ class MessageServiceTest {
                 .build();
 
         // when
-        MessageResponse result = messageService.sendWelcomeMessage(roomDto).orElse(null);
+        MessageListResponse result = messageService.sendWelcomeMessage(roomDto).orElse(null);
 
         // then
         assert result != null;
@@ -280,7 +281,6 @@ class MessageServiceTest {
     }
 
     private String createTimeFormatOfMessageResponse(LocalDateTime time) {
-        time = time.withNano(0);    // ignore milliseconds
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return time.format(formatter);
     }

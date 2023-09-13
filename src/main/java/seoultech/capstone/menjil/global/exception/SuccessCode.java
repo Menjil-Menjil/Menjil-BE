@@ -42,14 +42,19 @@ public enum SuccessCode {
     TOKEN_CREATED(HttpStatus.CREATED.value(), "Access Token, Refresh Token이 정상적으로 생성되었습니다"),
 
     // chat
-    MESSAGE_LOAD_SUCCESS(HttpStatus.CREATED.value(), "채팅 내역을 불러오는데 성공하였습니다"),
+    ROOM_DELETE_SUCCESS(HttpStatus.CREATED.value(), "채팅방 퇴장이 정상적으로 처리되었습니다"),
     MESSAGE_SEND_SUCCESS(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 입력되었습니다"),
     AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다"),
 
     // follow
     FOLLOW_CREATED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 생성되었습니다"),
-    FOLLOW_DELETED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 제거되었습니다");
+    FOLLOW_DELETED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 제거되었습니다"),
 
+    /**
+     * 202 ACCEPTED
+     * 아래 응답은 202 코드와 맞지 않지만, 프로젝트에서 단순 구분을 위해 수정하였음
+     */
+    MESSAGE_LOAD_SUCCESS(HttpStatus.ACCEPTED.value(), "채팅 내역을 불러오는데 성공하였습니다");
     private final int code;
     private final String message;
 }

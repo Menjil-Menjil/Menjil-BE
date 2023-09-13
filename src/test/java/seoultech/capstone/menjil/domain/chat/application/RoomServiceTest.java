@@ -18,7 +18,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -125,12 +125,12 @@ class RoomServiceTest {
                 .build();
 
         // when
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(1);
 
-        MessageResponse response = messageList.get(0);
+        MessageListResponse response = messageList.get(0);
 
         assertThat(response.getRoomId()).isEqualTo(roomId);
         assertThat(response.getSenderNickname()).isEqualTo(TEST_MENTOR_NICKNAME); // Welcome Message is sent by mentor
@@ -146,7 +146,7 @@ class RoomServiceTest {
                 .menteeNickname(TEST_MENTEE_NICKNAME)
                 .roomId(TEST_ROOM_ID)
                 .build();
-        LocalDateTime now = LocalDateTime.now().withNano(0); // ignore milliseconds
+        LocalDateTime now = LocalDateTime.now();
 
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
@@ -180,7 +180,7 @@ class RoomServiceTest {
         messageRepository.saveAll(saveThreeMessages);
 
         // when
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(3);
@@ -212,9 +212,12 @@ class RoomServiceTest {
         assertThat(order4Exists).isFalse(); // order 4 not exists because of the number of data is 3
 
         // 가장 나중에 작성된, 즉 시간이 가장 나중인 메시지가 order=3인지 확인
-        MessageResponse firstMsg = messageList.get(0);
+        MessageListResponse firstMsg = messageList.get(0);
         assertThat(firstMsg.getOrder()).isEqualTo(3);
-        assertEquals(firstMsg.getTime().withNano(0), now.plusSeconds(5000));
+        assertThat(firstMsg.get_id()).isEqualTo("test_uuid_3");
+
+        // 원활한 비교를 위해 milliseconds 0으로 설정
+        assertThat(firstMsg.getTime()).isAfterOrEqualTo(now.plusSeconds(5000).withNano(0));
     }
 
     @Test
@@ -259,20 +262,20 @@ class RoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(10);
 
-        MessageResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
+        MessageListResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
         assertThat(lastResponse.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        MessageResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
+        MessageListResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
         assertThat(firstResponse.get_id()).isEqualTo("id_" + (FIXED_NUM - 10 + 1));
     }
 
     /**
-     * getAllRoomsOfUser()
+     * getAllRoomsOfUser
      */
     @Test
     @DisplayName("case 'MENTEE': 멘티가 멘토링 페이지를 조회하면, 멘토의 정보와 RoomInfo 객체 3개가 리턴된다.")
@@ -300,7 +303,7 @@ class RoomServiceTest {
 
         // save messages
         // 주의: roomId가 room, room2, room3의 아이디와 동일해야 한다.
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
                         ._id("test_uuid_1")
@@ -400,7 +403,7 @@ class RoomServiceTest {
 
         // save messages
         // 주의: roomId가 room, room2, room3의 아이디와 동일해야 한다.
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
                         ._id("test_uuid_1")
@@ -503,6 +506,58 @@ class RoomServiceTest {
     }
 
     /**
+     * quitRoom
+     */
+    @Test
+    @DisplayName("채팅방과 채팅방에 포함된 대화 메시지가 정상적으로 제거되는지 검증")
+    void quitRoom_success() {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
+                .build();
+        LocalDateTime now = LocalDateTime.now();
+        int FIXED_NUM = 9;
+        List<ChatMessage> chatMessageList = new ArrayList<>();
+        for (int i = 1; i <= FIXED_NUM; i++) {
+            String _id = "id_" + i;
+            SenderType senderType;
+            String senderNickname;
+            if (i % 2 == 0) {
+                senderType = SenderType.MENTOR;
+                senderNickname = TEST_MENTOR_NICKNAME;
+            } else {
+                senderType = SenderType.MENTEE;
+                senderNickname = TEST_MENTEE_NICKNAME;
+            }
+            String message = "message_" + i;
+            MessageType messageType = MessageType.TALK;
+            LocalDateTime time = now.plusSeconds(i * 1000L);
+
+            // Add list
+            chatMessageList.add(ChatMessage.builder()
+                    ._id(_id)
+                    .roomId(TEST_ROOM_ID)
+                    .senderType(senderType)
+                    .senderNickname(senderNickname)
+                    .message(message)
+                    .messageType(messageType)
+                    .time(time)
+                    .build());
+        }
+        messageRepository.saveAll(chatMessageList);
+
+        // when
+        boolean result = roomService.quitRoom(roomDto);
+
+        // then
+        assertThat(result).isTrue();
+        assertThat(messageRepository.findAll().size()).isZero();    // Delete Messages
+        assertThat(roomRepository.findAll().size()).isZero(); // Delete Room
+    }
+
+    /**
      * validateUserIsExist
      */
     @Test
@@ -557,7 +612,7 @@ class RoomServiceTest {
     void findLastChatMessageByRoomId() {
         // given
         int FIXED_NUM = 8;
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
 
         List<ChatMessage> chatMessageList = new ArrayList<>();
         for (int i = 1; i <= FIXED_NUM; i++) {
@@ -593,10 +648,10 @@ class RoomServiceTest {
 
         // then
         assertThat(lastMessage.getMessage()).isEqualTo("message_" + FIXED_NUM);
+        assertThat(lastMessage.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        // 작거나 같고, 크거나 같은 두 조건을 만족하는 경우는 같은 경우 뿐이다.
-        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000));
-        assertThat(lastMessage.getTime()).isBeforeOrEqualTo(now.plusSeconds(FIXED_NUM * 1000));
+        // 테스트를 원활하게 하기 위해 milliseconds 값을 0으로 지정
+        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000).withNano(0));
     }
 
     private User createUser(String id, String email, String nickname, UserRole role) {
