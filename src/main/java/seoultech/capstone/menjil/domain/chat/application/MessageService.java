@@ -84,7 +84,8 @@ public class MessageService {
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
 
         if (dateTimeOptional.isEmpty()) {
-            return null; // or handle the error differently
+            // datetime parse exception
+            return null;
         }
         LocalDateTime dateTime = dateTimeOptional.get();
 
@@ -118,7 +119,7 @@ public class MessageService {
                 .build();
 
         if (!saveChatMessageInDb(message)) {
-            return null;  // handle the failure case appropriately
+            return null;  // DB save error: server error
         }
         return MessageResponse.fromChatMessageEntity(message, null);
     }

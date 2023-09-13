@@ -8,7 +8,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import seoultech.capstone.menjil.domain.chat.application.MessageService;
-import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
@@ -33,22 +32,41 @@ public class MessageController {
     public void enter(@DestinationVariable("roomId") String roomId,
                       @Valid @RequestBody MessageRequest messageRequest) {
 
-        if (MessageType.QUESTION.equals(messageRequest.getMessageType())) {
-            // 1. Save Client's Chat Message
-            int saveResult = messageService.saveChatMessage(messageRequest);
-            if (handleSaveResult(saveResult, roomId)) return;
+        switch (messageRequest.getMessageType()) {
+            case QUESTION:
+                // 1. Save Client's Chat Message
+                int saveResult = messageService.saveChatMessage(messageRequest);
+                if (handleSaveResult(saveResult, roomId)) return;
 
-            // 2. Send Client's Chat Message
-            // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
-            // 서버에서 다시 보내주는 식으로 처리하였음.
-            if (handleClientMessage(messageRequest, roomId)) return;
+                // 2. Send Client's Chat Message
+                // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
+                // 서버에서 다시 보내주는 식으로 처리하였음.
+                if (handleClientMessage(messageRequest, roomId)) return;
 
-            // 3. Send AI initial message
-            // TODO: 이 부분은 추후 비동기 처리 고려
-            if (handleAIMessage(roomId, messageRequest)) return;
+                // 3. Send AI initial message
+                // TODO: 이 부분은 추후 비동기 처리 고려
+                if (handleAIMessage(roomId, messageRequest)) return;
 
-            // 4. Handle Client's Question
-            handleClientQuestion(roomId, messageRequest);
+                // 4. Handle Client's Question
+                handleClientQuestion(roomId, messageRequest);
+                break;
+            case SELECT:
+            case AI_SUMMARY:
+            case AI_ANSWER:
+            case AI_RATING:
+                // 1. Save Client's Chat Message
+                int saveResults = messageService.saveChatMessage(messageRequest);
+                if (handleSaveResult(saveResults, roomId)) return;
+
+                // 2. Send Client's Chat Message
+                // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
+                // 서버에서 다시 보내주는 식으로 처리하였음.
+                if (handleClientMessage(messageRequest, roomId)) return;
+                break;
+            default:
+                sendNoMessageTypeResponse(roomId);
+                break;
+
         }
     }
 
@@ -64,7 +82,7 @@ public class MessageController {
     protected boolean handleClientMessage(MessageRequest messageRequest, String roomId) {
         MessageResponse clientMessageResponse = messageService.sendClientMessage(messageRequest);
         if (clientMessageResponse == null) {
-            sendErrorResponse(roomId, ErrorCode.SERVER_ERROR);
+            sendErrorResponse(roomId, ErrorCode.TIME_INPUT_INVALID);
             return true;
         }
         sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, clientMessageResponse);
@@ -92,6 +110,11 @@ public class MessageController {
 
     protected void sendErrorResponse(String roomId, ErrorCode code) {
         ApiResponse<?> apiResponse = ApiResponse.error(code);
+        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, apiResponse);
+    }
+
+    protected void sendNoMessageTypeResponse(String roomId) {
+        ApiResponse<?> apiResponse = ApiResponse.error(ErrorCode.MESSAGE_TYPE_INPUT_INVALID);
         simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, apiResponse);
     }
 
