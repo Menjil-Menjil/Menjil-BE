@@ -15,8 +15,9 @@ public enum MessageType {
     QUESTION,
     AI_QUESTION_RESPONSE, AI_SUMMARY_LIST, AI_SUMMARY, AI_ANSWER, AI_RATING,
     SELECT,
+    TALK,
     TYPE_NOT_EXISTS;
-    
+
     @JsonCreator
     public static MessageType forValue(String value) {
         for (MessageType type : MessageType.values()) {

@@ -18,7 +18,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -125,12 +125,12 @@ class RoomServiceTest {
                 .build();
 
         // when
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(1);
 
-        MessageResponse response = messageList.get(0);
+        MessageListResponse response = messageList.get(0);
 
         assertThat(response.getRoomId()).isEqualTo(roomId);
         assertThat(response.getSenderNickname()).isEqualTo(TEST_MENTOR_NICKNAME); // Welcome Message is sent by mentor
@@ -180,7 +180,7 @@ class RoomServiceTest {
         messageRepository.saveAll(saveThreeMessages);
 
         // when
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(3);
@@ -212,7 +212,7 @@ class RoomServiceTest {
         assertThat(order4Exists).isFalse(); // order 4 not exists because of the number of data is 3
 
         // 가장 나중에 작성된, 즉 시간이 가장 나중인 메시지가 order=3인지 확인
-        MessageResponse firstMsg = messageList.get(0);
+        MessageListResponse firstMsg = messageList.get(0);
         assertThat(firstMsg.getOrder()).isEqualTo(3);
         assertEquals(firstMsg.getTime().withNano(0), now.plusSeconds(5000));
     }
@@ -259,15 +259,15 @@ class RoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
 
         // then
         assertThat(messageList.size()).isEqualTo(10);
 
-        MessageResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
+        MessageListResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
         assertThat(lastResponse.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        MessageResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
+        MessageListResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
         assertThat(firstResponse.get_id()).isEqualTo("id_" + (FIXED_NUM - 10 + 1));
     }
 

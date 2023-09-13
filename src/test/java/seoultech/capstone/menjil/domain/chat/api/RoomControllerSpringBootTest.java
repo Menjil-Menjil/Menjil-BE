@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 
 import java.time.LocalDateTime;
@@ -35,25 +35,25 @@ public class RoomControllerSpringBootTest {
     void chatMessageIsMoreThanOne_return_true() {
         // given
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> messageResponses = Arrays.asList(
-                MessageResponse.builder()
+        List<MessageListResponse> messageResponses = Arrays.asList(
+                MessageListResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)
                         .roomId("test_room_1")
                         .senderType(SenderType.MENTOR)
                         .senderNickname("test_mentor_nickname")
                         .message("mentor's response")
-                        .messageType(MessageType.TALK)
+                        .messageType(MessageType.ENTER)
                         .time(now)
                         .build(),
-                MessageResponse.builder()
+                MessageListResponse.builder()
                         ._id("test_uuid_2")
                         .roomId("test_room_2")
                         .order(2)
                         .senderType(SenderType.MENTEE)
                         .senderNickname("test_mentee_nickname")
                         .message("test message 2")
-                        .messageType(MessageType.TALK)
+                        .messageType(MessageType.QUESTION)
                         .time(now.plusSeconds(3000))
                         .build()
         );
@@ -70,16 +70,17 @@ public class RoomControllerSpringBootTest {
     void chatMessageIsMoreThanOne_return_false_and_order_is_null() {
         // given
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(null)   // here is null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
+        List<MessageListResponse> response = Collections.singletonList(
+                MessageListResponse.builder()
+                        ._id("test_uuid_1")
+                        .order(null)   // here is null
+                        .roomId("test_room_id")
+                        .senderType(SenderType.MENTOR)
+                        .senderNickname("test_mentor_nickname")
+                        .message("Welcome Message")
+                        .messageType(MessageType.ENTER)
+                        .time(now)
+                        .build());
 
         // when
         boolean result = roomController.chatMessageIsMoreThanOne(response);
@@ -93,16 +94,17 @@ public class RoomControllerSpringBootTest {
     void chatMessageIsMoreThanOne_return_false_and_order_is_not_null() {
         // given
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(1)   // here is not null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
+        List<MessageListResponse> response = Collections.singletonList(
+                MessageListResponse.builder()
+                        ._id("test_uuid_1")
+                        .order(1)   // here is not null
+                        .roomId("test_room_id")
+                        .senderType(SenderType.MENTOR)
+                        .senderNickname("test_mentor_nickname")
+                        .message("Welcome Message")
+                        .messageType(MessageType.ENTER)
+                        .time(now)
+                        .build());
 
         // when
         boolean result = roomController.chatMessageIsMoreThanOne(response);
@@ -119,16 +121,17 @@ public class RoomControllerSpringBootTest {
     void checkIfUserEnterTheRoomAtFirstTime_return_true_when_order_is_null() {
         // given
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(null)   // here is null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
+        List<MessageListResponse> response = Collections.singletonList(
+                MessageListResponse.builder()
+                        ._id("test_uuid_1")
+                        .order(null)   // here is null
+                        .roomId("test_room_id")
+                        .senderType(SenderType.MENTOR)
+                        .senderNickname("test_mentor_nickname")
+                        .message("Welcome Message")
+                        .messageType(MessageType.ENTER)
+                        .time(now)
+                        .build());
 
         // when
         boolean result = roomController.checkIfUserEnterTheRoomAtFirstTime(response);
@@ -142,16 +145,17 @@ public class RoomControllerSpringBootTest {
     void checkIfUserEnterTheRoomAtFirstTime_return_true_when_order_is_not_null() {
         // given
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> response = Collections.singletonList(MessageResponse.builder()
-                ._id("test_uuid_1")
-                .order(1)   // here is not null
-                .roomId("test_room_id")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(now)
-                .build());
+        List<MessageListResponse> response = Collections.singletonList(
+                MessageListResponse.builder()
+                        ._id("test_uuid_1")
+                        .order(1)   // here is not null
+                        .roomId("test_room_id")
+                        .senderType(SenderType.MENTOR)
+                        .senderNickname("test_mentor_nickname")
+                        .message("Welcome Message")
+                        .messageType(MessageType.ENTER)
+                        .time(now)
+                        .build());
 
         // when
         boolean result = roomController.checkIfUserEnterTheRoomAtFirstTime(response);

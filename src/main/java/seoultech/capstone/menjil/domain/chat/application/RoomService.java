@@ -13,6 +13,7 @@ import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
@@ -40,7 +41,7 @@ public class RoomService {
     @Value("${cloud.aws.s3.bucket}")
     private String BUCKET_NAME;
 
-    public List<MessageResponse> enterTheRoom(RoomDto roomDto) {
+    public List<MessageListResponse> enterTheRoom(RoomDto roomDto) {
 
         // case 0: 멘티 혹은 멘토 id가 db에 존재하지 않는 경우 CustomException 발생
         validateUserIsExist(roomDto);
@@ -99,12 +100,12 @@ public class RoomService {
         mentorInDb.orElseThrow(() -> new CustomException(ErrorCode.MENTOR_NICKNAME_NOT_EXISTED));
     }
 
-    protected List<MessageResponse> handleNewRoom(RoomDto roomDto) {
-        List<MessageResponse> result = new ArrayList<>();
+    protected List<MessageListResponse> handleNewRoom(RoomDto roomDto) {
+        List<MessageListResponse> result = new ArrayList<>();
 
         Room newRoom = saveNewRoom(roomDto);
 
-        Optional<MessageResponse> messageResponse = messageService.sendWelcomeMessage(RoomDto.fromRoom(newRoom));
+        Optional<MessageListResponse> messageResponse = messageService.sendWelcomeMessage(RoomDto.fromRoom(newRoom));
         if (messageResponse.isEmpty()) {
             return null;
         } else {
@@ -127,7 +128,7 @@ public class RoomService {
         }
     }
 
-    private List<MessageResponse> handleExistingRoom(RoomDto roomDto) {
+    private List<MessageListResponse> handleExistingRoom(RoomDto roomDto) {
         int PAGE_SIZE = 10;
 
         // 최대 10개의 메시지를 클라이언트로 보낸다.
@@ -140,7 +141,7 @@ public class RoomService {
 
         // index가 낮을 수록, 시간 순이 나중인 메시지를 담도록
         return IntStream.range(0, messagePage.size())
-                .mapToObj(i -> MessageResponse.fromChatMessageEntity(messagePage.get(i), messagePage.size() - i))
+                .mapToObj(i -> MessageListResponse.fromChatMessageEntity(messagePage.get(i), messagePage.size() - i))
                 .collect(Collectors.toList());
     }
 

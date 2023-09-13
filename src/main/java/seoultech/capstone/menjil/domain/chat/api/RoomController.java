@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
@@ -33,14 +33,14 @@ public class RoomController {
      */
     @PostMapping("/room/enter")
     public void enterTheRoom(@RequestBody RoomDto roomDto) {
-        List<MessageResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
         if (messageList == null) {
             ApiResponse<?> errorApiResponse = ApiResponse.error(ErrorCode.TIME_INPUT_INVALID);
             simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomDto.getRoomId(), errorApiResponse);
             return;
         }
 
-        ApiResponse<List<MessageResponse>> messageResponse;
+        ApiResponse<List<MessageListResponse>> messageResponse;
         if (chatMessageIsMoreThanOne(messageList)) {
             messageResponse = ApiResponse.success(SuccessCode.MESSAGE_LOAD_SUCCESS, messageList);
         } else {
@@ -81,12 +81,12 @@ public class RoomController {
         }
     }
 
-    protected boolean chatMessageIsMoreThanOne(List<MessageResponse> messages) {
+    protected boolean chatMessageIsMoreThanOne(List<MessageListResponse> messages) {
         int MESSAGE_IS_MORE_THAN_ONE = 1;
         return messages.size() > MESSAGE_IS_MORE_THAN_ONE;
     }
 
-    protected boolean checkIfUserEnterTheRoomAtFirstTime(List<MessageResponse> messages) {
+    protected boolean checkIfUserEnterTheRoomAtFirstTime(List<MessageListResponse> messages) {
         return messages.get(0).getOrder() == null;
     }
 

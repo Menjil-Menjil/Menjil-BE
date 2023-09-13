@@ -18,6 +18,7 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.AwsLambdaRequest;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 
 import java.time.Duration;
@@ -46,7 +47,7 @@ public class MessageService {
         this.roomRepository = roomRepository;
     }
 
-    public Optional<MessageResponse> sendWelcomeMessage(RoomDto roomDto) {
+    public Optional<MessageListResponse> sendWelcomeMessage(RoomDto roomDto) {
         ChatMessage welcomeMsg = createWelcomeMessage(roomDto);
         if (saveChatMessageInDb(welcomeMsg)) {
             return Optional.of(convertChatMessageToDto(welcomeMsg));
@@ -90,7 +91,6 @@ public class MessageService {
         LocalDateTime dateTime = dateTimeOptional.get();
 
         return MessageResponse.builder()
-                .order(null)
                 .roomId(messageRequest.getRoomId())
                 .senderType(messageRequest.getSenderType())
                 .senderNickname(messageRequest.getSenderNickname())
@@ -121,7 +121,7 @@ public class MessageService {
         if (!saveChatMessageInDb(message)) {
             return null;  // DB save error: server error
         }
-        return MessageResponse.fromChatMessageEntity(message, null);
+        return MessageResponse.fromChatMessageEntity(message);
     }
 
     public MessageResponse handleQuestion(String roomId, MessageRequest messageRequest) {
@@ -145,7 +145,7 @@ public class MessageService {
             return null;  // handle the failure case appropriately
         }
 
-        return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage, null);
+        return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage);
     }
 
     /**
@@ -261,8 +261,8 @@ public class MessageService {
     /**
      * Used in Common
      */
-    private MessageResponse convertChatMessageToDto(ChatMessage message) {
-        return MessageResponse.fromChatMessageEntity(message, null);
+    private MessageListResponse convertChatMessageToDto(ChatMessage message) {
+        return MessageListResponse.fromChatMessageEntity(message, null);
     }
 
     public Optional<LocalDateTime> parseDateTime(String timeString) {

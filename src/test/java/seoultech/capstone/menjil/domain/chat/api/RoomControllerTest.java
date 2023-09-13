@@ -20,6 +20,7 @@ import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
@@ -77,8 +78,8 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
-        List<MessageResponse> messageResponses = Arrays.asList(
-                MessageResponse.builder()
+        List<MessageListResponse> messageResponses = Arrays.asList(
+                MessageListResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)
                         .roomId(roomDto.getRoomId())
@@ -88,7 +89,7 @@ class RoomControllerTest {
                         .messageType(MessageType.TALK)
                         .time(now)
                         .build(),
-                MessageResponse.builder()
+                MessageListResponse.builder()
                         ._id("test_uuid_2")
                         .roomId(roomDto.getRoomId())
                         .order(2)
@@ -98,7 +99,7 @@ class RoomControllerTest {
                         .messageType(MessageType.TALK)
                         .time(now.plusSeconds(3000))
                         .build(),
-                MessageResponse.builder()
+                MessageListResponse.builder()
                         ._id("test_uuid_3")
                         .roomId(roomDto.getRoomId())
                         .order(3)
@@ -148,7 +149,7 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        List<MessageResponse> messageResponse = Collections.singletonList(MessageResponse.builder()
+        List<MessageListResponse> messageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_1")
                 .order(null)
                 .roomId(roomDto.getRoomId())
@@ -196,7 +197,7 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessageResponse> firstMessageResponse = Collections.singletonList(MessageResponse.builder()
+        List<MessageListResponse> firstMessageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_3")
                 .order(null)    // here is null
                 .roomId(roomDto.getRoomId())
@@ -207,7 +208,7 @@ class RoomControllerTest {
                 .time(now)
                 .build());
 
-        List<MessageResponse> secondMessageResponse = Collections.singletonList(MessageResponse.builder()
+        List<MessageListResponse> secondMessageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_3")
                 .order(1)   // here is not null
                 .roomId(roomDto.getRoomId())
