@@ -34,7 +34,7 @@ public class RoomControllerSpringBootTest {
     @DisplayName("case 1: List의 개수가 2개이면 true 리턴")
     void chatMessageIsMoreThanOne_return_true() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> messageResponses = Arrays.asList(
                 MessageListResponse.builder()
                         ._id("test_uuid_1")
@@ -69,7 +69,7 @@ public class RoomControllerSpringBootTest {
     @DisplayName("case 2: List의 개수가 1 이하면 false 리턴, order = null")
     void chatMessageIsMoreThanOne_return_false_and_order_is_null() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> response = Collections.singletonList(
                 MessageListResponse.builder()
                         ._id("test_uuid_1")
@@ -93,7 +93,7 @@ public class RoomControllerSpringBootTest {
     @DisplayName("case 2-1: List의 개수가 1 이하면 false 리턴, order = 1")
     void chatMessageIsMoreThanOne_return_false_and_order_is_not_null() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> response = Collections.singletonList(
                 MessageListResponse.builder()
                         ._id("test_uuid_1")
@@ -120,7 +120,7 @@ public class RoomControllerSpringBootTest {
     @DisplayName("case 1: order가 null이면 true 리턴")
     void checkIfUserEnterTheRoomAtFirstTime_return_true_when_order_is_null() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> response = Collections.singletonList(
                 MessageListResponse.builder()
                         ._id("test_uuid_1")
@@ -144,7 +144,7 @@ public class RoomControllerSpringBootTest {
     @DisplayName("case 2: order가 1이면 false 리턴")
     void checkIfUserEnterTheRoomAtFirstTime_return_true_when_order_is_not_null() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> response = Collections.singletonList(
                 MessageListResponse.builder()
                         ._id("test_uuid_1")

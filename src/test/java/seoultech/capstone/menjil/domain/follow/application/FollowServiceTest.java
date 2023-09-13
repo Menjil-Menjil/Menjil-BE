@@ -34,7 +34,7 @@ class FollowServiceTest {
 
     @BeforeEach
     void setUp() {
-        LocalDateTime time = LocalDateTime.now().withNano(0);   // ignore milliseconds
+        LocalDateTime time = LocalDateTime.now();
         Follow testFollow = Follow.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME, time);
         followRepository.save(testFollow);
     }

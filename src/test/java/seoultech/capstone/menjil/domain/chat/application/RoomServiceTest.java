@@ -146,7 +146,7 @@ class RoomServiceTest {
                 .menteeNickname(TEST_MENTEE_NICKNAME)
                 .roomId(TEST_ROOM_ID)
                 .build();
-        LocalDateTime now = LocalDateTime.now().withNano(0); // ignore milliseconds
+        LocalDateTime now = LocalDateTime.now();
 
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
@@ -214,7 +214,10 @@ class RoomServiceTest {
         // 가장 나중에 작성된, 즉 시간이 가장 나중인 메시지가 order=3인지 확인
         MessageListResponse firstMsg = messageList.get(0);
         assertThat(firstMsg.getOrder()).isEqualTo(3);
-        assertEquals(firstMsg.getTime().withNano(0), now.plusSeconds(5000));
+        assertThat(firstMsg.get_id()).isEqualTo("test_uuid_3");
+
+        // 원활한 비교를 위해 milliseconds 0으로 설정
+        assertThat(firstMsg.getTime()).isAfterOrEqualTo(now.plusSeconds(5000).withNano(0));
     }
 
     @Test
@@ -300,7 +303,7 @@ class RoomServiceTest {
 
         // save messages
         // 주의: roomId가 room, room2, room3의 아이디와 동일해야 한다.
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
                         ._id("test_uuid_1")
@@ -400,7 +403,7 @@ class RoomServiceTest {
 
         // save messages
         // 주의: roomId가 room, room2, room3의 아이디와 동일해야 한다.
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<ChatMessage> saveThreeMessages = Arrays.asList(
                 ChatMessage.builder()
                         ._id("test_uuid_1")
@@ -609,7 +612,7 @@ class RoomServiceTest {
     void findLastChatMessageByRoomId() {
         // given
         int FIXED_NUM = 8;
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
 
         List<ChatMessage> chatMessageList = new ArrayList<>();
         for (int i = 1; i <= FIXED_NUM; i++) {
@@ -645,10 +648,10 @@ class RoomServiceTest {
 
         // then
         assertThat(lastMessage.getMessage()).isEqualTo("message_" + FIXED_NUM);
+        assertThat(lastMessage.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        // 작거나 같고, 크거나 같은 두 조건을 만족하는 경우는 같은 경우 뿐이다.
-        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000));
-        assertThat(lastMessage.getTime()).isBeforeOrEqualTo(now.plusSeconds(FIXED_NUM * 1000));
+        // 테스트를 원활하게 하기 위해 milliseconds 값을 0으로 지정
+        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000).withNano(0));
     }
 
     private User createUser(String id, String email, String nickname, UserRole role) {

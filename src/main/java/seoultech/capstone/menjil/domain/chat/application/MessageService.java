@@ -106,7 +106,7 @@ public class MessageService {
                 "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
                 "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
 
-        LocalDateTime now = getCurrentTimeWithoutNanos();
+        LocalDateTime now = getCurrentTimeWithNanos();
 
         // Build AI Message from messageRequest
         ChatMessage message = ChatMessage.builder()
@@ -171,7 +171,7 @@ public class MessageService {
         String welcomeMessage = buildWelcomeMessageText(roomDto);
         Object messageList = null;
         MessageType messageType = MessageType.ENTER;
-        LocalDateTime now = getCurrentTimeWithoutNanos();
+        LocalDateTime now = getCurrentTimeWithNanos();
 
         welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
         return welcomeMsg;
@@ -230,7 +230,7 @@ public class MessageService {
                                                 MessageRequest messageRequest,
                                                 List<AwsLambdaResponse> awsLambdaResponses) {
         String awsMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록입니다";
-        LocalDateTime now = getCurrentTimeWithoutNanos();
+        LocalDateTime now = getCurrentTimeWithNanos();
 
         // add 4th response
         awsLambdaResponses.add(AwsLambdaResponse.of(
@@ -285,7 +285,7 @@ public class MessageService {
         }
     }
 
-    private LocalDateTime getCurrentTimeWithoutNanos() {
-        return LocalDateTime.now().withNano(0); // ignore milliseconds
+    private LocalDateTime getCurrentTimeWithNanos() {
+        return LocalDateTime.now(); // not ignore milliseconds
     }
 }

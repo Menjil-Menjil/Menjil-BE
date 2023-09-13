@@ -77,7 +77,7 @@ class RoomControllerTest {
                 .roomId(TEST_ROOM_ID)
                 .build();
 
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> messageResponses = Arrays.asList(
                 MessageListResponse.builder()
                         ._id("test_uuid_1")
@@ -148,7 +148,7 @@ class RoomControllerTest {
                 .roomId(TEST_ROOM_ID)
                 .build();
 
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
         List<MessageListResponse> messageResponse = Collections.singletonList(MessageListResponse.builder()
                 ._id("test_uuid_1")
                 .order(null)

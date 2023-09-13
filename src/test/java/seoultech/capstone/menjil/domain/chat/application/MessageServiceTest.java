@@ -281,7 +281,6 @@ class MessageServiceTest {
     }
 
     private String createTimeFormatOfMessageResponse(LocalDateTime time) {
-        time = time.withNano(0);    // ignore milliseconds
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return time.format(formatter);
     }

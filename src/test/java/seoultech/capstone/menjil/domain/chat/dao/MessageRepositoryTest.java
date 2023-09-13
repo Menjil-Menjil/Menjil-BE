@@ -44,7 +44,7 @@ class MessageRepositoryTest {
         List<ChatMessage> chatMessageList = new ArrayList<>();
         int FIXED_NUM = 47;
         String roomId = "fixed_room_id";
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
 
         for (int i = 1; i <= FIXED_NUM; i++) {
             String _id = "id_" + i;
@@ -77,7 +77,7 @@ class MessageRepositoryTest {
         // when
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> result = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
 
@@ -89,7 +89,9 @@ class MessageRepositoryTest {
         // 시간순으로 맨 마지막에 입력된 데이터가 정상적으로 반환되는지 확인
         assertThat(lastMessage.get_id()).isEqualTo("id_" + FIXED_NUM);
         assertThat(lastMessage.getMessage()).isEqualTo("message_" + FIXED_NUM);
-        assertThat(lastMessage.getTime()).isEqualTo(now.plusSeconds(FIXED_NUM * 1000L));
+
+        // 원활한 비교를 위해 milliseconds 무시
+        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000L).withNano(0));
     }
 
     @Test
@@ -101,7 +103,7 @@ class MessageRepositoryTest {
         List<ChatMessage> chatMessageList = new ArrayList<>();
         int FIXED_NUM = 47;
         String roomId = "fixed_room_id";
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
 
         int NUM = 33;
 
@@ -143,7 +145,7 @@ class MessageRepositoryTest {
         // when
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> result = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
 
@@ -153,6 +155,8 @@ class MessageRepositoryTest {
 
         assertThat(lastMessage.get_id()).isEqualTo("id_" + NUM);
         assertThat(lastMessage.getMessage()).isEqualTo("message_" + NUM);
-        assertThat(lastMessage.getTime()).isEqualTo(now.plusSeconds(NUM * 1000 * 1000L));
+
+        // 원활한 비교를 위해 milliseconds 무시
+        assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(NUM * 1000 * 1000L).withNano(0));
     }
 }

@@ -14,7 +14,6 @@ import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -230,7 +229,7 @@ public class RoomService {
 
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is the same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
         return messagePage.get(0); // Assumes there is at least one message, add error handling if needed
