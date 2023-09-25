@@ -33,6 +33,9 @@ public enum SuccessCode {
     // follow
     FOLLOW_CHECK_SUCCESS(HttpStatus.OK.value(), "팔로우 조회에 성공하셨습니다"),
 
+    // following
+    GET_FOLLOW_MENTOR_LIST_AVAILABLE(HttpStatus.OK.value(), "팔로우 멘토 리스트를 불러오는데 성공하였습니다"),
+
 
     /**
      * 201 CREATED
