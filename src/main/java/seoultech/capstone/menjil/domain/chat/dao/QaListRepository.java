@@ -14,4 +14,6 @@ public interface QaListRepository extends MongoRepository<QaList, String> {
     @Query(value = "{ 'mentor_nickname' : ?0, 'answer' : { '$ne' : null } }", fields = "{ 'question_summary' : 1 }")
     List<QaList> findAnsweredQuestionsByMentor(String mentorNickname, Pageable pageable);
 
+    Long countByMentorNicknameAndAnswerIsNotNull(String mentorNickname);
+
 }

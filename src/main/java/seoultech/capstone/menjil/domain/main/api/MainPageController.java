@@ -28,9 +28,10 @@ import java.util.List;
 public class MainPageController {
 
     private final MainPageService mainPageService;
+    private final int pageSize = 3;
 
     @GetMapping("/mentors")
-    public ResponseEntity<ApiResponse<Page<MentorInfoResponse>>> getMentorList(String nickname, @PageableDefault(size = 3, sort = {"createdDate", "nickname"},
+    public ResponseEntity<ApiResponse<Page<MentorInfoResponse>>> getMentorList(String nickname, @PageableDefault(size = pageSize, sort = {"createdDate", "nickname"},
             direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK)
