@@ -1,5 +1,7 @@
 package seoultech.capstone.menjil.domain.chat.application;
 
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,13 +14,11 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
-import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -31,50 +31,91 @@ public class MessageServiceExceptionTest {
     @Mock
     private MessageRepository messageRepository;
 
+    private final int SAVE_SUCCESS = 0;
+    private final int TIME_INPUT_INVALID = -1;
+    private final int INTERNAL_SERVER_ERROR = -100;
+    private final static String TEST_ROOM_ID = "test_room_1";
+    private final String TEST_MENTEE_NICKNAME = "test_mentee_1";
+    private final String TEST_MENTOR_NICKNAME = "test_mentor_1";
+
     /**
-     * sendWelcomeMessage()
+     * sendWelcomeMessage
      */
     @Test
-    void sendWelcomeMessage_Should_Throw_CustomException_WhenSaveFails() {
-        // Arrange
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
-                .mentorNickname("test_mentor")
-                .menteeNickname("test_mentee")
-                .roomId("test_room_id")
+    @DisplayName("db에 저장 실패한 경우")
+    void sendWelcomeMessage_return_Optional_empty_WhenSaveFails() {
+        // given
+        RoomDto roomDto = RoomDto.builder()
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .roomId(TEST_ROOM_ID)
                 .build();
 
-        // DataIntegrityViolationException
+        // when: DataIntegrityViolationException
         doThrow(DataIntegrityViolationException.class).when(messageRepository).save(any(ChatMessage.class));
 
-        // Act and Assert
-        assertThrows(CustomException.class, () -> messageService.sendWelcomeMessage(roomDto));
-    }
-
-    /**
-     * saveChatMessage()
-     */
-    @Test
-    void saveChatMessage_Should_Return_False_WhenSaveFails() {
-        // Arrange
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDate = now.format(formatter);
-
-        MessageRequest messageDto = MessageRequest.builder()
-                .roomId("test1")
-                .message("hello Message")
-                .messageType(MessageType.ENTER)
-                .senderType(SenderType.MENTOR)
-                .time(formattedDate)
-                .build();
-        when(messageRepository.save(any(ChatMessage.class))).thenThrow(new DataIntegrityViolationException("Error"));
-
-        // Act
-        boolean result = messageService.saveChatMessage(messageDto);
-
-        // Assert
-        assertFalse(result);
+        // then
+        Assertions.assertThat(messageService.sendWelcomeMessage(roomDto)).isEmpty();
         verify(messageRepository, times(1)).save(any(ChatMessage.class));
     }
 
+    /**
+     * saveChatMessage
+     */
+    @Test
+    @DisplayName("db에 저장 실패한 경우 int INTERNAL_SERVER_ERROR 리턴")
+    void saveChatMessage_Return_INTERNAL_SERVER_ERROR_WhenSaveFails() {
+        // given
+        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
+
+        MessageRequest messageDto = MessageRequest.builder()
+                .roomId(TEST_ROOM_ID)
+                .senderNickname(TEST_MENTOR_NICKNAME)
+                .message("hello Message")
+                .messageType(MessageType.ENTER)
+                .senderType(SenderType.MENTOR)
+                .time(formattedDateTime)
+                .build();
+
+        // when
+        when(messageRepository.save(any(ChatMessage.class))).thenThrow(new DataIntegrityViolationException("Error"));
+
+        // then
+        int result = messageService.saveChatMessage(messageDto);
+        assertEquals(result, INTERNAL_SERVER_ERROR);
+        verify(messageRepository, times(1)).save(any(ChatMessage.class));
+    }
+
+    /**
+     * sendAIMessage
+     */
+    // TODO: 테스트 코드 작성 실패. 추후 다시 시도할 예정
+//    @Test
+//    @DisplayName("db에 저장 실패한 경우 null 리턴")
+//    void sendAIMessage_Return_null_WhenSaveFails() {
+//        // given
+//        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
+//
+//        MessageRequest clientMessageDto = MessageRequest.builder()
+//                .roomId(TEST_ROOM_ID)
+//                .senderType(SenderType.MENTEE)
+//                .senderNickname(TEST_MENTEE_NICKNAME)
+//                .message("멘티의 질문입니다")
+//                .messageType(MessageType.QUESTION)
+//                .time(formattedDateTime)
+//                .build();
+//
+//        // when
+//        when(messageRepository.save(any(ChatMessage.class))).thenThrow(new DataIntegrityViolationException("Error"));
+//
+//        // then
+//        Assertions.assertThat(messageService.sendAIMessage(TEST_ROOM_ID, clientMessageDto)).isNull();
+//        verify(messageService, times(1)).sendAIMessage(TEST_ROOM_ID, clientMessageDto);
+//        verify(messageRepository, times(1)).save(any(ChatMessage.class));
+//    }
+    private String createTimeFormatOfMessageResponse(LocalDateTime time) {
+        time = time;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return time.format(formatter);
+    }
 }

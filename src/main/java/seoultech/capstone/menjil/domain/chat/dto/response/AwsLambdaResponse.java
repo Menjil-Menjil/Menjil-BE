@@ -10,12 +10,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AwsLambdaResponse {
     @JsonProperty(value = "question_summary")
-    private String threeLineSummaryMessage;
+    private String question_summary;    // use underbar because mongodb saved type and return value is different
 
     @JsonProperty(value = "answer")
     private String answer;
 
     @JsonProperty(value = "similarity_percent")
-    private double similarityPercent;
+    private Double similarity_percent;     // use underbar because mongodb saved type and return value is different
 
+    public static AwsLambdaResponse of(String question_summary, String answer, Double similarity_percent) {
+        return new AwsLambdaResponse(question_summary, answer, similarity_percent);
+    }
 }

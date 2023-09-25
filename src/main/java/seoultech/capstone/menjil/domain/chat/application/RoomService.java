@@ -13,7 +13,7 @@ import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -21,10 +21,10 @@ import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,105 +36,135 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;    // img_url 정보 조회를 위해, 부득이하게 userRepository 사용
-    private final int PAGE_SIZE = 10;
-    private final int GET_ROOM_INFO_SIZE = 1;
-    private final int AWS_URL_DURATION = 7;
-    private final String TYPE_MENTEE = "MENTEE";
-    private final String TYPE_MENTOR = "MENTOR";
 
     @Value("${cloud.aws.s3.bucket}")
     private String BUCKET_NAME;
 
-    /**
-     * 채팅방 입장
-     * case 1: 채팅 내역이 존재하지 않는 경우(처음 입장)
-     * case 2: 채팅 내역이 존재하는 경우
-     */
-    public List<MessageResponse> enterTheRoom(RoomDto roomDto) {
-        List<MessageResponse> result = new ArrayList<>();
+    public List<MessageListResponse> enterTheRoom(RoomDto roomDto) {
 
-        // case 0: 멘티 혹은 멘토 id가 db에 존재하지 않는 경우 CustomException
-        User menteeInDb = userRepository.findUserByNickname(roomDto.getMenteeNickname())
-                .orElse(null);
-        User mentorInDb = userRepository.findUserByNickname(roomDto.getMentorNickname())
-                .orElse(null);
-        if (menteeInDb == null) {
-            throw new CustomException(ErrorCode.MENTEE_NICKNAME_NOT_EXISTED);
-        }
-        if (mentorInDb == null) {
-            throw new CustomException(ErrorCode.MENTOR_NICKNAME_NOT_EXISTED);
-        }
+        // case 0: 멘티 혹은 멘토 id가 db에 존재하지 않는 경우 CustomException 발생
+        validateUserIsExist(roomDto);
 
         Room room = roomRepository.findRoomById(roomDto.getRoomId());
         if (room == null) {
             // case 1: 채팅방이 존재하지 않는 경우
-            // 먼저 채팅방을 db에 저장한다.
-            Room newRoom = Room.builder()
-                    .roomId(roomDto.getRoomId())
-                    .menteeNickname(roomDto.getMenteeNickname())
-                    .mentorNickname(roomDto.getMentorNickname())
-                    .build();
-            try {
-                roomRepository.save(newRoom);
-            } catch (RuntimeException e) {
-                throw new CustomException(ErrorCode.SERVER_ERROR);
-            }
-
-            RoomDto newRoomDto = RoomDto.fromRoom(newRoom);
-            MessageResponse messageResponse = messageService.sendWelcomeMessage(newRoomDto);
-            result.add(messageResponse);
+            return handleNewRoom(roomDto);
         } else {
             // case 2: 채팅방이 존재하는 경우 -> 채팅 메시지가 반드시 존재한다.
-            // 최대 10개의 메시지를 클라이언트로 보낸다.
-            PageRequest pageRequest = PageRequest.of(0, PAGE_SIZE, Sort.by(
-                    Sort.Order.desc("time"),
-                    Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
-            ));
-            List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
-            for (int i = 0; i < messagePage.size(); i++) {
-                MessageResponse dto = MessageResponse.fromChatMessageEntity(messagePage.get(i), messagePage.size() - i);
-                result.add(dto);
-            }
+            return handleExistingRoom(roomDto);
         }
-        return result;
     }
 
     /**
      * 사용자의 채팅방 전체 데이터를 불러오는 경우
      * 멘티는 방 id, 멘토의 닉네임과 img_url, 마지막 대화내용,
      * 멘토는 방 Id, 멘티의 닉네임과 img_url, 마지막 대화내용
-     * 리스트 정보가 필요하다.
      */
     public List<RoomInfoResponse> getAllRoomsOfUser(String nickname, String type) {
-        List<RoomInfoResponse> result = new ArrayList<>();
+        String TYPE_MENTEE = "MENTEE";
+        String TYPE_MENTOR = "MENTOR";
 
-        /* type == MENTEE 의 경우(사용자가 멘타인 경우) */
+        /* type == MENTEE 의 경우(사용자가 멘티인 경우) */
         if (type.equals(TYPE_MENTEE)) {
-            List<Room> roomList = roomRepository.findRoomsByMenteeNickname(nickname);
-            if (roomList.isEmpty()) {
-                // 채팅방이 하나도 없는 경우
-                return result;
-            }
-            for (Room room : roomList) {
-                result.add(findMentorRoomsByMentee(room));
-            }
+            return getMenteeRooms(nickname);
         }
         /* type == Mentor 의 경우(사용자가 멘토인 경우) */
         else if (type.equals(TYPE_MENTOR)) {
-            List<Room> roomList = roomRepository.findRoomsByMentorNickname(nickname);
-            if (roomList.isEmpty()) {
-                // 채팅방이 하나도 없는 경우
-                return result;
-            }
-            for (Room room : roomList) {
-                result.add(findMenteeRoomsByMentor(room));
-            }
+            return getMentorRooms(nickname);
         } else {
             throw new CustomException(ErrorCode.TYPE_NOT_ALLOWED);
         }
+    }
 
-        result = sortByLastMessagedTimeOfHourDESC(result);
+    public boolean quitRoom(RoomDto roomDto) {
+        String roomId = roomDto.getRoomId();
+
+        // 1. ChatMessage 데이터 제거
+        boolean deleteChatMessagesByRoomId = deleteChatMessagesByRoomId(roomId);
+
+        // 2. Room 제거
+        boolean deleteRoom = deleteRoomByRoomId(roomId);
+
+        return deleteChatMessagesByRoomId && deleteRoom;
+    }
+
+    /**
+     * Used By enterTheRoom
+     */
+    protected void validateUserIsExist(RoomDto roomDto) {
+        Optional<User> menteeInDb = userRepository.findUserByNickname(roomDto.getMenteeNickname());
+        Optional<User> mentorInDb = userRepository.findUserByNickname(roomDto.getMentorNickname());
+
+        menteeInDb.orElseThrow(() -> new CustomException(ErrorCode.MENTEE_NICKNAME_NOT_EXISTED));
+        mentorInDb.orElseThrow(() -> new CustomException(ErrorCode.MENTOR_NICKNAME_NOT_EXISTED));
+    }
+
+    protected List<MessageListResponse> handleNewRoom(RoomDto roomDto) {
+        List<MessageListResponse> result = new ArrayList<>();
+
+        Room newRoom = saveNewRoom(roomDto);
+
+        Optional<MessageListResponse> messageResponse = messageService.sendWelcomeMessage(RoomDto.fromRoom(newRoom));
+        if (messageResponse.isEmpty()) {
+            return null;
+        } else {
+            result.add(messageResponse.get());
+        }
         return result;
+    }
+
+    private Room saveNewRoom(RoomDto roomDto) {
+        Room newRoom = Room.builder()
+                .roomId(roomDto.getRoomId())
+                .menteeNickname(roomDto.getMenteeNickname())
+                .mentorNickname(roomDto.getMentorNickname())
+                .build();
+
+        try {
+            return roomRepository.save(newRoom);
+        } catch (RuntimeException e) {
+            throw new CustomException(ErrorCode.SERVER_ERROR);
+        }
+    }
+
+    private List<MessageListResponse> handleExistingRoom(RoomDto roomDto) {
+        int PAGE_SIZE = 10;
+
+        // 최대 10개의 메시지를 클라이언트로 보낸다.
+        PageRequest pageRequest = PageRequest.of(0, PAGE_SIZE, Sort.by(
+                Sort.Order.desc("time"),
+                Sort.Order.desc("_id")
+        ));
+
+        List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomDto.getRoomId(), pageRequest);
+
+        // index가 낮을 수록, 시간 순이 나중인 메시지를 담도록
+        return IntStream.range(0, messagePage.size())
+                .mapToObj(i -> MessageListResponse.fromChatMessageEntity(messagePage.get(i), messagePage.size() - i))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Used By getAllRoomsOfUser
+     */
+    private List<RoomInfoResponse> getMenteeRooms(String menteeNickname) {
+        List<Room> menteeRooms = roomRepository.findRoomsByMenteeNickname(menteeNickname);
+        return getRoomsInfo(menteeRooms, this::findMentorRoomsByMentee);
+    }
+
+    private List<RoomInfoResponse> getMentorRooms(String mentorNickname) {
+        List<Room> roomList = roomRepository.findRoomsByMentorNickname(mentorNickname);
+        return getRoomsInfo(roomList, this::findMenteeRoomsByMentor);
+    }
+
+    private List<RoomInfoResponse> getRoomsInfo(List<Room> rooms, Function<Room, RoomInfoResponse> mapper) {
+        if (rooms.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<RoomInfoResponse> result = rooms.stream()
+                .map(mapper)
+                .collect(Collectors.toList());
+        return sortByLastMessagedTimeOfHourASC(result);
     }
 
     /**
@@ -146,28 +176,19 @@ public class RoomService {
         String mentorNickname = room.getMentorNickname();
         String roomId = room.getId();
 
-        System.out.println("roomId = " + roomId);
-
-
-        // Get MENTOR img url
+        // Find Mentor's User Object and Generate Presigned URL for their image
         User mentor = userRepository.findUserByNickname(mentorNickname)
                 .orElse(null);
         assert mentor != null;  // 멘토가 존재하지 않을 수 없다.
 
-        // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
-        String mentorImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentor.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
+        String mentorImgUrl = generatePreSignedUrlForMentorImage(mentor);
 
-        // Get Last Message and message time
-        PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
-                Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
-        ));
-        List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
-        String lastMessage = messagePage.get(0).getMessage();
-        LocalDateTime lastMessageTime = messagePage.get(0).getTime();
+        // Find Last Message and Time
+        ChatMessage lastChatMessage = findLastChatMessageByRoomId(roomId);
+        String lastMessage = lastChatMessage.getMessage();
+        LocalDateTime lastMessageTime = lastChatMessage.getTime();
 
-        return RoomInfoResponse.of(roomId, mentorNickname,
-                mentorImgUrl, lastMessage, lastMessageTime);
+        return RoomInfoResponse.of(roomId, mentorNickname, mentorImgUrl, lastMessage, lastMessageTime);
     }
 
     /**
@@ -179,34 +200,66 @@ public class RoomService {
         String menteeNickname = room.getMenteeNickname();
         String roomId = room.getId();
 
-        // Get MENTEE img url
+        // Find Mentee's User Object and Generate Presigned URL for their image
         User mentee = userRepository.findUserByNickname(menteeNickname)
                 .orElse(null);
-        assert mentee != null;  // 멘티가 존재하지 않을 수 없다.
-        // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
-        String menteeImgUrl = String.valueOf(awsS3Handler.generatePresignedUrl(BUCKET_NAME, mentee.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)));
+        assert mentee != null;  // 멘토가 존재하지 않을 수 없다.
 
-        // Get Last Message and message time
-        PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
-                Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
-        ));
-        List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
-        String lastMessage = messagePage.get(0).getMessage();
-        LocalDateTime lastMessageTime = messagePage.get(0).getTime();
+        String menteeImgUrl = generatePreSignedUrlForMentorImage(mentee);
 
-        return RoomInfoResponse.of(roomId, menteeNickname,
-                menteeImgUrl, lastMessage, lastMessageTime);
+        // Find Last Message and Time
+        ChatMessage lastChatMessage = findLastChatMessageByRoomId(roomId);
+        String lastMessage = lastChatMessage.getMessage();
+        LocalDateTime lastMessageTime = lastChatMessage.getTime();
+
+        return RoomInfoResponse.of(roomId, menteeNickname, menteeImgUrl, lastMessage, lastMessageTime);
     }
 
-    /**
-     * Sort by LastMessageTime, order by DESC
-     * 클라이언트에서 처리를 원활하게 하기 위해서 정렬하였음.
-     */
-    private List<RoomInfoResponse> sortByLastMessagedTimeOfHourDESC(List<RoomInfoResponse> result) {
+    private String generatePreSignedUrlForMentorImage(User mentor) {
+        // 주의! 만료 기간은 최대 7일까지 설정 가능하다.
+        int AWS_URL_DURATION = 7;
+
+        return String.valueOf(awsS3Handler.generatePresignedUrl(
+                BUCKET_NAME, mentor.getImgUrl(), Duration.ofDays(AWS_URL_DURATION)
+        ));
+    }
+
+    protected ChatMessage findLastChatMessageByRoomId(String roomId) {
+        int GET_ROOM_INFO_SIZE = 1;
+
+        PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
+                Sort.Order.desc("time"),
+                Sort.Order.desc("_id")
+        ));
+        List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
+        return messagePage.get(0); // Assumes there is at least one message, add error handling if needed
+    }
+
+    private List<RoomInfoResponse> sortByLastMessagedTimeOfHourASC(List<RoomInfoResponse> result) {
         result = result.stream()
-                .sorted(Comparator.comparing(RoomInfoResponse::getLastMessageTime).reversed())
+                .sorted(Comparator.comparing(RoomInfoResponse::getLastMessageTime))
                 .collect(Collectors.toList());
         return result;
     }
+
+    boolean deleteChatMessagesByRoomId(String roomId) {
+        try {
+            messageRepository.deleteChatMessagesByRoomId(roomId);
+            return true;
+        } catch (Exception e) {
+            log.error("error : ", e);
+            return false;
+        }
+    }
+
+    boolean deleteRoomByRoomId(String roomId) {
+        try {
+            roomRepository.deleteRoomById(roomId);
+            return true;
+        } catch (Exception e) {
+            log.error("error : ", e);
+            return false;
+        }
+    }
+
 }

@@ -1,25 +1,32 @@
 package seoultech.capstone.menjil.domain.chat.application;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
+import seoultech.capstone.menjil.domain.auth.domain.User;
+import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
+import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
+import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
-import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
@@ -29,7 +36,36 @@ class MessageServiceTest {
     @Autowired
     private MessageService messageService;
     @Autowired
+    private RoomRepository roomRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private MessageRepository messageRepository;
+
+    private final int TIME_INPUT_INVALID = -1;
+    private final int SAVE_SUCCESS = 0;
+
+    private final static String TEST_ROOM_ID = "test_room_1";
+    private final String TEST_MENTEE_NICKNAME = "test_mentee_1";
+    private final String TEST_MENTOR_NICKNAME = "test_mentor_1";
+
+    @BeforeEach
+    void setUp() {
+        // Save Room
+        Room room = Room.builder()
+                .roomId(TEST_ROOM_ID)
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .mentorNickname(TEST_MENTOR_NICKNAME)
+                .build();
+        roomRepository.save(room);
+
+        // Save Mentee and Mentor
+        User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME,
+                UserRole.MENTEE);
+        User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME,
+                UserRole.MENTOR);
+        userRepository.saveAll(List.of(mentee, mentor));
+    }
 
     @AfterEach
     void resetData() {
@@ -38,26 +74,27 @@ class MessageServiceTest {
     }
 
     /**
-     * sendWelcomeMessage()
+     * sendWelcomeMessage
      */
     @Test
-    @DisplayName("정상적으로 응답 메시지가 생성되며, MessagesResponse Dto 객체가 리턴된다")
+    @DisplayName("정상적으로 응답 메시지가 생성되며, MessageListResponse Dto 객체가 리턴된다")
     void sendWelcomeMessage() {
         // given
         String roomId = "room_id_one";
         String menteeNickname = "test_mentee_one";
         String mentorNickname = "test_mentor_one";
 
-        RoomDto roomDto = RoomDto.roomDtoConstructor()
+        RoomDto roomDto = RoomDto.builder()
                 .menteeNickname(menteeNickname)
                 .mentorNickname(mentorNickname)
                 .roomId(roomId)
                 .build();
 
         // when
-        MessageResponse result = messageService.sendWelcomeMessage(roomDto);
+        MessageListResponse result = messageService.sendWelcomeMessage(roomDto).orElse(null);
 
         // then
+        assert result != null;
         assertThat(result.getRoomId()).isEqualTo(roomId);
         assertThat(result.getOrder()).isNull();
         assertThat(result.getSenderType()).isEqualTo(SenderType.MENTOR);
@@ -67,15 +104,13 @@ class MessageServiceTest {
     }
 
     /**
-     * saveChatMessage()
+     * saveChatMessage
      */
     @Test
-    @DisplayName("클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 true 리턴")
-    void saveChatMessage() {
+    @DisplayName("case SAVE_SUCCESS: 클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 int 0 리턴")
+    void saveChatMessage_SAVE_SUCCESS() {
         // given
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // ignore milliseconds
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDate = now.format(formatter);
+        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
 
         MessageRequest messageDto = MessageRequest.builder()
                 .roomId("test_room_3")
@@ -83,23 +118,24 @@ class MessageServiceTest {
                 .senderNickname("test_mentor_nickname")
                 .message("Welcome Message")
                 .messageType(MessageType.ENTER)
-                .time(formattedDate)
+                .time(formattedDateTime)
                 .build();
 
         // when
-        boolean result = messageService.saveChatMessage(messageDto);
+        int result = messageService.saveChatMessage(messageDto);
 
         // then
-        assertThat(result).isTrue();
+        assertThat(result).isEqualTo(SAVE_SUCCESS);
     }
 
     @Test
-    @DisplayName("MessageDto에서 time 형식이 올바르지 않은 경우 CustomException 발생")
-    void saveChatMessage_time_format_is_not_alright() {
+    @DisplayName("case TIME_INPUT_INVALID: MessageDto에서 time 형식이 올바르지 않은 경우 int -1 리턴")
+    void saveChatMessage_TIME_INPUT_INVALID() {
         // given
         String format_is_wrong = "2023:08:14T12:23:00";
+        String format_is_wrong_v2 = "2023:08:14  12:23:00"; // 공백 2칸
 
-        MessageRequest messageDto = MessageRequest.builder()
+        MessageRequest messageDto1 = MessageRequest.builder()
                 .roomId("test_room_3")
                 .senderType(SenderType.MENTOR)
                 .senderNickname("test_mentor_nickname")
@@ -108,8 +144,157 @@ class MessageServiceTest {
                 .time(format_is_wrong)
                 .build();
 
+        MessageRequest messageDto2 = MessageRequest.builder()
+                .roomId("test_room_3")
+                .senderType(SenderType.MENTOR)
+                .senderNickname("test_mentor_nickname")
+                .message("Welcome Message")
+                .messageType(MessageType.ENTER)
+                .time(format_is_wrong_v2)
+                .build();
+
         // when
-        assertThrows(CustomException.class, () -> messageService.saveChatMessage(messageDto));
+        int result1 = messageService.saveChatMessage(messageDto1);
+        int result2 = messageService.saveChatMessage(messageDto2);
+
+        // then
+        assertThat(result1).isEqualTo(TIME_INPUT_INVALID);
+        assertThat(result2).isEqualTo(TIME_INPUT_INVALID);
     }
 
+    /**
+     * sendClientMessage
+     */
+    @Test
+    @DisplayName("정상적인 로직이 수행됨: 멘티의 질문을 그대로 전달한다")
+    void sendClientMessage() {
+        // given
+        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
+
+        MessageRequest clientMessageDto = MessageRequest.builder()
+                .roomId("test_room_3")
+                .senderType(SenderType.MENTEE)
+                .senderNickname("test_mentee_nickname")
+                .message("멘티의 질문입니다")
+                .messageType(MessageType.QUESTION)
+                .time(formattedDateTime)
+                .build();
+
+        // when
+        MessageResponse clientResponse = messageService.sendClientMessage(clientMessageDto);
+
+        // then
+        assertThat(clientResponse).isNotNull();
+        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.QUESTION);
+    }
+
+    @Test
+    @DisplayName("saveChatMessage에서 먼저 검증을 하겠지만, 한 번더 검증한다. 날자 형식이 맞지 않는 경우에는 null 리턴")
+    void sendClientMessage_when_time_format_wrong() {
+        // given
+        String wrongTimeString = "1996-12-01T00:04:27";
+
+        MessageRequest clientMessageDto = MessageRequest.builder()
+                .roomId("test_room_3")
+                .senderType(SenderType.MENTEE)
+                .senderNickname("test_mentee_nickname")
+                .message("멘티의 질문입니다")
+                .messageType(MessageType.QUESTION)
+                .time(wrongTimeString)
+                .build();
+
+        // when
+        MessageResponse clientResponse = messageService.sendClientMessage(clientMessageDto);
+
+        // then
+        assertThat(clientResponse).isNull();
+    }
+
+    /**
+     * sendAIMessage
+     */
+    @Test
+    @DisplayName("정상적인 로직이 수행됨: AI의 첫 응답이 그대로 전달된다")
+    void sendAIMessage() {
+        // given
+        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
+        String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와줄 AI 서포터입니다.\n" +
+                "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
+                "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
+
+        // 여기 메시지는, sendClientMessage 에서 사용된 것과 동일한, 즉 클라이언트에서 보낸 메시지이다.
+        MessageRequest clientMessageDto = MessageRequest.builder()
+                .roomId(TEST_ROOM_ID)
+                .senderType(SenderType.MENTEE)
+                .senderNickname(TEST_MENTEE_NICKNAME)
+                .message("멘티의 질문입니다")
+                .messageType(MessageType.QUESTION)
+                .time(formattedDateTime)
+                .build();
+
+        // when
+        // 응답에서 AI 메시지가 보내지는 것임.
+        MessageResponse aiFirstResponse = messageService.sendAIMessage(TEST_ROOM_ID, clientMessageDto);
+
+        // then
+        assertThat(aiFirstResponse).isNotNull();
+        assertThat(aiFirstResponse.getMessageType()).isEqualTo(MessageType.AI_QUESTION_RESPONSE);
+        assertThat(aiFirstResponse.getMessage()).isEqualTo(specificMessage);
+    }
+
+    /**
+     * parseDateTime
+     */
+    @Test
+    @DisplayName("case success: yyyy-MM-dd HH:mm:ss 형태로 파싱이 잘 된 경우")
+    void parseDateTime() {
+        // given
+        String timeString = "1996-12-01 00:04:27";
+
+        // when
+        Optional<LocalDateTime> time = messageService.parseDateTime(timeString);
+
+        // then
+        assertThat(time).isPresent();
+
+        // 작거나 같고, 크거나 같은 두 조건을 만족하는 경우는 같은 경우 뿐이다.
+        assertThat(LocalDateTime.of(1996, 12, 1, 0, 4, 27))
+                .isBeforeOrEqualTo(time.get());
+        assertThat(LocalDateTime.of(1996, 12, 1, 0, 4, 27))
+                .isAfterOrEqualTo(time.get());
+    }
+
+    @Test
+    @DisplayName("case fail: yyyy-MM-dd HH:mm:ss 형태로 파싱이 잘 '안'된 경우")
+    void parseDateTime_fail() {
+        // given
+        String wrongTimeString1 = "1996-12-01T00:04:27";
+        String wrongTimeString2 = "1996-12-01  00:04:27"; // 공백이 2개
+
+        // when
+        Optional<LocalDateTime> time1 = messageService.parseDateTime(wrongTimeString1);
+        Optional<LocalDateTime> time2 = messageService.parseDateTime(wrongTimeString2);
+
+        // then
+        assertThat(time1).isEmpty();
+        assertThat(time2).isEmpty();
+    }
+
+    private String createTimeFormatOfMessageResponse(LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return time.format(formatter);
+    }
+
+    private User createUser(String id, String email, String nickname, UserRole role) {
+        return User.builder()
+                .id(id).email(email).provider("google").nickname(nickname)
+                .role(role).birthYear(2000).birthMonth(3)
+                .school("서울과학기술대학교").score(3).scoreRange("중반")
+                .graduateDate(2021).graduateMonth(3)
+                .major("경제학과").subMajor(null)
+                .minor(null).field("백엔드").techStack("AWS")
+                .optionInfo(null)
+                .imgUrl("default/profile.png")  // set img url
+                .build();
+    }
 }

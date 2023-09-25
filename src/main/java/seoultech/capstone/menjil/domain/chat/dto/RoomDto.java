@@ -20,24 +20,15 @@ public class RoomDto {
     @NotBlank
     private String roomId;
 
-    @Builder(builderMethodName = "roomDtoConstructor")
+    @Builder
     private RoomDto(String menteeNickname, String mentorNickname, String roomId) {
         this.menteeNickname = menteeNickname;
         this.mentorNickname = mentorNickname;
         this.roomId = roomId;
     }
 
-    @Builder
-    public Room toRoom(String roomId) {
-        return Room.builder()
-                .roomId(roomId)
-                .menteeNickname(menteeNickname)
-                .mentorNickname(mentorNickname)
-                .build();
-    }
-
     public static RoomDto fromRoom(Room room) {
-        return RoomDto.roomDtoConstructor()
+        return RoomDto.builder()
                 .menteeNickname(room.getMenteeNickname())
                 .mentorNickname(room.getMentorNickname())
                 .roomId(room.getId())

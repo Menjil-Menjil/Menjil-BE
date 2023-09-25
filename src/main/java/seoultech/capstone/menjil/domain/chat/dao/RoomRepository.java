@@ -18,5 +18,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findRoomsByMentorNickname(String mentorNickname);
 
+    void deleteRoomById(String roomId);
 
 }

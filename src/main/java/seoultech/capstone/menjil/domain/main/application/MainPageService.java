@@ -12,10 +12,15 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
+import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
+import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.follow.domain.Follow;
+import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
+import seoultech.capstone.menjil.domain.main.dto.response.FollowListResponse;
 import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -23,10 +28,9 @@ import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,8 +39,10 @@ public class MainPageService {
 
     private final AwsS3Handler awsS3Handler;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
     private final RoomRepository roomRepository;
     private final MessageRepository messageRepository;
+    private final QaListRepository qaListRepository;
 
     private final int GET_ROOM_INFO_SIZE = 1;
     private final int AWS_URL_DURATION = 7;
@@ -59,7 +65,7 @@ public class MainPageService {
                     BUCKET_NAME, user.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
 
             // set lastAnsweredMessage
-            dto.setLastAnsweredMessage("현재 테스트 중입니다");
+            dto.setLastAnsweredMessage(getLastAnsweredMessages(user.getNickname()));
             return dto;
         });
         return mentorInfoResponse;
@@ -105,9 +111,26 @@ public class MainPageService {
         return result;
     }
 
-    public void getFollowersOfUser(String nickname) {
-        // List<Follow> follows = followRepository.findFollowsByFollowerNickname(nickname);
-        // 팔로우 목록에는 멘토의 어떤 정보를 보여줘야 하는지 아직 모름..
+    public List<FollowListResponse> getFollowersOfUser(String nickname) {
+        List<User> followUsers = followRepository.findFollowsByUserNickname(nickname)
+                .stream()
+                .map(Follow::getFollowNickname)
+                .map(userRepository::findUserByNickname)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        // 팔로우를 가장 최근에 한 사용자를 리스트 인덱스 0에 두도록 변경.
+        Collections.reverse(followUsers);
+
+        return followUsers.stream()
+                .map(user -> {
+                    FollowListResponse response = FollowListResponse.fromUserEntity(user);
+                    response.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(
+                            BUCKET_NAME, response.getImgUrl(), Duration.ofDays(AWS_URL_DURATION))));
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -130,7 +153,7 @@ public class MainPageService {
         // Get Last Message and message time
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
         String lastMessage = messagePage.get(0).getMessage();
@@ -159,7 +182,7 @@ public class MainPageService {
         // Get Last Message and message time
         PageRequest pageRequest = PageRequest.of(0, GET_ROOM_INFO_SIZE, Sort.by(
                 Sort.Order.desc("time"),
-                Sort.Order.desc("_id") // if time is same, order by _id(because ignore milliseconds in time)
+                Sort.Order.desc("_id")
         ));
         List<ChatMessage> messagePage = messageRepository.findChatMessageByRoomId(roomId, pageRequest);
         String lastMessage = messagePage.get(0).getMessage();
@@ -178,5 +201,19 @@ public class MainPageService {
                 .sorted(Comparator.comparing(RoomInfoResponse::getLastMessageTime).reversed())
                 .collect(Collectors.toList());
         return result;
+    }
+
+    private List<String> getLastAnsweredMessages(String mentorNickname) {
+        Pageable pageable = PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "question_time", "id")); // Get only the first 2 documents and sort them by 'question_time' and 'id' in descending order
+        List<QaList> qaLists = qaListRepository.findAnsweredQuestionsByMentor(mentorNickname, pageable);
+
+        if (qaLists.isEmpty()) {
+            return new ArrayList<>();
+        } else if (qaLists.size() == 1) {
+            return Stream.of(qaLists.get(0))
+                    .map(QaList::getQuestionSummary)
+                    .collect(Collectors.toList());
+        }
+        return List.of(qaLists.get(0).getQuestionSummary(), qaLists.get(1).getQuestionSummary());
     }
 }

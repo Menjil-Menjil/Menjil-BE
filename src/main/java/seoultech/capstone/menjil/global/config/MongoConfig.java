@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.chat.config;
+package seoultech.capstone.menjil.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

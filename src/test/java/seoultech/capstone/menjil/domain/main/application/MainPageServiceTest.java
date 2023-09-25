@@ -263,7 +263,7 @@ class MainPageServiceTest {
 
         // Create 13 Chat Messages and Save
         int FIXED_NUM = 13;
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // remove milliseconds
+        LocalDateTime now = LocalDateTime.now();    // remove milliseconds
         List<ChatMessage> chatMessageList = new ArrayList<>();
 
         for (int i = 1; i <= FIXED_NUM; i++) {
@@ -323,7 +323,7 @@ class MainPageServiceTest {
 
         // Create 13 Chat Messages and Save
         int FIXED_NUM = 13;
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // remove milliseconds
+        LocalDateTime now = LocalDateTime.now();    // remove milliseconds
         List<ChatMessage> chatMessageList = new ArrayList<>();
 
         for (int i = 1; i <= FIXED_NUM; i++) {
@@ -399,7 +399,7 @@ class MainPageServiceTest {
         userRepository.saveAll(users);
 
         // 각 채팅방 별로 채팅 메시지를 저장. 메시지는 하나씩만 저장
-        LocalDateTime now = LocalDateTime.now().withNano(0);    // remove milliseconds
+        LocalDateTime now = LocalDateTime.now();    // remove milliseconds
         List<ChatMessage> chatMessageList = new ArrayList<>();
 
         for (int i = 1; i <= ROOM_NUM; i++) {

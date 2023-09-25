@@ -2,18 +2,16 @@ package seoultech.capstone.menjil.domain.chat.api;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import seoultech.capstone.menjil.domain.chat.application.MessageService;
-import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import javax.validation.Valid;
@@ -25,42 +23,103 @@ public class MessageController {
     private final MessageService messageService;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
+    private final int SAVE_SUCCESS = 0;
+    private final int TIME_INPUT_INVALID = -1;
+    private final int INTERNAL_SERVER_ERROR = -100;
+
     @MessageMapping("/chat/room/{roomId}") // 실제론 메세지 매핑으로 pub/chat/room/{roomId} 임
 //    @SendTo("/queue/chat/{roomId}")
     public void enter(@DestinationVariable("roomId") String roomId,
                       @Valid @RequestBody MessageRequest messageRequest) {
-        Object result = "";
-        if (MessageType.QUESTION.equals(messageRequest.getMessageType())) {
-            // 이 부분은 추후 비동기 처리 고려
-            MessageResponse responseDto = messageService.sendAIMessage(roomId, messageRequest);
-            simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId,
-                    ResponseEntity.status(HttpStatus.OK)
-                            .body(ApiResponse.success(SuccessCode.AI_QUESTION_RESPONSE, responseDto)));
 
-            result = messageService.handleQuestion(roomId, messageRequest);
+        switch (messageRequest.getMessageType()) {
+            case QUESTION:
+                // 1. Save Client's Chat Message
+                int saveResult = messageService.saveChatMessage(messageRequest);
+                if (handleSaveResult(saveResult, roomId)) return;
+
+                // 2. Send Client's Chat Message
+                // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
+                // 서버에서 다시 보내주는 식으로 처리하였음.
+                if (handleClientMessage(messageRequest, roomId)) return;
+
+                // 3. Send AI initial message
+                // TODO: 이 부분은 추후 비동기 처리 고려
+                if (handleAIMessage(roomId, messageRequest)) return;
+
+                // 4. Handle Client's Question
+                handleClientQuestion(roomId, messageRequest);
+                break;
+            case SELECT:
+            case AI_SUMMARY:
+            case AI_ANSWER:
+            case AI_RATING:
+                // 1. Save Client's Chat Message
+                int saveResults = messageService.saveChatMessage(messageRequest);
+                if (handleSaveResult(saveResults, roomId)) return;
+
+                // 2. Send Client's Chat Message
+                // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
+                // 서버에서 다시 보내주는 식으로 처리하였음.
+                if (handleClientMessage(messageRequest, roomId)) return;
+                break;
+            default:
+                sendNoMessageTypeResponse(roomId);
+                break;
+
         }
-
-        // /queue/chat/room/{room id}로 메세지 보냄
-        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, result);
     }
 
-    // 메시지 테스트를 위한 메소드. 테스트 이후 제거할 계획
-    // produces에 UTf-8을 해줘야 POST맨에서 chatGPT 응답 결과 한글 메시지가 안 깨짐
-    /*@PostMapping(value = "/api/msg", produces = "application/json;charset=utf-8")
-    public Object messageTest(@RequestBody MessageRequest messageRequestDto) {
-        Object result = messageService.handleQuestion(messageRequestDto.getRoomId(), messageRequestDto);
-        System.out.println("result = " + result);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.AI_QUESTION_RESPONSE, result));
+    protected boolean handleSaveResult(int saveResult, String roomId) {
+        if (saveResult == TIME_INPUT_INVALID || saveResult == INTERNAL_SERVER_ERROR) {
+            ErrorCode code = (saveResult == TIME_INPUT_INVALID) ? ErrorCode.TIME_INPUT_INVALID : ErrorCode.SERVER_ERROR;
+            sendErrorResponse(roomId, code);
+            return true;
+        }
+        return false;
     }
 
-    // 저장 시간 테스트. 테스트 이후 제거할 계획
-    @PostMapping(value = "/api/msg2", produces = "application/json;charset=utf-8")
-    public Object saveTest(@RequestBody MessageRequest messageRequestDto) {
-        Object result = messageService.sendAIMessage(messageRequestDto.getRoomId(), messageRequestDto);
+    protected boolean handleClientMessage(MessageRequest messageRequest, String roomId) {
+        MessageResponse clientMessageResponse = messageService.sendClientMessage(messageRequest);
+        if (clientMessageResponse == null) {
+            sendErrorResponse(roomId, ErrorCode.TIME_INPUT_INVALID);
+            return true;
+        }
+        sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, clientMessageResponse);
+        return false;
+    }
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.AI_QUESTION_RESPONSE, result));
-    }*/
+    protected boolean handleAIMessage(String roomId, MessageRequest messageRequest) {
+        MessageResponse response = messageService.sendAIMessage(roomId, messageRequest);
+        if (response == null) {
+            sendErrorResponse(roomId, ErrorCode.SERVER_ERROR);
+            return true;
+        }
+        sendSuccessResponse(roomId, SuccessCode.AI_QUESTION_RESPONSE, response);
+        return false;
+    }
+
+    protected void handleClientQuestion(String roomId, MessageRequest messageRequest) {
+        MessageResponse resultResponse = messageService.handleQuestion(roomId, messageRequest);
+        if (resultResponse == null) {
+            sendErrorResponse(roomId, ErrorCode.SERVER_ERROR);
+        } else {
+            sendSuccessResponse(roomId, SuccessCode.AI_QUESTION_RESPONSE, resultResponse);
+        }
+    }
+
+    protected void sendErrorResponse(String roomId, ErrorCode code) {
+        ApiResponse<?> apiResponse = ApiResponse.error(code);
+        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, apiResponse);
+    }
+
+    protected void sendNoMessageTypeResponse(String roomId) {
+        ApiResponse<?> apiResponse = ApiResponse.error(ErrorCode.MESSAGE_TYPE_INPUT_INVALID);
+        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, apiResponse);
+    }
+
+    protected void sendSuccessResponse(String roomId, SuccessCode code, MessageResponse messageResponse) {
+        ApiResponse<?> apiResponse = ApiResponse.success(code, messageResponse);
+        simpMessagingTemplate.convertAndSend("/queue/chat/room/" + roomId, apiResponse);
+    }
 }

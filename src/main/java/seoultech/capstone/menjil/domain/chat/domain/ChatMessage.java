@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -27,10 +28,10 @@ public class ChatMessage {
     @Field("sender_nickname")
     private String senderNickname;
 
-    @Field("message")
+    @Field(value = "message", write = Field.Write.ALWAYS)   // To persist field value can be null
     private String message;
 
-    @Field("message_list")
+    @Field(value = "message_list", write = Field.Write.ALWAYS)  // To persist field value can be null
     private Object messageList;
 
     @Field("message_type")
@@ -40,13 +41,23 @@ public class ChatMessage {
     private LocalDateTime time;
 
     public void setWelcomeMessage(String roomId, SenderType senderType, String senderNickname,
-                                  String message, MessageType messageType, LocalDateTime time) {
+                                  String message, Object messageList,
+                                  MessageType messageType, LocalDateTime time) {
         this.roomId = roomId;
         this.senderType = senderType;
         this.senderNickname = senderNickname;
         this.message = message;
+        this.messageList = messageList;
         this.messageType = messageType;
-        this.time = time.truncatedTo(ChronoUnit.SECONDS);   // truncate milliseconds
+        this.time = time;
+    }
+
+    public void setLambdaMessage(String message) {
+        this.message = message;
+    }
+
+    public void setLambdaMessageList(Object messageList) {
+        this.messageList = messageList;
     }
 
     @Builder
