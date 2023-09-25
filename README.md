@@ -1,3 +1,4 @@
+[![Java CI with Gradle, CD with Docker Hub and AWS EC2 in main branch](https://github.com/Menjil-Menjil/Menjil-BE/actions/workflows/main.yml/badge.svg)](https://github.com/Menjil-Menjil/Menjil-BE/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/Menjil-Menjil/Menjil-BE/branch/main/graph/badge.svg?token=OHAY998TAN)](https://codecov.io/gh/Menjil-Menjil/Menjil-BE)
 # Menjil-Menjil Server
 
