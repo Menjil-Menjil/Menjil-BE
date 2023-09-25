@@ -12,7 +12,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     Optional<Follow> findFollowByUserNicknameAndFollowNickname(String userNickname, String followNickname);
 
-    List<Follow> findFollowsByUserNickname(String userNickname);
+    List<Follow> findFollowsByUserNicknameOrderByCreatedDateAsc(String userNickname);
 
     Page<Follow> findFollowsByUserNickname(String userNickname, Pageable pageable);
 

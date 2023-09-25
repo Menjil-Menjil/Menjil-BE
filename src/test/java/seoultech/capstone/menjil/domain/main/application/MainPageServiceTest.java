@@ -15,21 +15,19 @@ import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
-import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
-import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
-import seoultech.capstone.menjil.domain.chat.domain.MessageType;
-import seoultech.capstone.menjil.domain.chat.domain.Room;
-import seoultech.capstone.menjil.domain.chat.domain.SenderType;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
+import seoultech.capstone.menjil.domain.chat.domain.QaList;
+import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
+import seoultech.capstone.menjil.domain.follow.domain.Follow;
+import seoultech.capstone.menjil.domain.main.dto.response.FollowUserResponse;
 import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
-import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
@@ -41,10 +39,15 @@ class MainPageServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
-    private RoomRepository roomRepository;
+    private FollowRepository followRepository;
+
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired
+    private QaListRepository qaListRepository;
 
     private final int SIZE = 3;
     private final Sort SORT = Sort.by(
@@ -56,8 +59,8 @@ class MainPageServiceTest {
 
     @BeforeEach
     void setUp() {
-        User userA = createUser("google_1231323", "test@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE);
-        User userB = createUser("google_1231324", "test2@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR);
+        User userA = createTestUser("google_1231323", "test@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE);
+        User userB = createTestUser("google_1231324", "test2@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR);
         userRepository.saveAll(List.of(userA, userB));
     }
 
@@ -65,14 +68,15 @@ class MainPageServiceTest {
     void resetData() {
         // delete mongodb manually
         messageRepository.deleteAll();
+        qaListRepository.deleteAll();
     }
 
     /**
-     * getMentorList()
+     * getMentors
      */
     @Test
     @DisplayName("page=0, sort=3, order by createdDate, nickname DESC, mentor=8: 데이터 3개 리턴")
-    void getMentorList_page_0() throws InterruptedException {
+    void getMentors_page_0() throws InterruptedException {
         // given
         int pageNum = 0;
         PageRequest pageRequest = PageRequest.of(pageNum, SIZE, SORT);
@@ -83,13 +87,14 @@ class MainPageServiceTest {
 
         int MENTOR_NUM = 8;
         String MENTOR_NICKNAME = "test_mentor_";
-        List<User> users = new ArrayList<>();
-        for (int i = 1; i <= MENTOR_NUM; i++) {
-            String testId = "google_" + i;
-            String testEmail = "test_" + i + "@gmail.com";
-            String testNickname = MENTOR_NICKNAME + i;
-            users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
-        }
+        List<User> users = IntStream.rangeClosed(1, MENTOR_NUM)
+                .mapToObj(i -> {
+                    String testId = "google_" + i;
+                    String testEmail = "test_" + i + "@gmail.com";
+                    String testNickname = MENTOR_NICKNAME + i;
+                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                })
+                .collect(Collectors.toList());  // collects the User objects into a List<User>
 
         // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
@@ -103,7 +108,7 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         assertThat(mentorList.getSize()).isEqualTo(3);
@@ -120,7 +125,7 @@ class MainPageServiceTest {
 
     @Test
     @DisplayName("page=2, sort=3, order by createdDate, nickname DESC, mentor=8 : Content 2개 리턴")
-    void getMentorList_page_2() throws InterruptedException {
+    void getMentors_page_2() throws InterruptedException {
         // given
         int pageNum = 2;
         PageRequest pageRequest = PageRequest.of(pageNum, SIZE, SORT);
@@ -131,13 +136,14 @@ class MainPageServiceTest {
 
         int MENTOR_NUM = 8;
         String MENTOR_NICKNAME = "test_mentor_";
-        List<User> users = new ArrayList<>();
-        for (int i = 1; i <= MENTOR_NUM; i++) {
-            String testId = "google_" + i;
-            String testEmail = "test_" + i + "@gmail.com";
-            String testNickname = MENTOR_NICKNAME + i;
-            users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
-        }
+        List<User> users = IntStream.rangeClosed(1, MENTOR_NUM)
+                .mapToObj(i -> {
+                    String testId = "google_" + i;
+                    String testEmail = "test_" + i + "@gmail.com";
+                    String testNickname = MENTOR_NICKNAME + i;
+                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                })
+                .collect(Collectors.toList());  // collects the User objects into a List<User>
 
         // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
@@ -151,7 +157,7 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         // size 값은 SIZE 값과 동일하다.
@@ -170,7 +176,7 @@ class MainPageServiceTest {
 
     @Test
     @DisplayName("page=3, sort=3, order by createdDate, nickname DESC, mentor=8 : Content 0개 리턴")
-    void getMentorList_page_3() throws InterruptedException {
+    void getMentors_page_3() throws InterruptedException {
         // given
         int pageNum = 3;
         PageRequest pageRequest = PageRequest.of(pageNum, SIZE, SORT);
@@ -181,13 +187,14 @@ class MainPageServiceTest {
 
         int MENTOR_NUM = 8;
         String MENTOR_NICKNAME = "test_mentor_";
-        List<User> users = new ArrayList<>();
-        for (int i = 1; i <= MENTOR_NUM; i++) {
-            String testId = "google_" + i;
-            String testEmail = "test_" + i + "@gmail.com";
-            String testNickname = MENTOR_NICKNAME + i;
-            users.add(createUser(testId, testEmail, testNickname, UserRole.MENTOR));
-        }
+        List<User> users = IntStream.rangeClosed(1, MENTOR_NUM)
+                .mapToObj(i -> {
+                    String testId = "google_" + i;
+                    String testEmail = "test_" + i + "@gmail.com";
+                    String testNickname = MENTOR_NICKNAME + i;
+                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                })
+                .collect(Collectors.toList());  // collects the User objects into a List<User>
 
         // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
@@ -201,254 +208,147 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentorList("test1", pageRequest);
+        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         assertThat(mentorList.getContent().size()).isEqualTo(0);
     }
 
     /**
-     * getUserRoomList()
+     * getFollowersOfUser
      */
     @Test
-    @DisplayName("사용자의 닉네임이 db에 없는 경우 CustomException 리턴")
-    void getUserRoomList_when_nickname_not_exists_in_db() {
+    @DisplayName("사용자의 팔로워가 3명인 경우")
+    void getFollowersOfUser() {
         // given
-        String menteeNickname = "mentee_nickname_not_exists_in_db";
+        int MENTOR_NUM = 3;
+        String MENTOR_NICKNAME = "test_mentor_";
+        LocalDateTime now = LocalDateTime.now();
 
-        // when
-        assertThrows(CustomException.class, () -> mainPageService.getAllRoomsOfUser(menteeNickname));
-    }
+        List<Follow> follows = IntStream.rangeClosed(1, MENTOR_NUM)
+                .mapToObj(i -> {
+                    return Follow.of(TEST_MENTEE_NICKNAME, MENTOR_NICKNAME + i, now.plusMinutes(i));
+                })
+                .collect(Collectors.toList());
 
-    @Test
-    @DisplayName("'멘티'의 닉네임이 db에 존재하지만 채팅방이 하나도 없는 경우 empty List 리턴")
-    void getUserRoomList_when_mentee_room_not_exists_in_db() {
-        // given
-        String menteeNickname = TEST_MENTEE_NICKNAME;
+        List<User> users = IntStream.rangeClosed(1, MENTOR_NUM)
+                .mapToObj(i -> {
+                    String testId = "google_" + i;
+                    String testEmail = "test_" + i + "@gmail.com";
+                    String testNickname = MENTOR_NICKNAME + i;
+                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                })
+                .collect(Collectors.toList());
 
-        // when
-        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(menteeNickname);
-
-        // then
-        assertThat(result.size()).isZero();
-    }
-
-    @Test
-    @DisplayName("'멘토'의 닉네임이 db에 존재하지만 채팅방이 하나도 없는 경우 empty List 리턴")
-    void getUserRoomList_when_mentor_oom_not_exists_in_db() {
-        // given
-        String mentorNickname = TEST_MENTOR_NICKNAME;
-
-        // when
-        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(mentorNickname);
-
-        // then
-        assertThat(result.size()).isZero();
-    }
-
-    @Test
-    @DisplayName("'멘티'의 닉네임에 대한 방이 하나 존재, 방 메시지가 13개 존재하는 경우, 방 1개에 대한 가장 마지막에 작성된 메시지가 반환된다")
-    void getUserRoomList_of_mentee_when_room_isOne_and_messages_is_13() {
-        // given
-        String menteeNickname = TEST_MENTEE_NICKNAME;
-        String roomId = "test_room_1";
-
-        // Create and Save One Room
-        Room room = Room.builder()
-                .roomId(roomId)
-                .menteeNickname(menteeNickname)    // here is menteenickname
-                .mentorNickname(TEST_MENTOR_NICKNAME)
-                .build();
-        roomRepository.save(room);
-
-        // Create 13 Chat Messages and Save
-        int FIXED_NUM = 13;
-        LocalDateTime now = LocalDateTime.now();    // remove milliseconds
-        List<ChatMessage> chatMessageList = new ArrayList<>();
-
-        for (int i = 1; i <= FIXED_NUM; i++) {
-            String _id = "id_" + i;
-            SenderType senderType;
-            String senderNickname;
-            if (i % 2 == 0) {
-                senderType = SenderType.MENTOR;
-                senderNickname = TEST_MENTOR_NICKNAME;
-            } else {
-                senderType = SenderType.MENTEE;
-                senderNickname = TEST_MENTEE_NICKNAME;
-            }
-            String message = "message_" + i;
-            MessageType messageType = MessageType.TALK;
-            LocalDateTime time = now.plusSeconds(i);
-
-            // Add list
-            chatMessageList.add(ChatMessage.builder()
-                    ._id(_id)
-                    .roomId(roomId)
-                    .senderType(senderType)
-                    .senderNickname(senderNickname)
-                    .message(message)
-                    .messageType(messageType)
-                    .time(time)
-                    .build());
-        }
-        messageRepository.saveAll(chatMessageList);
-
-        // when
-        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(menteeNickname);    // here is menteenickname
-
-        // then
-        assertThat(result.size()).isEqualTo(1);
-
-        RoomInfoResponse oneRoom = result.get(0);
-        assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
-        assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
-        assertThat(oneRoom.getLastMessageTime()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("'멘토'의 닉네임에 대한 방이 하나 존재, 방 메시지가 13개 존재하는 경우, 방 데이터와 가장 마지막에 작성된 메시지가 반환된다")
-    void getUserRoomList_of_mentor_when_room_isOne_and_messages_is_13() {
-        // given
-        String mentorNickname = TEST_MENTOR_NICKNAME;
-        String roomId = "test_room_1";
-
-        // Create and Save One Room
-        Room room = Room.builder()
-                .roomId(roomId)
-                .menteeNickname(TEST_MENTEE_NICKNAME)
-                .mentorNickname(mentorNickname)    // here is mentornickname
-                .build();
-        roomRepository.save(room);
-
-        // Create 13 Chat Messages and Save
-        int FIXED_NUM = 13;
-        LocalDateTime now = LocalDateTime.now();    // remove milliseconds
-        List<ChatMessage> chatMessageList = new ArrayList<>();
-
-        for (int i = 1; i <= FIXED_NUM; i++) {
-            String _id = "id_" + i;
-            SenderType senderType;
-            String senderNickname;
-            if (i % 2 == 0) {
-                senderType = SenderType.MENTOR;
-                senderNickname = TEST_MENTOR_NICKNAME;
-            } else {
-                senderType = SenderType.MENTEE;
-                senderNickname = TEST_MENTEE_NICKNAME;
-            }
-            String message = "message_" + i;
-            MessageType messageType = MessageType.TALK;
-            LocalDateTime time = now.plusSeconds(i);
-
-            // Add list
-            chatMessageList.add(ChatMessage.builder()
-                    ._id(_id)
-                    .roomId(roomId)
-                    .senderType(senderType)
-                    .senderNickname(senderNickname)
-                    .message(message)
-                    .messageType(messageType)
-                    .time(time)
-                    .build());
-        }
-        messageRepository.saveAll(chatMessageList);
-
-        // when
-        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(mentorNickname);    // here is mentornickname
-
-        // then
-        assertThat(result.size()).isEqualTo(1);
-
-        RoomInfoResponse oneRoom = result.get(0);
-        assertThat(oneRoom.getRoomId()).isEqualTo(roomId);
-        assertThat(oneRoom.getLastMessage()).isEqualTo("message_" + FIXED_NUM);
-        assertThat(oneRoom.getLastMessageTime()).isNotNull();
-    }
-
-    /* 이 경우는 '멘티'의 경우만 검증해도 '멘토'의 경우도 함께 검증할 수 있을 것으로 판단하여,
-    멘티의 경우만 테스트 코드를 작성함
-     */
-    @Test
-    @DisplayName("'멘티'의 닉네임에 대한 방이 5개 존재, 방 메시지가 1개씩 존재하는 경우, " +
-            "방 3개가 가장 마지막 메시지를 기준으로 내림차순 정렬이 되는지 검증")
-    void getUserRoomList_of_mentee_does_room_is_order_by_DESC() {
-        // given
-        String menteeNickname = TEST_MENTEE_NICKNAME;
-        String roomId = "test_room_";
-        String mentorNickname = "test_test_mentor_";    // TEST_MENTOR_NICKNAME와 구분을 위해
-
-        // Create and Save Five Room
-        int ROOM_NUM = 5;
-        List<Room> rooms = new ArrayList<>();
-        for (int i = 1; i <= ROOM_NUM; i++) {
-            rooms.add(Room.builder()
-                    .roomId(roomId + i)
-                    .menteeNickname(menteeNickname)    // here is menteenickname
-                    .mentorNickname(mentorNickname + i)
-                    .build());
-        }
-        roomRepository.saveAll(rooms);
-
-        // 방이 존재하므로, 그에 대한 멘토 5명의 데이터도 users table에 미리 저장이 되어 있어야 한다.
-        List<User> users = new ArrayList<>();
-        for (int i = 1; i <= ROOM_NUM; i++) {
-            users.add(createUser("id_" + i, "testtt" + i + "@google.com",
-                    mentorNickname + i, UserRole.MENTOR));
-        }
+        followRepository.saveAll(follows);
         userRepository.saveAll(users);
 
-        // 각 채팅방 별로 채팅 메시지를 저장. 메시지는 하나씩만 저장
-        LocalDateTime now = LocalDateTime.now();    // remove milliseconds
-        List<ChatMessage> chatMessageList = new ArrayList<>();
-
-        for (int i = 1; i <= ROOM_NUM; i++) {
-            String _id = "id_" + i;
-            String message = "message_" + i;
-            MessageType messageType = MessageType.TALK;
-            LocalDateTime time = now.plusSeconds(i * 1000L);
-
-            // Add list
-            chatMessageList.add(ChatMessage.builder()
-                    ._id(_id)
-                    .roomId(roomId + i)
-                    .senderType(SenderType.MENTOR)
-                    .senderNickname(mentorNickname + i)
-                    .message(message)
-                    .messageType(messageType)
-                    .time(time)
-                    .build());
-        }
-        messageRepository.saveAll(chatMessageList);
-
         // when
-        List<RoomInfoResponse> result = mainPageService.getAllRoomsOfUser(menteeNickname);    // here is menteenickname
+        // 여기서 User Table도 조회하기 때문에, User 엔티티도 db에 저장되어 있어야 한다.
+        List<FollowUserResponse> followUserResponses = mainPageService.getFollowersOfUser(TEST_MENTEE_NICKNAME);
 
         // then
-        assertThat(result.size()).isEqualTo(5);
+        assertThat(followUserResponses.size()).isEqualTo(MENTOR_NUM);
 
-        // 리스트의 인덱스가 작을 수록, 가장 최근에 대화한 메시지가 존재하는 방이다.
-        RoomInfoResponse firstRoom = result.get(0);
-        RoomInfoResponse middleRoom = result.get((result.size() - 1) / 2);
-        RoomInfoResponse lastRoom = result.get(result.size() - 1);
+        FollowUserResponse followUserResponse1 = followUserResponses.get(0);
+        FollowUserResponse followUserResponse2 = followUserResponses.get(1);
+        FollowUserResponse followUserResponse3 = followUserResponses.get(2);
 
-        assertThat(firstRoom.getLastMessageTime())
-                .isAfterOrEqualTo(middleRoom.getLastMessageTime());
-        assertThat(middleRoom.getLastMessageTime())
-                .isAfterOrEqualTo(lastRoom.getLastMessageTime());
+        // 팔로우를 가장 최근에 한, 즉 createdDate 값이 가장 큰 사용자가 인덱스 0인지 검증
+        assertThat(followUserResponse1.getNickname()).isEqualTo(MENTOR_NICKNAME + "3");
+        assertThat(followUserResponse2.getNickname()).isEqualTo(MENTOR_NICKNAME + "2");
+        assertThat(followUserResponse3.getNickname()).isEqualTo(MENTOR_NICKNAME + "1");
     }
 
+    /**
+     * getLastAnsweredMessages
+     */
+    @Test
+    @DisplayName("case 1: 멘토의 질문 답변 데이터가 0개인 경우(존재하지 않는 경우)")
+    void getLastAnsweredMessages_returns_empty_ArrayList() {
+        // given
+        String id = "google_1234123124";
+        String email = "mentor2@mentor.com";
+        String nickname = "mentor_test_33";
+        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
 
-    private User createUser(String id, String email, String nickname, UserRole role) {
+        // when
+        List<String> lastAnsweredMessages = mainPageService.getLastAnsweredMessages(mentor1.getNickname());
+
+        // then
+        assertThat(lastAnsweredMessages).isEmpty();
+    }
+
+    @Test
+    @DisplayName("case 2: 멘토의 질문 답변 데이터가 1개인 경우")
+    void getLastAnsweredMessages_size_is_one() {
+        // given
+        String id = "google_1234123124";
+        String email = "mentor2@mentor.com";
+        String nickname = "mentor_test_33";
+        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+
+        int qaNum = 1;
+        List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
+                .mapToObj(i -> createTestQaList(mentor1, i))
+                .collect(Collectors.toList());
+
+        qaListRepository.saveAll(qaLists);
+
+        // when
+        List<String> lastAnsweredMessages = mainPageService.getLastAnsweredMessages(mentor1.getNickname());
+
+        // then
+        assertThat(lastAnsweredMessages.size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("case 3: 멘토의 질문 답변 데이터가 2개 이상인 경우")
+    void getLastAnsweredMessages_size_is_more_than_two() {
+        // given
+        String id = "google_1234123124";
+        String email = "mentor2@mentor.com";
+        String nickname = "mentor_test_33";
+        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+
+        int qaNum = 5;
+        List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
+                .mapToObj(i -> createTestQaList(mentor1, i))
+                .collect(Collectors.toList());
+
+        qaListRepository.saveAll(qaLists);
+
+        // when
+        List<String> lastAnsweredMessages = mainPageService.getLastAnsweredMessages(mentor1.getNickname());
+
+        // then
+        assertThat(lastAnsweredMessages.size()).isEqualTo(2);
+    }
+
+    private User createTestUser(String id, String email, String nickname, UserRole role) {
         return User.builder()
                 .id(id).email(email).provider("google").nickname(nickname)
                 .role(role).birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
-                .major("컴퓨터공학과").subMajor(null)
+                .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
                 .optionInfo(null)
                 .imgUrl("default/profile.png")  // set img url
+                .build();
+    }
+
+    private QaList createTestQaList(User mentor, int index) {
+        LocalDateTime now = LocalDateTime.now();
+        return QaList.builder()
+                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .mentorNickname(mentor.getNickname())
+                .questionOrigin("origin message_" + index)
+                .questionSummary("summary message_" + index)
+                .questionSummaryEn("summary eng message_" + index)
+                .questionTime(now.minusHours(index))
+                .answer("answer message_" + index)
+                .answerTime(now)
                 .build();
     }
 
