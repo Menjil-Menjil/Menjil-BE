@@ -6,7 +6,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum SuccessIntValue {
-    SUCCESS(0);
+    SUCCESS(0),
+
+    // follow
+    FOLLOW_CREATED(10),
+    FOLLOW_DELETED(11);
 
     private final int value;
 }
