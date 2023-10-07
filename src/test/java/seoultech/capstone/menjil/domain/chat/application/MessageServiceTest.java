@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @SpringBootTest
 @Transactional
@@ -41,9 +43,6 @@ class MessageServiceTest {
     private UserRepository userRepository;
     @Autowired
     private MessageRepository messageRepository;
-
-    private final int TIME_INPUT_INVALID = -1;
-    private final int SAVE_SUCCESS = 0;
 
     private final static String TEST_ROOM_ID = "test_room_1";
     private final String TEST_MENTEE_NICKNAME = "test_mentee_1";
@@ -125,7 +124,7 @@ class MessageServiceTest {
         int result = messageService.saveChatMessage(messageDto);
 
         // then
-        assertThat(result).isEqualTo(SAVE_SUCCESS);
+        assertThat(result).isEqualTo(SUCCESS.getValue());
     }
 
     @Test
@@ -158,8 +157,8 @@ class MessageServiceTest {
         int result2 = messageService.saveChatMessage(messageDto2);
 
         // then
-        assertThat(result1).isEqualTo(TIME_INPUT_INVALID);
-        assertThat(result2).isEqualTo(TIME_INPUT_INVALID);
+        assertThat(result1).isEqualTo(TIME_INPUT_INVALID.getValue());
+        assertThat(result2).isEqualTo(TIME_INPUT_INVALID.getValue());
     }
 
     /**

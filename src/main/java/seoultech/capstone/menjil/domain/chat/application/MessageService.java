@@ -28,6 +28,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
+
 @Slf4j
 @Service
 public class MessageService {
@@ -56,15 +60,11 @@ public class MessageService {
     }
 
     public int saveChatMessage(MessageRequest messageRequest) {
-        int SAVE_SUCCESS = 0;
-        int TIME_INPUT_INVALID = -1;
-        int INTERNAL_SERVER_ERROR = -100;
-
         // MessageRequest time format 검증
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
 
         if (dateTimeOptional.isEmpty()) {
-            return TIME_INPUT_INVALID; // or handle the error differently
+            return TIME_INPUT_INVALID.getValue(); // or handle the error differently
         }
         LocalDateTime dateTime = dateTimeOptional.get();
 
@@ -73,9 +73,9 @@ public class MessageService {
 
         // save entity to mongoDB
         if (!saveChatMessageInDb(chatMessage)) {
-            return INTERNAL_SERVER_ERROR;  // handle the failure case appropriately
+            return INTERNAL_SERVER_ERROR.getValue();  // handle the failure case appropriately
         }
-        return SAVE_SUCCESS;
+        return SUCCESS.getValue();
     }
 
     /**

@@ -3,7 +3,6 @@ package seoultech.capstone.menjil.domain.auth.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
@@ -20,8 +19,10 @@ import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
+
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.USER_ALREADY_IN_DB;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,14 +43,10 @@ public class AuthService {
     /**
      * 회원가입 전, 유저가 이미 db에 존재하는지 조회.
      */
+    @Transactional(readOnly = true)
     public int findUserInDb(String email, String provider) {
-        List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
-
-        if (userInDb.size() > 0) {
-            return HttpStatus.CONFLICT.value();
-        } else {
-            return HttpStatus.OK.value();
-        }
+        Optional<User> user = userRepository.findUserByEmailAndProvider(email, provider);
+        return checkIfUserInDb(user) ? USER_ALREADY_IN_DB.getValue() : SUCCESS.getValue();
     }
 
     /**
@@ -57,19 +54,15 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public int findNicknameInDb(String nickname) {
-        User nicknameExistsInDb = userRepository.findUserByNickname(nickname)
-                .orElse(null);
-        if (nicknameExistsInDb != null) {
-            return HttpStatus.CONFLICT.value();
-        }
-        return HttpStatus.OK.value();
+        Optional<User> user = userRepository.findUserByNickname(nickname);
+        return checkIfUserInDb(user) ? USER_ALREADY_IN_DB.getValue() : SUCCESS.getValue();
     }
 
     /**
      * 회원가입 로직 수행
      */
     @Transactional
-    public int signUp(SignUpRequest request) {
+    public void signUp(SignUpRequest request) {
         // SignUpRequestDto -> User Entity 변환
         User user = request.toUserEntity();
 
@@ -86,7 +79,6 @@ public class AuthService {
         User nicknameExistsInDb = userRepository.findUserByNickname(user.getNickname())
                 .orElse(null);
         if (nicknameExistsInDb != null) {
-            // return HttpStatus.CONFLICT.value();
             // 이 부분은, 컨트롤러가 아닌 서비스에서 처리하는 것이 더 바람직할 것으로 보임.
             throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
         }
@@ -100,9 +92,6 @@ public class AuthService {
         } catch (RuntimeException e) {
             throw new CustomException(ErrorCode.SERVER_ERROR);
         }
-
-        // User Entity -> UserSignupResponse
-        return HttpStatus.CREATED.value();
     }
 
     /**
@@ -110,10 +99,10 @@ public class AuthService {
      */
     @Transactional
     public SignInResponse signIn(String email, String provider) {
-        List<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
+        Optional<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
 
-        if (userInDb.size() > 0) {
-            User user = userInDb.get(0);
+        if (checkIfUserInDb(userInDb)) {
+            User user = userInDb.get();
 
             // Access, Refresh Token 생성
             LocalDateTime currentDateTime = LocalDateTime.now();
@@ -153,4 +142,7 @@ public class AuthService {
         }
     }
 
+    private boolean checkIfUserInDb(Optional<User> user) {
+        return user.isPresent();
+    }
 }

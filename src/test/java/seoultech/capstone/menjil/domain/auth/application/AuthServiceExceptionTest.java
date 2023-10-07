@@ -16,11 +16,11 @@ import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -62,7 +62,7 @@ public class AuthServiceExceptionTest {
         String mockRefreshToken = "mockRefreshToken";
 
         when(userRepository.findUserByEmailAndProvider(testEmail, testProvider))
-                .thenReturn(Collections.singletonList(mockUser));
+                .thenReturn(Optional.ofNullable(mockUser));
         when(jwtTokenProvider.generateAccessToken(anyString(), any(LocalDateTime.class))).thenReturn(mockAccessToken);
         when(jwtTokenProvider.generateRefreshToken(anyString(), any(LocalDateTime.class))).thenReturn(mockRefreshToken);
         when(tokenRepository.findRefreshTokenByUserId(mockUser)).thenReturn(Optional.empty());

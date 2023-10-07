@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
@@ -21,6 +20,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.USER_ALREADY_IN_DB;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @SpringBootTest
 @Transactional
@@ -40,7 +41,7 @@ class AuthServiceTest {
     private static final String defaultImgUrl = "profile/default.png";
 
     @BeforeEach
-    void init() {
+    void setUp() {
         // @Test , @RepeatedTest , @ParameterizedTest , @TestFactory 가 붙은 테스트 메소드가 실행하기 전에 실행된다.
         // 각 테스트 메서드 전에 실행된다.
         User userA = createUser("google_1", TEST_USER_EMAIL, TEST_USER_PROVIDER, TEST_USER_NICKNAME);
@@ -50,29 +51,32 @@ class AuthServiceTest {
     @Test
     @DisplayName("회원가입: 플랫폼 서버(google, kakao)에서 인증 받은 뒤, 추가정보 입력 전 유저 조회")
     void checkUserExistsInDb_user_already_exists_in_db() {
-        // email, provider 가 같은 유저가 db에 이미 존재하면, 409 CONFLICT
+        // email, provider 가 같은 유저가 db에 이미 존재하는 경우
         int result = authService.findUserInDb(TEST_USER_EMAIL, TEST_USER_PROVIDER);
-        assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(result).isEqualTo(USER_ALREADY_IN_DB.getValue());
 
-        // email, provider 가 같은 유저가 db에 없다면, 200 OK
+        // email, provider 가 같은 유저가 db에 존재하지 않는 경우
         int result2 = authService.findUserInDb("userA@gmail.com", "kakao");
-        assertThat(result2).isEqualTo(HttpStatus.OK.value());
-    }
-
-    @Test
-    @DisplayName("회원가입 시에 닉네임 중복 검사")
-    void checkNicknameDuplication() {
-        // 닉네임 중복 시 CustomException 발생
-        int result = authService.findNicknameInDb(TEST_USER_NICKNAME);
-        assertThat(result).isEqualTo(HttpStatus.CONFLICT.value());
-
-        // 닉네임 중복이 아닐 시 정상적으로 String 결과 반환
-        int result2 = authService.findNicknameInDb("testB");
-        assertThat(result2).isEqualTo(HttpStatus.OK.value());
+        assertThat(result2).isEqualTo(SUCCESS.getValue());
     }
 
     /**
-     * signUp()
+     * findNicknameInDb
+     */
+    @Test
+    @DisplayName("회원가입 시에 닉네임 중복 검사")
+    void findNicknameInDb() {
+        // 닉네임 중복
+        int result = authService.findNicknameInDb(TEST_USER_NICKNAME);
+        assertThat(result).isEqualTo(USER_ALREADY_IN_DB.getValue());
+
+        // 닉네임 중복 X
+        int result2 = authService.findNicknameInDb("testB");
+        assertThat(result2).isEqualTo(SUCCESS.getValue());
+    }
+
+    /**
+     * signUp
      */
     @Test
     @DisplayName("정상적으로 회원가입이 동작하는지 확인: img_url 세팅 및 데이터 저장")
@@ -83,14 +87,12 @@ class AuthServiceTest {
         // @BeforeEach 에서 저장된 데이터 제거
         userRepository.deleteAll();
 
-        int result = authService.signUp(SignUpRequestA);
+        authService.signUp(SignUpRequestA);
         List<User> userList = userRepository.findAll();
         assertThat(userList.size()).isEqualTo(1);
 
         // default img url이 잘 저장되는지 검증
         assertThat(userList.get(0).getImgUrl()).isEqualTo(defaultImgUrl);
-
-        assertThat(result).isEqualTo(HttpStatus.CREATED.value());
     }
 
     @Test
@@ -104,7 +106,7 @@ class AuthServiceTest {
     }
 
     /**
-     * signIn()
+     * signIn
      */
     @Test
     @DisplayName("로그인 시 db에 사용자 정보가 있는 경우 Access Token, Refresh Token, 그 외 사용자 정보를 응답으로 보낸다")

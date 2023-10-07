@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 import static seoultech.capstone.menjil.global.common.dto.ApiResponse.success;
 import static seoultech.capstone.menjil.global.exception.ErrorCode.*;
 import static seoultech.capstone.menjil.global.exception.SuccessCode.*;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -41,7 +42,7 @@ public class AuthController {
                                                                   @RequestParam("provider") String provider) {
         log.info(">> 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
         int httpStatusValue = authService.findUserInDb(email, provider);
-        if (httpStatusValue == HttpStatus.OK.value()) {
+        if (httpStatusValue == SUCCESS.getValue()) {
             return ResponseEntity.status(HttpStatus.OK).body(success(SIGNUP_AVAILABLE));
 //          return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE), HttpStatus.OK);
         } else {
@@ -64,7 +65,7 @@ public class AuthController {
         }
         int httpStatusValue = authService.findNicknameInDb(nickname);
 
-        if (httpStatusValue == HttpStatus.OK.value()) {
+        if (httpStatusValue == SUCCESS.getValue()) {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(success(NICKNAME_AVAILABLE));
         } else {
@@ -95,7 +96,9 @@ public class AuthController {
             throw exception;
         }
 
-        return ResponseEntity.status(authService.signUp(signUpRequest))
+        authService.signUp(signUpRequest);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(success(SIGNUP_SUCCESS, signUpRequest.getEmail()));
     }
 
@@ -115,8 +118,7 @@ public class AuthController {
             throw new CustomException(PROVIDER_NOT_ALLOWED);
         }
 
-        SignInResponse signInResponse = authService.signIn(dto.getEmail(),
-                dto.getProvider());
+        SignInResponse signInResponse = authService.signIn(dto.getEmail(), provider);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponse));
