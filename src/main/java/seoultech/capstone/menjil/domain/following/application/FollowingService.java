@@ -90,7 +90,8 @@ public class FollowingService {
         Long answersCount = qaListRepository.countByMentorNicknameAndAnswerIsNotNull(followNickname);
 
         // 3. 작성 질문/답변 목록 리스트
-        List<FollowingQaDto> followingQaDtos = qaListRepository.findQaListsByMentorNicknameOrderByAnswerTimeAsc(followNickname)
+        Sort sort = Sort.by(Sort.Order.asc("answer_time"));
+        List<FollowingQaDto> followingQaDtos = qaListRepository.findQuestionAndAnswerWithMentorNickname(followNickname, sort)
                 .stream()
                 .map(q -> new FollowingQaDto(q.getQuestionOrigin(), q.getQuestionSummary(),
                         q.getAnswer(), q.getAnswerTime()))

@@ -1,6 +1,7 @@
 package seoultech.capstone.menjil.domain.chat.dao;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -21,10 +22,10 @@ public interface QaListRepository extends MongoRepository<QaList, String> {
             fields = "{ 'question_summary' : 1 }")
     List<QaList> findAnsweredQuestionsByMentor(String mentorNickname, Pageable pageable);
 
-    @Query(value = "{'answer' : { '$ne' : null } }",
+    @Query(value = "{'mentor_nickname' : ?0, 'answer' : { '$ne' : null } }",
             fields = "{ 'question_origin' : 1, 'question_summary' : 1, " +
                     "'answer' :  1, 'answer_time': 1 }")
-    List<QaList> findQaListsByMentorNicknameOrderByAnswerTimeAsc(String mentorNickname);
+    List<QaList> findQuestionAndAnswerWithMentorNickname(String mentorNickname, Sort sort);
 
     Long countByMentorNicknameAndAnswerIsNotNull(String mentorNickname);
 
