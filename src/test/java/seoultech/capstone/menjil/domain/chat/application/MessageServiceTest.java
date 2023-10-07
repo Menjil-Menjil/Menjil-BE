@@ -169,10 +169,11 @@ class MessageServiceTest {
     @DisplayName("정상적인 로직이 수행됨: 멘티의 질문을 그대로 전달한다")
     void sendClientMessage() {
         // given
+        String roomId = "test_room_3";
         String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
 
         MessageRequest clientMessageDto = MessageRequest.builder()
-                .roomId("test_room_3")
+                .roomId(roomId)
                 .senderType(SenderType.MENTEE)
                 .senderNickname("test_mentee_nickname")
                 .message("멘티의 질문입니다")
@@ -185,11 +186,12 @@ class MessageServiceTest {
 
         // then
         assertThat(clientResponse).isNotNull();
+        assertThat(clientResponse.getRoomId()).isEqualTo(roomId);
         assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.QUESTION);
     }
 
     @Test
-    @DisplayName("saveChatMessage에서 먼저 검증을 하겠지만, 한 번더 검증한다. 날자 형식이 맞지 않는 경우에는 null 리턴")
+    @DisplayName("saveChatMessage에서 먼저 검증을 하겠지만, 한 번 더 검증한다. 날자 형식이 맞지 않는 경우에는 null 리턴")
     void sendClientMessage_when_time_format_wrong() {
         // given
         String wrongTimeString = "1996-12-01T00:04:27";
@@ -218,9 +220,7 @@ class MessageServiceTest {
     void sendAIMessage() {
         // given
         String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
-        String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와줄 AI 서포터입니다.\n" +
-                "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
-                "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
+        String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와드릴게요!";
 
         // 여기 메시지는, sendClientMessage 에서 사용된 것과 동일한, 즉 클라이언트에서 보낸 메시지이다.
         MessageRequest clientMessageDto = MessageRequest.builder()
@@ -268,7 +268,7 @@ class MessageServiceTest {
     @DisplayName("case fail: yyyy-MM-dd HH:mm:ss 형태로 파싱이 잘 '안'된 경우")
     void parseDateTime_fail() {
         // given
-        String wrongTimeString1 = "1996-12-01T00:04:27";
+        String wrongTimeString1 = "1996-12-01T00:04:27";  // 사이에 'T' 존재
         String wrongTimeString2 = "1996-12-01  00:04:27"; // 공백이 2개
 
         // when

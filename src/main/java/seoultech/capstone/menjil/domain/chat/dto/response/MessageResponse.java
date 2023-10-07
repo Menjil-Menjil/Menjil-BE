@@ -17,7 +17,6 @@ public class MessageResponse {
     /**
      * 채팅 메시지를 주고받을 때 사용하는 Response DTO
      */
-    @JsonIgnore // ignore room id
     private String roomId;
     private SenderType senderType;
     private String senderNickname;
