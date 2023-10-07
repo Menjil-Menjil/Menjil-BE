@@ -20,7 +20,6 @@ public class MessageListResponse {
      */
     private String _id;
     private Integer order;
-    @JsonIgnore // ignore room id
     private String roomId;
     private SenderType senderType;
     private String senderNickname;

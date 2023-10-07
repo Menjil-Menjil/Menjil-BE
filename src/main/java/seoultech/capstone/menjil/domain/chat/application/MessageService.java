@@ -102,9 +102,7 @@ public class MessageService {
     }
 
     public MessageResponse sendAIMessage(String roomId, MessageRequest messageRequest) {
-        String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와줄 AI 서포터입니다.\n" +
-                "멘토의 답변을 기다리면서, 당신의 질문과 유사한 질문에서 시작된 대화를 살펴보실래요?\n" +
-                "더 신속하게, 다양한 해답을 얻을 수도 있을 거예요!";
+        String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와드릴게요!";
 
         LocalDateTime now = getCurrentTimeWithNanos();
 
@@ -131,7 +129,6 @@ public class MessageService {
         Message message = fetchGptMessage(messageRequest.getMessage());
 
         List<AwsLambdaResponse> awsLambdaResponses = fetchLambdaResponses(messageRequest, mentorNickname, message);
-
         if (awsLambdaResponses == null) {
             return null; // Handle appropriately
         }
@@ -229,12 +226,18 @@ public class MessageService {
                                                 String mentorNickname,
                                                 MessageRequest messageRequest,
                                                 List<AwsLambdaResponse> awsLambdaResponses) {
-        String awsMessage = messageRequest.getSenderNickname() + "님의 질문과 유사도가 높은 대화 목록입니다";
+        String awsMessage = "먼저, " + messageRequest.getSenderNickname()
+                + "님의 질문과 유사한 질문에서 시작된 대화를 살펴 보실래요?\n"
+                + "더 신속하게, 다양한 해답을 얻을 수 있을거에요";
+
         LocalDateTime now = getCurrentTimeWithNanos();
 
-        // add 4th response
+        // add 4th, 5th response
+        awsLambdaResponses.add(AwsLambdaResponse.of(
+                "목록 새로고침", null, null));
         awsLambdaResponses.add(AwsLambdaResponse.of(
                 "멘토에게 질문하고 답변을 기다릴래요", null, null));
+
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
                 .senderType(SenderType.MENTOR)
@@ -245,11 +248,15 @@ public class MessageService {
                 .time(now)
                 .build();
 
+        // TODO: 추후 디자인에 따라 이 부분 변동 가능성 있음.
         if (similarMessageDoesNotExists(awsLambdaResponses)) {
-            String similarDoesNotExists = messageRequest.getSenderNickname()
+            /*String similarDoesNotExists = messageRequest.getSenderNickname()
                     + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
-            awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);
-            awsLambdaResponseMessage.setLambdaMessageList(null);
+            awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);*/
+            awsLambdaResponseMessage.setLambdaMessageList(AwsLambdaResponse.of(
+                    messageRequest.getSenderNickname()
+                            + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null)
+            );
         }
         return awsLambdaResponseMessage;
     }
