@@ -13,7 +13,7 @@ import java.util.Optional;
 // JpaRepository 를 상속했으므로 @Repository annotation 이 없어도 IOC 가 된다.
 public interface UserRepository extends JpaRepository<User, String> {
 
-    List<User> findUserByEmailAndProvider(String email, String provider);
+    Optional<User> findUserByEmailAndProvider(String email, String provider);
 
     Optional<User> findUserByNickname(String nickname);  // Nickname 은 중복이 되지 않으므로, List 가 아닌 Optional 로 조회
 
