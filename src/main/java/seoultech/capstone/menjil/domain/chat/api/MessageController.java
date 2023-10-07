@@ -16,16 +16,15 @@ import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import javax.validation.Valid;
 
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
 public class MessageController {
     private final MessageService messageService;
     private final SimpMessagingTemplate simpMessagingTemplate;
-
-    private final int SAVE_SUCCESS = 0;
-    private final int TIME_INPUT_INVALID = -1;
-    private final int INTERNAL_SERVER_ERROR = -100;
 
     @MessageMapping("/chat/room/{roomId}") // 실제론 메세지 매핑으로 pub/chat/room/{roomId} 임
 //    @SendTo("/queue/chat/{roomId}")
@@ -71,8 +70,8 @@ public class MessageController {
     }
 
     protected boolean handleSaveResult(int saveResult, String roomId) {
-        if (saveResult == TIME_INPUT_INVALID || saveResult == INTERNAL_SERVER_ERROR) {
-            ErrorCode code = (saveResult == TIME_INPUT_INVALID) ? ErrorCode.TIME_INPUT_INVALID : ErrorCode.SERVER_ERROR;
+        if (saveResult == TIME_INPUT_INVALID.getValue() || saveResult == INTERNAL_SERVER_ERROR.getValue()) {
+            ErrorCode code = (saveResult == TIME_INPUT_INVALID.getValue()) ? ErrorCode.TIME_INPUT_INVALID : ErrorCode.SERVER_ERROR;
             sendErrorResponse(roomId, code);
             return true;
         }

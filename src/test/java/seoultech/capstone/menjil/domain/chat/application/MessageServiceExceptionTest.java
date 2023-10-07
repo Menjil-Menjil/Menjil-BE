@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageServiceExceptionTest {
@@ -31,9 +32,6 @@ public class MessageServiceExceptionTest {
     @Mock
     private MessageRepository messageRepository;
 
-    private final int SAVE_SUCCESS = 0;
-    private final int TIME_INPUT_INVALID = -1;
-    private final int INTERNAL_SERVER_ERROR = -100;
     private final static String TEST_ROOM_ID = "test_room_1";
     private final String TEST_MENTEE_NICKNAME = "test_mentee_1";
     private final String TEST_MENTOR_NICKNAME = "test_mentor_1";
@@ -82,7 +80,7 @@ public class MessageServiceExceptionTest {
 
         // then
         int result = messageService.saveChatMessage(messageDto);
-        assertEquals(result, INTERNAL_SERVER_ERROR);
+        assertEquals(result, INTERNAL_SERVER_ERROR.getValue());
         verify(messageRepository, times(1)).save(any(ChatMessage.class));
     }
 
@@ -114,7 +112,6 @@ public class MessageServiceExceptionTest {
 //        verify(messageRepository, times(1)).save(any(ChatMessage.class));
 //    }
     private String createTimeFormatOfMessageResponse(LocalDateTime time) {
-        time = time;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return time.format(formatter);
     }

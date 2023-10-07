@@ -10,6 +10,9 @@ public enum ErrorIntValue {
     // auth
     USER_ALREADY_IN_DB(-1),
 
+    // chat
+    TIME_INPUT_INVALID(-11),
+
 
     // common
     INTERNAL_SERVER_ERROR(-100);
