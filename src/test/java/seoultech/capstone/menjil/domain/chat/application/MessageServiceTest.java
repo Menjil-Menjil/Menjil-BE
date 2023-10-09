@@ -176,7 +176,7 @@ class MessageServiceTest {
                 .senderType(SenderType.MENTEE)
                 .senderNickname("test_mentee_nickname")
                 .message("멘티의 질문입니다")
-                .messageType(MessageType.QUESTION)
+                .messageType(MessageType.C_QUESTION)
                 .time(formattedDateTime)
                 .build();
 
@@ -186,7 +186,7 @@ class MessageServiceTest {
         // then
         assertThat(clientResponse).isNotNull();
         assertThat(clientResponse.getRoomId()).isEqualTo(roomId);
-        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.QUESTION);
+        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.C_QUESTION);
     }
 
     @Test
@@ -200,7 +200,7 @@ class MessageServiceTest {
                 .senderType(SenderType.MENTEE)
                 .senderNickname("test_mentee_nickname")
                 .message("멘티의 질문입니다")
-                .messageType(MessageType.QUESTION)
+                .messageType(MessageType.C_QUESTION)
                 .time(wrongTimeString)
                 .build();
 
@@ -227,7 +227,7 @@ class MessageServiceTest {
                 .senderType(SenderType.MENTEE)
                 .senderNickname(TEST_MENTEE_NICKNAME)
                 .message("멘티의 질문입니다")
-                .messageType(MessageType.QUESTION)
+                .messageType(MessageType.C_QUESTION)
                 .time(formattedDateTime)
                 .build();
 

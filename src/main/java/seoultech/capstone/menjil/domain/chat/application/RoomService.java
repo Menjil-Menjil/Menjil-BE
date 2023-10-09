@@ -123,7 +123,7 @@ public class RoomService {
         try {
             return roomRepository.save(newRoom);
         } catch (RuntimeException e) {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

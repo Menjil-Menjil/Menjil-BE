@@ -367,8 +367,8 @@ class RoomControllerTest {
                         .content(content)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError())
-                .andExpect(jsonPath("$.code", is(ErrorCode.SERVER_ERROR.getHttpStatus().value())))
-                .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
+                .andExpect(jsonPath("$.code", is(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message", is(ErrorCode.INTERNAL_SERVER_ERROR.getMessage())))
                 .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 

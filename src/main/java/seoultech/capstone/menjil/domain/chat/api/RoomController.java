@@ -77,7 +77,7 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(SuccessCode.ROOM_DELETE_SUCCESS));
         } else {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

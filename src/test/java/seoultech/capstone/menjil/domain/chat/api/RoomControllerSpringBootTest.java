@@ -53,7 +53,7 @@ public class RoomControllerSpringBootTest {
                         .senderType(SenderType.MENTEE)
                         .senderNickname("test_mentee_nickname")
                         .message("test message 2")
-                        .messageType(MessageType.QUESTION)
+                        .messageType(MessageType.C_QUESTION)
                         .time(now.plusSeconds(3000))
                         .build()
         );

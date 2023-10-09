@@ -101,7 +101,7 @@ class FollowControllerTest {
 
     @Test
     @DisplayName("case 3: 서버 오류")
-    void followRequest_internal_server_error() throws Exception {
+    void followRequest_INTERNAL_SERVER_ERROR() throws Exception {
         // given
         FollowRequest followRequest = FollowRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
         Gson gson = new Gson();
@@ -115,8 +115,8 @@ class FollowControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().is5xxServerError())
-                .andExpect(jsonPath("$.code", is(ErrorCode.SERVER_ERROR.getHttpStatus().value())))
-                .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
+                .andExpect(jsonPath("$.code", is(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message", is(ErrorCode.INTERNAL_SERVER_ERROR.getMessage())))
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
 

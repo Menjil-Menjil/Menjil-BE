@@ -39,7 +39,7 @@ class MessageControllerSpringBootTest {
     void sendErrorResponse() {
         // given
         String roomId = "test_room_id";
-        ErrorCode errorCode = ErrorCode.SERVER_ERROR;
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
         ArgumentCaptor<ApiResponse<?>> argumentCaptor = ArgumentCaptor.forClass(ApiResponse.class);
 
         // when

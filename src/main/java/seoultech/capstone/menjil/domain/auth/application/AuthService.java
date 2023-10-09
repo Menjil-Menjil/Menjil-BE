@@ -90,7 +90,7 @@ public class AuthService {
         try {
             userRepository.save(user);
         } catch (RuntimeException e) {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -129,7 +129,7 @@ public class AuthService {
                 try {
                     tokenRepository.save(rfEntity);
                 } catch (RuntimeException e) {
-                    throw new CustomException(ErrorCode.SERVER_ERROR);
+                    throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                 }
             }
 

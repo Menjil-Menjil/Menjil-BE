@@ -53,7 +53,7 @@ public class FollowingService {
 
             // 1. get follows
             User user = userRepository.findUserByNickname(followNickname)
-                    .orElseThrow(() -> new CustomException(ErrorCode.SERVER_ERROR));
+                    .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
             FollowingUserDto followingUserDto = FollowingUserDto.fromUserEntity(user);
 
             // set AWS S3 presigned url
@@ -79,7 +79,7 @@ public class FollowingService {
     @Transactional
     public FollowingMentorInfoResponse getFollowMentorInfo(String nickname, String followNickname) {
         User user = userRepository.findUserByNickname(followNickname)
-                .orElseThrow(() -> new CustomException(ErrorCode.SERVER_ERROR));
+                .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
 
         // 1. 사용자 정보
         FollowingUserInfoDto followingUserInfoDto = FollowingUserInfoDto.fromUserEntity(user);
