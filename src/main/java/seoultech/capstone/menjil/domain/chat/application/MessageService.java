@@ -59,6 +59,26 @@ public class MessageService {
         return Optional.empty();
     }
 
+    public Object saveAndSendClientChatMessage(MessageRequest messageRequest) {
+        // MessageRequest의 time format 검증
+        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
+
+        if (dateTimeOptional.isEmpty()) {
+            return TIME_INPUT_INVALID.getValue(); // or handle the error differently
+        }
+        LocalDateTime dateTime = dateTimeOptional.get();
+
+        // MessageRequest -> ChatMessage(Entity) 변환
+        ChatMessage clientChatMessage = convertMessageRequestToChatMessageEntity(messageRequest, dateTime);
+
+        // save entity to mongoDB
+        if (!saveChatMessageInDb(clientChatMessage)) {
+            return INTERNAL_SERVER_ERROR.getValue();  // handle the failure case appropriately
+        }
+
+        return MessageResponse.fromChatMessageEntity(clientChatMessage);
+    }
+
     public int saveChatMessage(MessageRequest messageRequest) {
         // MessageRequest time format 검증
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
@@ -70,11 +90,15 @@ public class MessageService {
 
         // MessageRequest -> ChatMessage(Entity) 변환
         ChatMessage chatMessage = convertMessageRequestToChatMessageEntity(messageRequest, dateTime);
+        System.out.println("chatMessage.get_id() = " + chatMessage.get_id());
+
+        System.out.println("========");
 
         // save entity to mongoDB
         if (!saveChatMessageInDb(chatMessage)) {
             return INTERNAL_SERVER_ERROR.getValue();  // handle the failure case appropriately
         }
+        System.out.println("chatMessage.get_id() = " + chatMessage.get_id());
         return SUCCESS.getValue();
     }
 

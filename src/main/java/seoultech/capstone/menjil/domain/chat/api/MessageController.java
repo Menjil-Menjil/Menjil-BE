@@ -31,18 +31,18 @@ public class MessageController {
     public void enter(@DestinationVariable("roomId") String roomId,
                       @Valid @RequestBody MessageRequest messageRequest) {
 
-        // 1. Save Client's Chat Message
-        int saveResult = messageService.saveChatMessage(messageRequest);
-
-        // 1-1. Handle the save result
-        if (handleSaveResult(saveResult, roomId)) return;
+        // 1. Save Client's chat message and return MessageRespones DTO
+        Object result = messageService.saveAndSendClientChatMessage(messageRequest);
+        if (result instanceof Integer) {
+            // 1-1. error handling
+            handleSaveErrorResult((Integer) result, roomId);
+            return;
+        }
 
         switch (messageRequest.getMessageType()) {
             case C_QUESTION:
                 // 2. Send Client's Chat Message
-                // 처음에는 클라이언트에서 바로 띄워주는 것으로 생각했으나, 만약 db 저장시 오류가 발생할 수 있으므로,
-                // 서버에서 다시 보내주는 식으로 처리하였음.
-                if (handleClientMessage(messageRequest, roomId)) return;
+                sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, (MessageResponse) result);
 
                 // 3. Send AI initial message
                 // TODO: 이 부분은 추후 비동기 처리 고려
@@ -53,7 +53,7 @@ public class MessageController {
                 break;
             case AI_SELECT:
                 // 2. Send Client's Chat Message
-                if (handleClientMessage(messageRequest, roomId)) return;
+                sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, (MessageResponse) result);
                 break;
             case AI_ANSWER:
 
@@ -63,23 +63,9 @@ public class MessageController {
         }
     }
 
-    protected boolean handleSaveResult(int saveResult, String roomId) {
-        if (saveResult == TIME_INPUT_INVALID.getValue() || saveResult == INTERNAL_SERVER_ERROR.getValue()) {
-            ErrorCode code = (saveResult == TIME_INPUT_INVALID.getValue()) ? ErrorCode.TIME_INPUT_INVALID : ErrorCode.INTERNAL_SERVER_ERROR;
-            sendErrorResponse(roomId, code);
-            return true;
-        }
-        return false;
-    }
-
-    protected boolean handleClientMessage(MessageRequest messageRequest, String roomId) {
-        MessageResponse clientMessageResponse = messageService.sendClientMessage(messageRequest);
-        if (clientMessageResponse == null) {
-            sendErrorResponse(roomId, ErrorCode.TIME_INPUT_INVALID);
-            return true;
-        }
-        sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, clientMessageResponse);
-        return false;
+    protected void handleSaveErrorResult(int saveResult, String roomId) {
+        ErrorCode code = (saveResult == TIME_INPUT_INVALID.getValue()) ? ErrorCode.TIME_INPUT_INVALID : ErrorCode.INTERNAL_SERVER_ERROR;
+        sendErrorResponse(roomId, code);
     }
 
     protected boolean handleAIMessage(String roomId, MessageRequest messageRequest) {
