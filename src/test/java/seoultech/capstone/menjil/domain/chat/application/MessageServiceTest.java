@@ -18,7 +18,7 @@ import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageOrderResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 
 import java.time.LocalDateTime;
@@ -76,7 +76,7 @@ class MessageServiceTest {
      * sendWelcomeMessage
      */
     @Test
-    @DisplayName("정상적으로 응답 메시지가 생성되며, MessageListResponse Dto 객체가 리턴된다")
+    @DisplayName("정상적으로 응답 메시지가 생성되며, MessageOrderResponse Dto 객체가 리턴된다")
     void sendWelcomeMessage() {
         // given
         String roomId = "room_id_one";
@@ -90,7 +90,7 @@ class MessageServiceTest {
                 .build();
 
         // when
-        MessageListResponse result = messageService.sendWelcomeMessage(roomDto).orElse(null);
+        MessageOrderResponse result = messageService.sendWelcomeMessage(roomDto).orElse(null);
 
         // then
         assert result != null;
@@ -176,7 +176,7 @@ class MessageServiceTest {
                 .senderType(SenderType.MENTEE)
                 .senderNickname("test_mentee_nickname")
                 .message("멘티의 질문입니다")
-                .messageType(MessageType.QUESTION)
+                .messageType(MessageType.C_QUESTION)
                 .time(formattedDateTime)
                 .build();
 
@@ -186,7 +186,7 @@ class MessageServiceTest {
         // then
         assertThat(clientResponse).isNotNull();
         assertThat(clientResponse.getRoomId()).isEqualTo(roomId);
-        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.QUESTION);
+        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.C_QUESTION);
     }
 
     @Test
@@ -200,7 +200,7 @@ class MessageServiceTest {
                 .senderType(SenderType.MENTEE)
                 .senderNickname("test_mentee_nickname")
                 .message("멘티의 질문입니다")
-                .messageType(MessageType.QUESTION)
+                .messageType(MessageType.C_QUESTION)
                 .time(wrongTimeString)
                 .build();
 
@@ -227,7 +227,7 @@ class MessageServiceTest {
                 .senderType(SenderType.MENTEE)
                 .senderNickname(TEST_MENTEE_NICKNAME)
                 .message("멘티의 질문입니다")
-                .messageType(MessageType.QUESTION)
+                .messageType(MessageType.C_QUESTION)
                 .time(formattedDateTime)
                 .build();
 

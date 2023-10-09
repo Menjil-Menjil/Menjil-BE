@@ -35,7 +35,7 @@ public class FollowController {
         } else if (result == FOLLOW_DELETED.getValue()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(success(SuccessCode.FOLLOW_DELETED));
         } else {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

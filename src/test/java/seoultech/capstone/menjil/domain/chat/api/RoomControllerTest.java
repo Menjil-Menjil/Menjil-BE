@@ -20,7 +20,7 @@ import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageOrderResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
@@ -78,8 +78,8 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> messageResponses = Arrays.asList(
-                MessageListResponse.builder()
+        List<MessageOrderResponse> messageOrderResponses = Arrays.asList(
+                MessageOrderResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)
                         .roomId(roomDto.getRoomId())
@@ -89,7 +89,7 @@ class RoomControllerTest {
                         .messageType(MessageType.TALK)
                         .time(now)
                         .build(),
-                MessageListResponse.builder()
+                MessageOrderResponse.builder()
                         ._id("test_uuid_2")
                         .roomId(roomDto.getRoomId())
                         .order(2)
@@ -99,7 +99,7 @@ class RoomControllerTest {
                         .messageType(MessageType.TALK)
                         .time(now.plusSeconds(3000))
                         .build(),
-                MessageListResponse.builder()
+                MessageOrderResponse.builder()
                         ._id("test_uuid_3")
                         .roomId(roomDto.getRoomId())
                         .order(3)
@@ -115,7 +115,7 @@ class RoomControllerTest {
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(messageResponses);
+        Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(messageOrderResponses);
 
         // then
         mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
@@ -134,7 +134,7 @@ class RoomControllerTest {
         assertThat(SuccessCode.MESSAGE_LOAD_SUCCESS.getCode()).isEqualTo(capturedApiResponse.getCode());
         assertThat(SuccessCode.MESSAGE_LOAD_SUCCESS.getMessage()).isEqualTo(capturedApiResponse.getMessage());
 
-        assertThat(messageResponses).isEqualTo(capturedApiResponse.getData());
+        assertThat(messageOrderResponses).isEqualTo(capturedApiResponse.getData());
     }
 
 
@@ -149,7 +149,7 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> messageResponse = Collections.singletonList(MessageListResponse.builder()
+        List<MessageOrderResponse> memessageOrderResponsessageResponse = Collections.singletonList(MessageOrderResponse.builder()
                 ._id("test_uuid_1")
                 .order(null)
                 .roomId(roomDto.getRoomId())
@@ -164,7 +164,7 @@ class RoomControllerTest {
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(messageResponse);
+        Mockito.when(roomService.enterTheRoom(roomDto)).thenReturn(memessageOrderResponsessageResponse);
 
         // then
         mvc.perform(MockMvcRequestBuilders.post("/api/chat/room/enter/")
@@ -183,7 +183,7 @@ class RoomControllerTest {
         assertThat(SuccessCode.MESSAGE_CREATED.getCode()).isEqualTo(capturedApiResponse.getCode());
         assertThat(SuccessCode.MESSAGE_CREATED.getMessage()).isEqualTo(capturedApiResponse.getMessage());
 
-        assertThat(messageResponse).isEqualTo(capturedApiResponse.getData());
+        assertThat(memessageOrderResponsessageResponse).isEqualTo(capturedApiResponse.getData());
     }
 
     @Test
@@ -197,7 +197,7 @@ class RoomControllerTest {
                 .build();
 
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> firstMessageResponse = Collections.singletonList(MessageListResponse.builder()
+        List<MessageOrderResponse> firstMessageResponse = Collections.singletonList(MessageOrderResponse.builder()
                 ._id("test_uuid_3")
                 .order(null)    // here is null
                 .roomId(roomDto.getRoomId())
@@ -208,7 +208,7 @@ class RoomControllerTest {
                 .time(now)
                 .build());
 
-        List<MessageListResponse> secondMessageResponse = Collections.singletonList(MessageListResponse.builder()
+        List<MessageOrderResponse> secondMessageResponse = Collections.singletonList(MessageOrderResponse.builder()
                 ._id("test_uuid_3")
                 .order(1)   // here is not null
                 .roomId(roomDto.getRoomId())
@@ -367,8 +367,8 @@ class RoomControllerTest {
                         .content(content)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError())
-                .andExpect(jsonPath("$.code", is(ErrorCode.SERVER_ERROR.getHttpStatus().value())))
-                .andExpect(jsonPath("$.message", is(ErrorCode.SERVER_ERROR.getMessage())))
+                .andExpect(jsonPath("$.code", is(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value())))
+                .andExpect(jsonPath("$.message", is(ErrorCode.INTERNAL_SERVER_ERROR.getMessage())))
                 .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 

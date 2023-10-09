@@ -99,7 +99,7 @@ public class MessageServiceExceptionTest {
 //                .senderType(SenderType.MENTEE)
 //                .senderNickname(TEST_MENTEE_NICKNAME)
 //                .message("멘티의 질문입니다")
-//                .messageType(MessageType.QUESTION)
+//                .messageType(MessageType.C_QUESTION)
 //                .time(formattedDateTime)
 //                .build();
 //
