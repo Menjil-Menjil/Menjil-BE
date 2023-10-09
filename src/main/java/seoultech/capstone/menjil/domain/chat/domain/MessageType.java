@@ -12,8 +12,8 @@ public enum MessageType {
      * TYPE_NOT_EXISTS : enum에 정의되어 있지 않은 타입이 들어올 경우, MessageController에서 예외 처리를 위해 생성
      */
     ENTER,
-    C_QUESTION, C_SELECT,
-    AI_QUESTION_RESPONSE, AI_SUMMARY_LIST, AI_ANSWER,
+    C_QUESTION,
+    AI_QUESTION_RESPONSE, AI_SUMMARY_LIST, AI_SELECT, AI_ANSWER,
     TALK,
     TYPE_NOT_EXISTS;
 

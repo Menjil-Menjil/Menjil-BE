@@ -51,7 +51,7 @@ public class MessageController {
                 // 4. Send the answer of Client's Question
                 handleClientQuestion(roomId, messageRequest);
                 break;
-            case C_SELECT:
+            case AI_SELECT:
                 // 2. Send Client's Chat Message
                 if (handleClientMessage(messageRequest, roomId)) return;
                 break;
