@@ -18,7 +18,7 @@ import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
 import seoultech.capstone.menjil.domain.chat.dto.request.AwsLambdaRequest;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageRequest;
 import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageOrderResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 
 import java.time.Duration;
@@ -51,7 +51,7 @@ public class MessageService {
         this.roomRepository = roomRepository;
     }
 
-    public Optional<MessageListResponse> sendWelcomeMessage(RoomDto roomDto) {
+    public Optional<MessageOrderResponse> sendWelcomeMessage(RoomDto roomDto) {
         ChatMessage welcomeMsg = createWelcomeMessage(roomDto);
         if (saveChatMessageInDb(welcomeMsg)) {
             return Optional.of(convertChatMessageToDto(welcomeMsg));
@@ -78,9 +78,6 @@ public class MessageService {
         return SUCCESS.getValue();
     }
 
-    /**
-     * MessageType: QUESTION
-     */
     public MessageResponse sendClientMessage(MessageRequest messageRequest) {
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
 
@@ -230,13 +227,13 @@ public class MessageService {
                 + "님의 질문과 유사한 질문에서 시작된 대화를 살펴 보실래요?\n"
                 + "더 신속하게, 다양한 해답을 얻을 수 있을거에요";
 
+        String message4th = "AI 챗봇을 종료하고 멘토 답변 기다리기";
+
         LocalDateTime now = getCurrentTimeWithNanos();
 
-        // add 4th, 5th response
+        // add 4th response
         awsLambdaResponses.add(AwsLambdaResponse.of(
-                "목록 새로고침", null, null));
-        awsLambdaResponses.add(AwsLambdaResponse.of(
-                "멘토에게 질문하고 답변을 기다릴래요", null, null));
+                message4th, null, null));
 
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
@@ -268,8 +265,8 @@ public class MessageService {
     /**
      * Used in Common
      */
-    private MessageListResponse convertChatMessageToDto(ChatMessage message) {
-        return MessageListResponse.fromChatMessageEntity(message, null);
+    private MessageOrderResponse convertChatMessageToDto(ChatMessage message) {
+        return MessageOrderResponse.fromChatMessageEntity(message, null);
     }
 
     public Optional<LocalDateTime> parseDateTime(String timeString) {

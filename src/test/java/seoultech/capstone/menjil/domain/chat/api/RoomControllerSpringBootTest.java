@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageOrderResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 
 import java.time.LocalDateTime;
@@ -35,8 +35,8 @@ public class RoomControllerSpringBootTest {
     void chatMessageIsMoreThanOne_return_true() {
         // given
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> messageResponses = Arrays.asList(
-                MessageListResponse.builder()
+        List<MessageOrderResponse> messageOrderResponses = Arrays.asList(
+                MessageOrderResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)
                         .roomId("test_room_1")
@@ -46,7 +46,7 @@ public class RoomControllerSpringBootTest {
                         .messageType(MessageType.ENTER)
                         .time(now)
                         .build(),
-                MessageListResponse.builder()
+                MessageOrderResponse.builder()
                         ._id("test_uuid_2")
                         .roomId("test_room_2")
                         .order(2)
@@ -59,7 +59,7 @@ public class RoomControllerSpringBootTest {
         );
 
         // when
-        boolean result = roomController.chatMessageIsMoreThanOne(messageResponses);
+        boolean result = roomController.chatMessageIsMoreThanOne(messageOrderResponses);
 
         // then
         assertThat(result).isTrue();
@@ -70,8 +70,8 @@ public class RoomControllerSpringBootTest {
     void chatMessageIsMoreThanOne_return_false_and_order_is_null() {
         // given
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> response = Collections.singletonList(
-                MessageListResponse.builder()
+        List<MessageOrderResponse> response = Collections.singletonList(
+                MessageOrderResponse.builder()
                         ._id("test_uuid_1")
                         .order(null)   // here is null
                         .roomId("test_room_id")
@@ -94,8 +94,8 @@ public class RoomControllerSpringBootTest {
     void chatMessageIsMoreThanOne_return_false_and_order_is_not_null() {
         // given
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> response = Collections.singletonList(
-                MessageListResponse.builder()
+        List<MessageOrderResponse> response = Collections.singletonList(
+                MessageOrderResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)   // here is not null
                         .roomId("test_room_id")
@@ -121,8 +121,8 @@ public class RoomControllerSpringBootTest {
     void checkIfUserEnterTheRoomAtFirstTime_return_true_when_order_is_null() {
         // given
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> response = Collections.singletonList(
-                MessageListResponse.builder()
+        List<MessageOrderResponse> response = Collections.singletonList(
+                MessageOrderResponse.builder()
                         ._id("test_uuid_1")
                         .order(null)   // here is null
                         .roomId("test_room_id")
@@ -145,8 +145,8 @@ public class RoomControllerSpringBootTest {
     void checkIfUserEnterTheRoomAtFirstTime_return_true_when_order_is_not_null() {
         // given
         LocalDateTime now = LocalDateTime.now();
-        List<MessageListResponse> response = Collections.singletonList(
-                MessageListResponse.builder()
+        List<MessageOrderResponse> response = Collections.singletonList(
+                MessageOrderResponse.builder()
                         ._id("test_uuid_1")
                         .order(1)   // here is not null
                         .roomId("test_room_id")
