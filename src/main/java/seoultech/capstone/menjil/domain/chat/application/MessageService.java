@@ -30,7 +30,6 @@ import java.util.Optional;
 
 import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
 import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
-import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @Slf4j
 @Service
@@ -62,7 +61,6 @@ public class MessageService {
     public Object saveAndSendClientChatMessage(MessageRequest messageRequest) {
         // MessageRequest의 time format 검증
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
-
         if (dateTimeOptional.isEmpty()) {
             return TIME_INPUT_INVALID.getValue(); // or handle the error differently
         }
@@ -79,7 +77,8 @@ public class MessageService {
         return MessageResponse.fromChatMessageEntity(clientChatMessage);
     }
 
-    public int saveChatMessage(MessageRequest messageRequest) {
+    // TODO: 추후 사용되지 않으면 지울 것
+   /* public int saveChatMessage(MessageRequest messageRequest) {
         // MessageRequest time format 검증
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
 
@@ -120,7 +119,7 @@ public class MessageService {
                 .messageType(messageRequest.getMessageType())
                 .time(dateTime)
                 .build();
-    }
+    }*/
 
     public MessageResponse sendAIMessage(String roomId, MessageRequest messageRequest) {
         String specificMessage = "당신의 궁금증을 빠르게 해결할 수 있게 도와드릴게요!";
@@ -256,7 +255,7 @@ public class MessageService {
         LocalDateTime now = getCurrentTimeWithNanos();
 
         // add 4th response
-        awsLambdaResponses.add(AwsLambdaResponse.of(
+        awsLambdaResponses.add(AwsLambdaResponse.of(null,
                 message4th, null, null));
 
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
@@ -274,7 +273,7 @@ public class MessageService {
             /*String similarDoesNotExists = messageRequest.getSenderNickname()
                     + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
             awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);*/
-            awsLambdaResponseMessage.setLambdaMessageList(AwsLambdaResponse.of(
+            awsLambdaResponseMessage.setLambdaMessageList(AwsLambdaResponse.of(null,
                     messageRequest.getSenderNickname()
                             + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null)
             );
