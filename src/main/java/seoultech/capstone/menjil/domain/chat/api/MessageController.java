@@ -16,7 +16,6 @@ import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import javax.validation.Valid;
 
-import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
 import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
 
 @Slf4j
@@ -52,10 +51,11 @@ public class MessageController {
                 handleClientQuestion(roomId, messageRequest);
                 break;
             case AI_SELECT:
+            case AI_SUMMARY:
+            case AI_SUMMARY_ANSWER:
                 // 2. Send Client's Chat Message
                 sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, (MessageResponse) result);
                 break;
-            case AI_ANSWER:
 
             default:
                 sendMessageTypeErrorResponse(roomId);
