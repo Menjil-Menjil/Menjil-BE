@@ -62,7 +62,6 @@ public class MessageService {
     public Object saveAndSendClientChatMessage(MessageRequest messageRequest) {
         // MessageRequest의 time format 검증
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
-
         if (dateTimeOptional.isEmpty()) {
             return TIME_INPUT_INVALID.getValue(); // or handle the error differently
         }
@@ -79,6 +78,7 @@ public class MessageService {
         return MessageResponse.fromChatMessageEntity(clientChatMessage);
     }
 
+    // TODO: 추후 사용되지 않으면 지울 것
     public int saveChatMessage(MessageRequest messageRequest) {
         // MessageRequest time format 검증
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
@@ -102,6 +102,7 @@ public class MessageService {
         return SUCCESS.getValue();
     }
 
+    // TODO: 추후 사용되지 않으면 지울 것
     public MessageResponse sendClientMessage(MessageRequest messageRequest) {
         Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
 
@@ -249,14 +250,32 @@ public class MessageService {
                                                 List<AwsLambdaResponse> awsLambdaResponses) {
         String awsMessage = "먼저, " + messageRequest.getSenderNickname()
                 + "님의 질문과 유사한 질문에서 시작된 대화를 살펴 보실래요?\n"
-                + "더 신속하게, 다양한 해답을 얻을 수 있을거에요";
-
+                + "더 신속하게, 다양한 해답을 얻을 수 있을거에요!\n"
+                + messageRequest.getSenderNickname() + "님이 입력한 질문과 유사한 질문의 개수는 " + awsLambdaResponses.size() +
+                "개 입니다.";
         String message4th = "AI 챗봇을 종료하고 멘토 답변 기다리기";
-
         LocalDateTime now = getCurrentTimeWithNanos();
 
+        if (awsLambdaResponses.size() == 0) {
+            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+                    messageRequest.getSenderNickname()
+                            + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null));
+            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+                    null, null, null));
+            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+                    null, null, null));
+        } else if (awsLambdaResponses.size() == 1) {
+            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+                    null, null, null));
+            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+                    null, null, null));
+        } else if (awsLambdaResponses.size() == 2) {
+            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+                    null, null, null));
+        }
+        // 아래는 공통
         // add 4th response
-        awsLambdaResponses.add(AwsLambdaResponse.of(
+        awsLambdaResponses.add(AwsLambdaResponse.of(null,
                 message4th, null, null));
 
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
@@ -270,15 +289,15 @@ public class MessageService {
                 .build();
 
         // TODO: 추후 디자인에 따라 이 부분 변동 가능성 있음.
-        if (similarMessageDoesNotExists(awsLambdaResponses)) {
-            /*String similarDoesNotExists = messageRequest.getSenderNickname()
+        /*if (similarMessageDoesNotExists(awsLambdaResponses)) {
+         *//*String similarDoesNotExists = messageRequest.getSenderNickname()
                     + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
-            awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);*/
-            awsLambdaResponseMessage.setLambdaMessageList(AwsLambdaResponse.of(
+            awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);*//*
+            awsLambdaResponseMessage.setLambdaMessageList(AwsLambdaResponse.of(null,
                     messageRequest.getSenderNickname()
                             + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null)
             );
-        }
+        }*/
         return awsLambdaResponseMessage;
     }
 
