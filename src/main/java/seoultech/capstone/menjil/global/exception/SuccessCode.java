@@ -48,6 +48,7 @@ public enum SuccessCode {
     ROOM_DELETE_SUCCESS(HttpStatus.CREATED.value(), "채팅방 퇴장이 정상적으로 처리되었습니다"),
     MESSAGE_SEND_SUCCESS(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 입력되었습니다"),
     AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다"),
+    MESSAGE_RATING_SUCCESS(HttpStatus.CREATED.value(), "답변에 대한 평가가 정상적으로 등록되었습니다"),
 
     // follow
     FOLLOW_CREATED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 생성되었습니다"),
