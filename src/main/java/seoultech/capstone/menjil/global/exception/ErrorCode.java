@@ -31,7 +31,8 @@ public enum ErrorCode {
     TIME_INPUT_INVALID(HttpStatus.BAD_REQUEST, "CH03", "time 형식을 yyyy-MM-dd HH:mm:ss으로 작성해 주세요"),
     MESSAGE_TYPE_INPUT_INVALID(HttpStatus.CONFLICT, "CH04", "지정된 Message Type이 입력되지 않았습니다"),
     MENTEE_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH05", "멘티의 닉네임 정보가 존재하지 않습니다"),
-    MENTOR_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH06", "멘토의 닉네임 정보가 존재하지 않습니다");
+    MENTOR_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH06", "멘토의 닉네임 정보가 존재하지 않습니다"),
+    QALIST_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH07", "채팅 메시지 id가 유효하지 않습니다");
 
     private final HttpStatus httpStatus;
     private final String type;

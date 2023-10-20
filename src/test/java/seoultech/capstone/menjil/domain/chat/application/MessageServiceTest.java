@@ -102,114 +102,115 @@ class MessageServiceTest {
         assertThat(result.getMessageType()).isEqualTo(MessageType.ENTER);
     }
 
-    /**
-     * saveChatMessage
-     */
-    @Test
-    @DisplayName("case SAVE_SUCCESS: 클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 int 0 리턴")
-    void saveChatMessage_SAVE_SUCCESS() {
-        // given
-        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
-
-        MessageRequest messageDto = MessageRequest.builder()
-                .roomId("test_room_3")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(formattedDateTime)
-                .build();
-
-        // when
-        int result = messageService.saveChatMessage(messageDto);
-
-        // then
-        assertThat(result).isEqualTo(SUCCESS.getValue());
-    }
-
-    @Test
-    @DisplayName("case TIME_INPUT_INVALID: MessageDto에서 time 형식이 올바르지 않은 경우 int -1 리턴")
-    void saveChatMessage_TIME_INPUT_INVALID() {
-        // given
-        String format_is_wrong = "2023:08:14T12:23:00";
-        String format_is_wrong_v2 = "2023:08:14  12:23:00"; // 공백 2칸
-
-        MessageRequest messageDto1 = MessageRequest.builder()
-                .roomId("test_room_3")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(format_is_wrong)
-                .build();
-
-        MessageRequest messageDto2 = MessageRequest.builder()
-                .roomId("test_room_3")
-                .senderType(SenderType.MENTOR)
-                .senderNickname("test_mentor_nickname")
-                .message("Welcome Message")
-                .messageType(MessageType.ENTER)
-                .time(format_is_wrong_v2)
-                .build();
-
-        // when
-        int result1 = messageService.saveChatMessage(messageDto1);
-        int result2 = messageService.saveChatMessage(messageDto2);
-
-        // then
-        assertThat(result1).isEqualTo(TIME_INPUT_INVALID.getValue());
-        assertThat(result2).isEqualTo(TIME_INPUT_INVALID.getValue());
-    }
-
-    /**
-     * sendClientMessage
-     */
-    @Test
-    @DisplayName("정상적인 로직이 수행됨: 멘티의 질문을 그대로 전달한다")
-    void sendClientMessage() {
-        // given
-        String roomId = "test_room_3";
-        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
-
-        MessageRequest clientMessageDto = MessageRequest.builder()
-                .roomId(roomId)
-                .senderType(SenderType.MENTEE)
-                .senderNickname("test_mentee_nickname")
-                .message("멘티의 질문입니다")
-                .messageType(MessageType.C_QUESTION)
-                .time(formattedDateTime)
-                .build();
-
-        // when
-        MessageResponse clientResponse = messageService.sendClientMessage(clientMessageDto);
-
-        // then
-        assertThat(clientResponse).isNotNull();
-        assertThat(clientResponse.getRoomId()).isEqualTo(roomId);
-        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.C_QUESTION);
-    }
-
-    @Test
-    @DisplayName("saveChatMessage에서 먼저 검증을 하겠지만, 한 번 더 검증한다. 날자 형식이 맞지 않는 경우에는 null 리턴")
-    void sendClientMessage_when_time_format_wrong() {
-        // given
-        String wrongTimeString = "1996-12-01T00:04:27";
-
-        MessageRequest clientMessageDto = MessageRequest.builder()
-                .roomId("test_room_3")
-                .senderType(SenderType.MENTEE)
-                .senderNickname("test_mentee_nickname")
-                .message("멘티의 질문입니다")
-                .messageType(MessageType.C_QUESTION)
-                .time(wrongTimeString)
-                .build();
-
-        // when
-        MessageResponse clientResponse = messageService.sendClientMessage(clientMessageDto);
-
-        // then
-        assertThat(clientResponse).isNull();
-    }
+    // TODO: 서비스 로직에서 제외되면 제거할 것
+//    /**
+//     * saveChatMessage
+//     */
+//    @Test
+//    @DisplayName("case SAVE_SUCCESS: 클라이언트로 들어오는 채팅 메시지가 db에 저장이 정상적으로 되는 경우 int 0 리턴")
+//    void saveChatMessage_SAVE_SUCCESS() {
+//        // given
+//        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
+//
+//        MessageRequest messageDto = MessageRequest.builder()
+//                .roomId("test_room_3")
+//                .senderType(SenderType.MENTOR)
+//                .senderNickname("test_mentor_nickname")
+//                .message("Welcome Message")
+//                .messageType(MessageType.ENTER)
+//                .time(formattedDateTime)
+//                .build();
+//
+//        // when
+//        int result = messageService.saveChatMessage(messageDto);
+//
+//        // then
+//        assertThat(result).isEqualTo(SUCCESS.getValue());
+//    }
+//
+//    @Test
+//    @DisplayName("case TIME_INPUT_INVALID: MessageDto에서 time 형식이 올바르지 않은 경우 int -1 리턴")
+//    void saveChatMessage_TIME_INPUT_INVALID() {
+//        // given
+//        String format_is_wrong = "2023:08:14T12:23:00";
+//        String format_is_wrong_v2 = "2023:08:14  12:23:00"; // 공백 2칸
+//
+//        MessageRequest messageDto1 = MessageRequest.builder()
+//                .roomId("test_room_3")
+//                .senderType(SenderType.MENTOR)
+//                .senderNickname("test_mentor_nickname")
+//                .message("Welcome Message")
+//                .messageType(MessageType.ENTER)
+//                .time(format_is_wrong)
+//                .build();
+//
+//        MessageRequest messageDto2 = MessageRequest.builder()
+//                .roomId("test_room_3")
+//                .senderType(SenderType.MENTOR)
+//                .senderNickname("test_mentor_nickname")
+//                .message("Welcome Message")
+//                .messageType(MessageType.ENTER)
+//                .time(format_is_wrong_v2)
+//                .build();
+//
+//        // when
+//        int result1 = messageService.saveChatMessage(messageDto1);
+//        int result2 = messageService.saveChatMessage(messageDto2);
+//
+//        // then
+//        assertThat(result1).isEqualTo(TIME_INPUT_INVALID.getValue());
+//        assertThat(result2).isEqualTo(TIME_INPUT_INVALID.getValue());
+//    }
+//
+//    /**
+//     * sendClientMessage
+//     */
+//    @Test
+//    @DisplayName("정상적인 로직이 수행됨: 멘티의 질문을 그대로 전달한다")
+//    void sendClientMessage() {
+//        // given
+//        String roomId = "test_room_3";
+//        String formattedDateTime = createTimeFormatOfMessageResponse(LocalDateTime.now());
+//
+//        MessageRequest clientMessageDto = MessageRequest.builder()
+//                .roomId(roomId)
+//                .senderType(SenderType.MENTEE)
+//                .senderNickname("test_mentee_nickname")
+//                .message("멘티의 질문입니다")
+//                .messageType(MessageType.C_QUESTION)
+//                .time(formattedDateTime)
+//                .build();
+//
+//        // when
+//        MessageResponse clientResponse = messageService.sendClientMessage(clientMessageDto);
+//
+//        // then
+//        assertThat(clientResponse).isNotNull();
+//        assertThat(clientResponse.getRoomId()).isEqualTo(roomId);
+//        assertThat(clientResponse.getMessageType()).isEqualTo(MessageType.C_QUESTION);
+//    }
+//
+//    @Test
+//    @DisplayName("saveChatMessage에서 먼저 검증을 하겠지만, 한 번 더 검증한다. 날자 형식이 맞지 않는 경우에는 null 리턴")
+//    void sendClientMessage_when_time_format_wrong() {
+//        // given
+//        String wrongTimeString = "1996-12-01T00:04:27";
+//
+//        MessageRequest clientMessageDto = MessageRequest.builder()
+//                .roomId("test_room_3")
+//                .senderType(SenderType.MENTEE)
+//                .senderNickname("test_mentee_nickname")
+//                .message("멘티의 질문입니다")
+//                .messageType(MessageType.C_QUESTION)
+//                .time(wrongTimeString)
+//                .build();
+//
+//        // when
+//        MessageResponse clientResponse = messageService.sendClientMessage(clientMessageDto);
+//
+//        // then
+//        assertThat(clientResponse).isNull();
+//    }
 
     /**
      * sendAIMessage

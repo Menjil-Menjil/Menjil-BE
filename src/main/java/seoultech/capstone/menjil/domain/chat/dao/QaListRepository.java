@@ -8,9 +8,12 @@ import org.springframework.stereotype.Repository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QaListRepository extends MongoRepository<QaList, String> {
+
+    Optional<QaList> findBy_id(String _id);
 
     /*
     이 메서드에서는, question_summary field 외에 다른 필드는 필요하지 않으므로
