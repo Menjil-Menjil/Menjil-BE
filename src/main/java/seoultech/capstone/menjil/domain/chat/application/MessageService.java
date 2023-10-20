@@ -2,11 +2,7 @@ package seoultech.capstone.menjil.domain.chat.application;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
@@ -21,12 +17,12 @@ import seoultech.capstone.menjil.domain.chat.dto.response.AwsLambdaResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageOrderResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.MessageResponse;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
 import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
@@ -36,16 +32,15 @@ import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS
 @Service
 public class MessageService {
 
-    private final WebClient apiGatewayClient;
+    private final AwsLambdaClient awsLambdaClient;
     private final ChatGptService chatGptService;
     private final MessageRepository messageRepository;
     private final RoomRepository roomRepository;
 
     @Autowired
-    public MessageService(@Qualifier("apiGatewayClient") WebClient apiGatewayClient,
-                          ChatGptService chatGptService, MessageRepository messageRepository,
-                          RoomRepository roomRepository) {
-        this.apiGatewayClient = apiGatewayClient;
+    public MessageService(AwsLambdaClient awsLambdaClient, ChatGptService chatGptService,
+                          MessageRepository messageRepository, RoomRepository roomRepository) {
+        this.awsLambdaClient = awsLambdaClient;
         this.chatGptService = chatGptService;
         this.messageRepository = messageRepository;
         this.roomRepository = roomRepository;
@@ -57,6 +52,25 @@ public class MessageService {
             return Optional.of(convertChatMessageToDto(welcomeMsg));
         }
         return Optional.empty();
+    }
+
+    private ChatMessage createWelcomeMessage(RoomDto roomDto) {
+        ChatMessage welcomeMsg = new ChatMessage();
+        String roomId = roomDto.getRoomId();
+        SenderType type = SenderType.MENTOR;
+        String mentorNickname = roomDto.getMentorNickname();
+        String welcomeMessage = buildWelcomeMessageText(roomDto);
+        Object messageList = null;
+        MessageType messageType = MessageType.ENTER;
+        LocalDateTime now = getCurrentTimeWithNanos();
+
+        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
+        return welcomeMsg;
+    }
+
+    private String buildWelcomeMessageText(RoomDto roomDto) {
+        return "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
+                + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
     }
 
     public Object saveAndSendClientChatMessage(MessageRequest messageRequest) {
@@ -78,49 +92,8 @@ public class MessageService {
         return MessageResponse.fromChatMessageEntity(clientChatMessage);
     }
 
-    // TODO: 추후 사용되지 않으면 지울 것
-    public int saveChatMessage(MessageRequest messageRequest) {
-        // MessageRequest time format 검증
-        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
-
-        if (dateTimeOptional.isEmpty()) {
-            return TIME_INPUT_INVALID.getValue(); // or handle the error differently
-        }
-        LocalDateTime dateTime = dateTimeOptional.get();
-
-        // MessageRequest -> ChatMessage(Entity) 변환
-        ChatMessage chatMessage = convertMessageRequestToChatMessageEntity(messageRequest, dateTime);
-        System.out.println("chatMessage.get_id() = " + chatMessage.get_id());
-
-        System.out.println("========");
-
-        // save entity to mongoDB
-        if (!saveChatMessageInDb(chatMessage)) {
-            return INTERNAL_SERVER_ERROR.getValue();  // handle the failure case appropriately
-        }
-        System.out.println("chatMessage.get_id() = " + chatMessage.get_id());
-        return SUCCESS.getValue();
-    }
-
-    // TODO: 추후 사용되지 않으면 지울 것
-    public MessageResponse sendClientMessage(MessageRequest messageRequest) {
-        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
-
-        if (dateTimeOptional.isEmpty()) {
-            // datetime parse exception
-            return null;
-        }
-        LocalDateTime dateTime = dateTimeOptional.get();
-
-        return MessageResponse.builder()
-                .roomId(messageRequest.getRoomId())
-                .senderType(messageRequest.getSenderType())
-                .senderNickname(messageRequest.getSenderNickname())
-                .message(messageRequest.getMessage())
-                .messageList(null)
-                .messageType(messageRequest.getMessageType())
-                .time(dateTime)
-                .build();
+    private ChatMessage convertMessageRequestToChatMessageEntity(MessageRequest messageRequest, LocalDateTime dateTime) {
+        return MessageRequest.toChatMessageEntity(messageRequest, dateTime);
     }
 
     public MessageResponse sendAIMessage(String roomId, MessageRequest messageRequest) {
@@ -150,20 +123,20 @@ public class MessageService {
         // 1. ChatGPT에게 질문 데이터 전달하여 세줄 요약 결과를 받아온다.
         Message message = fetchGptMessage(messageRequest.getMessage());
 
+        // 2. Lambda로 요청을 보내 결과를 받아온다.
         List<AwsLambdaResponse> awsLambdaResponses = fetchLambdaResponses(messageRequest, mentorNickname, message);
         if (awsLambdaResponses == null) {
             return null; // Handle appropriately
         }
 
-        // 4. create Lambda ChatMessage Entity
+        // 3. create Lambda ChatMessage Entity
         ChatMessage lambdaResponseChatMessage = createLambdaChatMessage(roomId, mentorNickname,
                 messageRequest, awsLambdaResponses);
 
-        // 5. 응답 메시지 db에 저장
+        // 4. 응답 메시지 db에 저장
         if (!saveChatMessageInDb(lambdaResponseChatMessage)) {
             return null;  // handle the failure case appropriately
         }
-
         return MessageResponse.fromChatMessageEntity(lambdaResponseChatMessage);
     }
 
@@ -179,38 +152,7 @@ public class MessageService {
         return room.getMentorNickname();
     }
 
-    /**
-     * Used By sendWelcomeMessage
-     */
-    private ChatMessage createWelcomeMessage(RoomDto roomDto) {
-        ChatMessage welcomeMsg = new ChatMessage();
-        String roomId = roomDto.getRoomId();
-        SenderType type = SenderType.MENTOR;
-        String mentorNickname = roomDto.getMentorNickname();
-        String welcomeMessage = buildWelcomeMessageText(roomDto);
-        Object messageList = null;
-        MessageType messageType = MessageType.ENTER;
-        LocalDateTime now = getCurrentTimeWithNanos();
 
-        welcomeMsg.setWelcomeMessage(roomId, type, mentorNickname, welcomeMessage, messageList, messageType, now);
-        return welcomeMsg;
-    }
-
-    private String buildWelcomeMessageText(RoomDto roomDto) {
-        return "안녕하세요 " + roomDto.getMenteeNickname() + "님!\n"
-                + "멘토 " + roomDto.getMentorNickname() + "입니다. 질문을 입력해주세요";
-    }
-
-    /**
-     * Used by saveChatMessage
-     */
-    private ChatMessage convertMessageRequestToChatMessageEntity(MessageRequest messageRequest, LocalDateTime dateTime) {
-        return MessageRequest.toChatMessageEntity(messageRequest, dateTime);
-    }
-
-    /**
-     * Used By handleQuestion
-     */
     private Message fetchGptMessage(String userMessage) {
         return chatGptService.getMessageFromGpt(userMessage);
     }
@@ -224,24 +166,8 @@ public class MessageService {
                 message.getContent()
         );
 
-        // 3. Send Request
-        try {
-            return apiGatewayClient.post()
-                    .uri("/api/lambda/question")
-                    .body(BodyInserters.fromValue(awsLambdaRequest))
-                    .retrieve()
-                    .bodyToFlux(AwsLambdaResponse.class)
-                    .timeout(Duration.ofSeconds(180))
-                    .onErrorResume(e -> {
-                        log.error("An error occurred while fetching from Lambda", e);
-                        return Mono.empty();
-                    })
-                    .collectList()
-                    .block();
-        } catch (Exception e) {
-            log.error(">> An exception occurred while making the AWS Lambda request", e);
-            return null;
-        }
+        // 3. Send Request using the dedicated client
+        return awsLambdaClient.sendRequestToLambda(awsLambdaRequest);
     }
 
     private ChatMessage createLambdaChatMessage(String roomId,
@@ -256,27 +182,22 @@ public class MessageService {
         String message4th = "AI 챗봇을 종료하고 멘토 답변 기다리기";
         LocalDateTime now = getCurrentTimeWithNanos();
 
-        if (awsLambdaResponses.size() == 0) {
+        int initialSize = awsLambdaResponses.size();
+        int questionMaxSize = 3;
+
+        // 첫 번째 메시지 추가 (만약 리스트가 비어 있을 경우)
+        if (initialSize == 0) {
             awsLambdaResponses.add(AwsLambdaResponse.of(null,
                     messageRequest.getSenderNickname()
                             + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null));
-            awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                    null, null, null));
-            awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                    null, null, null));
-        } else if (awsLambdaResponses.size() == 1) {
-            awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                    null, null, null));
-            awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                    null, null, null));
-        } else if (awsLambdaResponses.size() == 2) {
-            awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                    null, null, null));
+            initialSize++;
         }
-        // 아래는 공통
-        // add 4th response
-        awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                message4th, null, null));
+        // 필요한 만큼 빈 메시지 추가
+        IntStream.range(initialSize, questionMaxSize)
+                .mapToObj(i -> AwsLambdaResponse.of(null, null, null, null))
+                .forEach(awsLambdaResponses::add);
+        // 4번째 응답 추가(공통)
+        awsLambdaResponses.add(AwsLambdaResponse.of(null, message4th, null, null));
 
         ChatMessage awsLambdaResponseMessage = ChatMessage.builder()
                 .roomId(roomId)
@@ -288,22 +209,51 @@ public class MessageService {
                 .time(now)
                 .build();
 
-        // TODO: 추후 디자인에 따라 이 부분 변동 가능성 있음.
-        /*if (similarMessageDoesNotExists(awsLambdaResponses)) {
-         *//*String similarDoesNotExists = messageRequest.getSenderNickname()
-                    + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다";
-            awsLambdaResponseMessage.setLambdaMessage(similarDoesNotExists);*//*
-            awsLambdaResponseMessage.setLambdaMessageList(AwsLambdaResponse.of(null,
-                    messageRequest.getSenderNickname()
-                            + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null)
-            );
-        }*/
         return awsLambdaResponseMessage;
     }
 
-    public boolean similarMessageDoesNotExists(List<AwsLambdaResponse> awsLambdaResponses) {
-        return awsLambdaResponses.size() == 1;
+
+    // TODO: 추후 사용되지 않으면 지울 것
+    /*public int saveChatMessage(MessageRequest messageRequest) {
+        // MessageRequest time format 검증
+        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
+
+        if (dateTimeOptional.isEmpty()) {
+            return TIME_INPUT_INVALID.getValue(); // or handle the error differently
+        }
+        LocalDateTime dateTime = dateTimeOptional.get();
+
+        // MessageRequest -> ChatMessage(Entity) 변환
+        ChatMessage chatMessage = convertMessageRequestToChatMessageEntity(messageRequest, dateTime);
+
+        // save entity to mongoDB
+        if (!saveChatMessageInDb(chatMessage)) {
+            return INTERNAL_SERVER_ERROR.getValue();  // handle the failure case appropriately
+        }
+        System.out.println("chatMessage.get_id() = " + chatMessage.get_id());
+        return SUCCESS.getValue();
     }
+
+    // TODO: 추후 사용되지 않으면 지울 것
+    public MessageResponse sendClientMessage(MessageRequest messageRequest) {
+        Optional<LocalDateTime> dateTimeOptional = parseDateTime(messageRequest.getTime());
+
+        if (dateTimeOptional.isEmpty()) {
+            // datetime parse exception
+            return null;
+        }
+        LocalDateTime dateTime = dateTimeOptional.get();
+
+        return MessageResponse.builder()
+                .roomId(messageRequest.getRoomId())
+                .senderType(messageRequest.getSenderType())
+                .senderNickname(messageRequest.getSenderNickname())
+                .message(messageRequest.getMessage())
+                .messageList(null)
+                .messageType(messageRequest.getMessageType())
+                .time(dateTime)
+                .build();
+    } */
 
     /**
      * Used in Common
