@@ -8,7 +8,7 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FollowingUserInfo {
+public class FollowingUserDto {
 
     private String nickname;
     private String company;     // 재직 중인 회사
@@ -22,8 +22,8 @@ public class FollowingUserInfo {
         this.imgUrl = imgUrl;
     }
 
-    public static FollowingUserInfo fromUserEntity(User user) {
-        return new FollowingUserInfo(user.getNickname(), user.getCompany(), user.getField(),
+    public static FollowingUserDto fromUserEntity(User user) {
+        return new FollowingUserDto(user.getNickname(), user.getCompany(), user.getField(),
                 user.getTechStack(), user.getSchool(), user.getMajor(), user.getImgUrl());
     }
 

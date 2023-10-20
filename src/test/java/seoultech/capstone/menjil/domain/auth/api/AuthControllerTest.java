@@ -11,7 +11,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -22,7 +21,9 @@ import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
+import seoultech.capstone.menjil.global.exception.ErrorIntValue;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
+import seoultech.capstone.menjil.global.exception.SuccessIntValue;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.times;
@@ -56,17 +57,20 @@ class AuthControllerTest {
      */
 
     /**
-     * checkSignupIsAvailable()
+     * checkSignupIsAvailable
+     * 회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다
      */
     @Test
-    @DisplayName("회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다. " +
-            "기존에 가입되어있는 사용자가 아니라면, SuccessCode.SIGNUP_AVAILABLE 리턴 ")
+    @DisplayName("case 1: 사용자가 존재하지 않는 경우")
     void checkSignupIsAvailable() throws Exception {
+        // given
         String email = "Junit-test@gmail.com";
         String provider = "google";
 
-        Mockito.when(authService.findUserInDb(email, provider)).thenReturn(200);
+        // when
+        Mockito.when(authService.findUserInDb(email, provider)).thenReturn(SuccessIntValue.SUCCESS.getValue());
 
+        // then
         mvc.perform(get("/api/auth/signup")
                         .queryParam("email", email)
                         .queryParam("provider", provider))
@@ -79,13 +83,12 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("회원가입 하기 전에, 먼저 기존에 가입된 사용자인지 확인한다. " +
-            "기존에 가입되어있는 사용자이면, ErrorCode.USER_DUPLICATED 리턴 ")
+    @DisplayName("case 2: 사용자가 이미 존재하는 경우 경우")
     void checkSignupIsAvailable_user_already_existed() throws Exception {
         String email = "Junit-test@gmail.com";
         String provider = "google";
 
-        Mockito.when(authService.findUserInDb(email, provider)).thenReturn(409);
+        Mockito.when(authService.findUserInDb(email, provider)).thenReturn(ErrorIntValue.USER_ALREADY_IN_DB.getValue());
 
         mvc.perform(get("/api/auth/signup")
                         .queryParam("email", email)
@@ -101,15 +104,14 @@ class AuthControllerTest {
     }
 
     /**
-     * checkNicknameDuplicate()
+     * checkNicknameDuplicate
      */
     @Test
     @DisplayName("닉네임 검증; 공백과 특수문자가 없는경우 SuccessCode.NICKNAME_AVAILABLE 리턴")
     void checkNicknameDuplicate() throws Exception {
         String nickname = "test33AA가나마";
-        int httpOkValue = HttpStatus.OK.value();
 
-        Mockito.when(authService.findNicknameInDb(nickname)).thenReturn(httpOkValue);
+        Mockito.when(authService.findNicknameInDb(nickname)).thenReturn(SuccessIntValue.SUCCESS.getValue());
 
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", nickname))
@@ -151,9 +153,8 @@ class AuthControllerTest {
     @DisplayName("닉네임 검증; 닉네임이 db에 이미 존재하는 경우 ErrorCode.NICKNAME_DUPLICATED 리턴")
     void checkNicknameDuplicate_nickname_already_existed() throws Exception {
         String nickname = "NicknameExistsInDB";
-        int httpConflictValue = HttpStatus.CONFLICT.value();
 
-        Mockito.when(authService.findNicknameInDb(nickname)).thenReturn(httpConflictValue);
+        Mockito.when(authService.findNicknameInDb(nickname)).thenReturn(ErrorIntValue.USER_ALREADY_IN_DB.getValue());
 
         mvc.perform(get("/api/auth/check-nickname")
                         .queryParam("nickname", nickname))
@@ -166,7 +167,7 @@ class AuthControllerTest {
     }
 
     /**
-     * 회원가입 요청 검증
+     * signUp
      */
     @Test
     @DisplayName("회원가입 요청이 정상적으로 된 경우 SuccessCode.SIGNUP_SUCCESS 리턴")
@@ -175,8 +176,8 @@ class AuthControllerTest {
                 "hi", 1999, 3, "서울시립대", 3);
         String content = gson.toJson(signUpReqDto);
 
-        int httpCreatedValue = HttpStatus.CREATED.value();
-        Mockito.when(authService.signUp(signUpReqDto)).thenReturn(httpCreatedValue);
+        // Return type of authService.signUp method is void
+        Mockito.doNothing().when(authService).signUp(signUpReqDto);
 
         mvc.perform(MockMvcRequestBuilders.post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)

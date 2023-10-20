@@ -11,9 +11,11 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.InstanceOfAssertFactories.OPTIONAL;
 
 @Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -40,14 +42,12 @@ class UserRepositoryTest {
         userRepository.saveAll(List.of(userA, userB, userC));
 
         // when
-        List<User> userList = userRepository.findUserByEmailAndProvider("userA@gmail.com", "google");
+        Optional<User> user = userRepository.findUserByEmailAndProvider("userA@gmail.com", "google");
 
         // then
-        assertThat(userList).hasSize(1)
-                .extracting("email", "provider")
-                .containsExactly(
-                        tuple("userA@gmail.com", "google")
-                );
+        assertThat(user.isPresent()).isTrue();
+        assertThat(user.get().getEmail()).isEqualTo("userA@gmail.com");
+        assertThat(user.get().getProvider()).isEqualTo("google");
     }
 
     @Test
@@ -59,11 +59,12 @@ class UserRepositoryTest {
         userRepository.saveAll(List.of(userA, userB));
 
         // when
-        User nicknameExistsInDb = userRepository.findUserByNickname("g1")
-                .orElse(null);
+        Optional<User> nicknameExistsInDb = userRepository.findUserByNickname("g1");
+
 
         // then
-        assertThat(nicknameExistsInDb.getNickname()).isEqualTo("g1");
+        assertThat(nicknameExistsInDb.isPresent()).isTrue();
+        assertThat(nicknameExistsInDb.get().getNickname()).isEqualTo("g1");
     }
 
     @Test

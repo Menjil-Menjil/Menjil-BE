@@ -34,8 +34,8 @@ public enum SuccessCode {
     FOLLOW_CHECK_SUCCESS(HttpStatus.OK.value(), "팔로우 조회에 성공하셨습니다"),
 
     // following
-    GET_FOLLOW_MENTOR_LIST_AVAILABLE(HttpStatus.OK.value(), "팔로우 멘토 리스트를 불러오는데 성공하였습니다"),
-
+    GET_ALL_FOLLOW_MENTOR_SUCCESS(HttpStatus.OK.value(), "팔로우 멘토 리스트를 불러오는데 성공하였습니다"),
+    GET_FOLLOW_MENTOR_INFO_SUCCESS(HttpStatus.OK.value(), "팔로우 멘토 정보를 불러오는데 성공하였습니다"),
 
     /**
      * 201 CREATED
@@ -48,6 +48,7 @@ public enum SuccessCode {
     ROOM_DELETE_SUCCESS(HttpStatus.CREATED.value(), "채팅방 퇴장이 정상적으로 처리되었습니다"),
     MESSAGE_SEND_SUCCESS(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 입력되었습니다"),
     AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다"),
+    MESSAGE_RATING_SUCCESS(HttpStatus.CREATED.value(), "답변에 대한 평가가 정상적으로 등록되었습니다"),
 
     // follow
     FOLLOW_CREATED(HttpStatus.CREATED.value(), "팔로우가 정상적으로 생성되었습니다"),

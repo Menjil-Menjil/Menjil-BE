@@ -1,5 +1,6 @@
 package seoultech.capstone.menjil.domain.chat.domain;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -16,28 +17,55 @@ public class QaList {
     @Id
     private String _id;
 
-    @Field("mentee_nickname")
+    @Field(name = "mentee_nickname")
     private String menteeNickname;
 
-    @Field("mentor_nickname")
+    @Field(name = "mentor_nickname")
     private String mentorNickname;
 
-    @Field("question_origin")
+    @Field(name = "question_origin")
     private String questionOrigin;
 
-    @Field("question_summary")
+    @Field(name = "question_summary")
     private String questionSummary;
 
-    @Field("question_summary_en")
+    @Field(name = "question_summary_en")
     private String questionSummaryEn;
 
-    @Field("question_time")
+    @Field(name = "question_time")
     private LocalDateTime questionTime;
 
-    @Field("answer")
+    @Field(name = "answer")
     private String answer;
 
-    @Field("answer_time")
+    @Field(name = "answer_time")
     private LocalDateTime answerTime;
 
+    @Field(name = "views")
+    private Long views;
+
+    @Field(name = "likes")
+    private Long likes;
+
+    @Builder
+    private QaList(String menteeNickname, String mentorNickname, String questionOrigin,
+                   String questionSummary, String questionSummaryEn, LocalDateTime questionTime,
+                   String answer, LocalDateTime answerTime) {
+        this.menteeNickname = menteeNickname;
+        this.mentorNickname = mentorNickname;
+        this.questionOrigin = questionOrigin;
+        this.questionSummary = questionSummary;
+        this.questionSummaryEn = questionSummaryEn;
+        this.questionTime = questionTime;
+        this.answer = answer;
+        this.answerTime = answerTime;
+    }
+
+    public void setViews(Long views) {
+        this.views = views;
+    }
+
+    public void setLikes(Long likes) {
+        this.likes = likes;
+    }
 }

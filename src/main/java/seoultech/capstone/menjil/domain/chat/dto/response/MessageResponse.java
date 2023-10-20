@@ -17,7 +17,7 @@ public class MessageResponse {
     /**
      * 채팅 메시지를 주고받을 때 사용하는 Response DTO
      */
-    @JsonIgnore // ignore room id
+    private String _id;
     private String roomId;
     private SenderType senderType;
     private String senderNickname;
@@ -29,9 +29,10 @@ public class MessageResponse {
     private LocalDateTime time;
 
     @Builder
-    private MessageResponse(String roomId, SenderType senderType,
+    private MessageResponse(String _id, String roomId, SenderType senderType,
                             String senderNickname, String message, Object messageList,
                             MessageType messageType, LocalDateTime time) {
+        this._id = _id;
         this.roomId = roomId;
         this.senderType = senderType;
         this.senderNickname = senderNickname;
@@ -43,6 +44,7 @@ public class MessageResponse {
 
     public static MessageResponse fromChatMessageEntity(ChatMessage chatMessage) {
         return MessageResponse.builder()
+                ._id(chatMessage.get_id())
                 .roomId(chatMessage.getRoomId())
                 .senderType(chatMessage.getSenderType())
                 .senderNickname(chatMessage.getSenderNickname())

@@ -52,7 +52,7 @@ public class ChatGptService {
                     .content(response.getChoices().get(0).getMessage().getContent())
                     .build();
         } else {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

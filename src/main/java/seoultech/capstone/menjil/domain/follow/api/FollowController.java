@@ -15,6 +15,8 @@ import seoultech.capstone.menjil.global.exception.SuccessCode;
 import javax.validation.Valid;
 
 import static seoultech.capstone.menjil.global.common.dto.ApiResponse.success;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.FOLLOW_CREATED;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.FOLLOW_DELETED;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,17 +28,14 @@ public class FollowController {
 
     @PostMapping("/request")
     public ResponseEntity<ApiResponse<?>> followRequest(@Valid @RequestBody FollowRequest followRequest) {
-        int FOLLOW_CREATED = 0;
-        int FOLLOW_DELETED = 1;
-        int INTERNAL_SERVER_ERROR = -100;
 
         int result = followService.followRequest(followRequest);
-        if (result == FOLLOW_CREATED) {
+        if (result == FOLLOW_CREATED.getValue()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(success(SuccessCode.FOLLOW_CREATED));
-        } else if (result == FOLLOW_DELETED) {
+        } else if (result == FOLLOW_DELETED.getValue()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(success(SuccessCode.FOLLOW_DELETED));
         } else {
-            throw new CustomException(ErrorCode.SERVER_ERROR);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 

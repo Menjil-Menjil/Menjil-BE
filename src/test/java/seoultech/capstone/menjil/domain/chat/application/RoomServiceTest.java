@@ -18,7 +18,7 @@ import seoultech.capstone.menjil.domain.chat.domain.MessageType;
 import seoultech.capstone.menjil.domain.chat.domain.Room;
 import seoultech.capstone.menjil.domain.chat.domain.SenderType;
 import seoultech.capstone.menjil.domain.chat.dto.RoomDto;
-import seoultech.capstone.menjil.domain.chat.dto.response.MessageListResponse;
+import seoultech.capstone.menjil.domain.chat.dto.response.MessageOrderResponse;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 
@@ -125,12 +125,12 @@ class RoomServiceTest {
                 .build();
 
         // when
-        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageOrderResponse> messageOrderResponses = roomService.enterTheRoom(roomDto);
 
         // then
-        assertThat(messageList.size()).isEqualTo(1);
+        assertThat(messageOrderResponses.size()).isEqualTo(1);
 
-        MessageListResponse response = messageList.get(0);
+        MessageOrderResponse response = messageOrderResponses.get(0);
 
         assertThat(response.getRoomId()).isEqualTo(roomId);
         assertThat(response.getSenderNickname()).isEqualTo(TEST_MENTOR_NICKNAME); // Welcome Message is sent by mentor
@@ -180,14 +180,14 @@ class RoomServiceTest {
         messageRepository.saveAll(saveThreeMessages);
 
         // when
-        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageOrderResponse> messageOrderResponses = roomService.enterTheRoom(roomDto);
 
         // then
-        assertThat(messageList.size()).isEqualTo(3);
+        assertThat(messageOrderResponses.size()).isEqualTo(3);
 
         // 대화는 챗봇 형식, 즉 일대일로 진행되므로, 멘티와 멘토 타입이 존재할 수밖에 없다.
-        List<SenderType> senderTypesList = Arrays.asList(messageList.get(0).getSenderType(),
-                messageList.get(1).getSenderType(), messageList.get(2).getSenderType());
+        List<SenderType> senderTypesList = Arrays.asList(messageOrderResponses.get(0).getSenderType(),
+                messageOrderResponses.get(1).getSenderType(), messageOrderResponses.get(2).getSenderType());
         boolean menteeExists = senderTypesList.stream().anyMatch(
                 type -> type.equals(SenderType.MENTEE));
         boolean mentorExists = senderTypesList.stream().anyMatch(
@@ -196,8 +196,8 @@ class RoomServiceTest {
         assertThat(mentorExists).isTrue();
 
         // Order 1, 2, 3이 정상적으로 리턴되는지 확인
-        List<Integer> orderList = Arrays.asList(messageList.get(0).getOrder(), messageList.get(1).getOrder(),
-                messageList.get(2).getOrder());
+        List<Integer> orderList = Arrays.asList(messageOrderResponses.get(0).getOrder(), messageOrderResponses.get(1).getOrder(),
+                messageOrderResponses.get(2).getOrder());
         boolean order1Exists = orderList.stream().anyMatch(
                 num -> num == 1);
         boolean order2Exists = orderList.stream().anyMatch(
@@ -212,7 +212,7 @@ class RoomServiceTest {
         assertThat(order4Exists).isFalse(); // order 4 not exists because of the number of data is 3
 
         // 가장 나중에 작성된, 즉 시간이 가장 나중인 메시지가 order=3인지 확인
-        MessageListResponse firstMsg = messageList.get(0);
+        MessageOrderResponse firstMsg = messageOrderResponses.get(0);
         assertThat(firstMsg.getOrder()).isEqualTo(3);
         assertThat(firstMsg.get_id()).isEqualTo("test_uuid_3");
 
@@ -262,15 +262,15 @@ class RoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<MessageListResponse> messageList = roomService.enterTheRoom(roomDto);
+        List<MessageOrderResponse> messageOrderResponses = roomService.enterTheRoom(roomDto);
 
         // then
-        assertThat(messageList.size()).isEqualTo(10);
+        assertThat(messageOrderResponses.size()).isEqualTo(10);
 
-        MessageListResponse lastResponse = messageList.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
+        MessageOrderResponse lastResponse = messageOrderResponses.get(0); // 불러온 10개의 대화 중, 가장 마지막 대화내용
         assertThat(lastResponse.get_id()).isEqualTo("id_" + FIXED_NUM);
 
-        MessageListResponse firstResponse = messageList.get(messageList.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
+        MessageOrderResponse firstResponse = messageOrderResponses.get(messageOrderResponses.size() - 1); // 불러온 10개의 대화 중, 첫 번째 대화내용
         assertThat(firstResponse.get_id()).isEqualTo("id_" + (FIXED_NUM - 10 + 1));
     }
 

@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.FOLLOW_CREATED;
+import static seoultech.capstone.menjil.global.exception.SuccessIntValue.FOLLOW_DELETED;
 
 @SpringBootTest
 @Transactional
@@ -29,8 +31,6 @@ class FollowServiceTest {
 
     private final String TEST_USER_NICKNAME = "test_user_nickname";
     private final String TEST_FOLLOW_NICKNAME = "test_follow_nickname";
-    private final int FOLLOW_CREATED = 0;
-    private final int FOLLOW_DELETED = 1;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +55,7 @@ class FollowServiceTest {
         int result = followService.followRequest(followRequest);
 
         // then
-        assertThat(result).isEqualTo(FOLLOW_DELETED);
+        assertThat(result).isEqualTo(FOLLOW_DELETED.getValue());
 
         // db에서 지워졌는지 검증
         assertThat(followRepository.findAll().size()).isZero();
@@ -75,7 +75,7 @@ class FollowServiceTest {
         int result = followService.followRequest(followRequest);
 
         // then
-        assertThat(result).isEqualTo(FOLLOW_CREATED);
+        assertThat(result).isEqualTo(FOLLOW_CREATED.getValue());
 
         // db에 추가되었는지 검증
         assertThat(followRepository.findAll().size()).isEqualTo(2);
