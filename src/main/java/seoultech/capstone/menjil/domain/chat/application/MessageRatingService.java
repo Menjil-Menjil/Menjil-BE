@@ -3,6 +3,7 @@ package seoultech.capstone.menjil.domain.chat.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.chat.dto.request.MessageClickIncViewsAndLikesRequest;
@@ -15,6 +16,7 @@ import seoultech.capstone.menjil.global.exception.ErrorCode;
 @Service
 public class MessageRatingService {
 
+    private final MessageRepository messageRepository;
     private final QaListRepository qaListRepository;
 
     public MessageClickIncViewsAndLikesResponse incrementViewsAndLikes(MessageClickIncViewsAndLikesRequest request) {
@@ -24,6 +26,9 @@ public class MessageRatingService {
 
         // 변경된 내용 저장: Spring Data MongoDB는 dirty checking이 없다.
         qaListRepository.save(qaList);
+
+        // 평가 이후 AI_SUMMARY_RATING 메시지 제거
+        messageRepository.deleteById(request.getId());
 
         return MessageClickIncViewsAndLikesResponse.of(qaList.get_id(),
                 qaList.getViews(), qaList.getLikes());

@@ -53,6 +53,8 @@ public class MessageController {
             case AI_SELECT:
             case AI_SUMMARY:
             case AI_SUMMARY_ANSWER:
+            case AI_SUMMARY_RATING:
+            case AI_C_RATING:
                 // 2. Send Client's Chat Message
                 sendSuccessResponse(roomId, SuccessCode.MESSAGE_SEND_SUCCESS, (MessageResponse) result);
                 break;

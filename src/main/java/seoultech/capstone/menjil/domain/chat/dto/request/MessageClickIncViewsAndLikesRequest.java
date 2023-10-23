@@ -12,6 +12,9 @@ import javax.validation.constraints.NotBlank;
 public class MessageClickIncViewsAndLikesRequest {
 
     @NotBlank
+    private String Id;
+
+    @NotBlank
     private String questionId;
 
     @NotBlank
