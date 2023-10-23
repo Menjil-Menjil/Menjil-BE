@@ -32,7 +32,8 @@ public enum ErrorCode {
     MESSAGE_TYPE_INPUT_INVALID(HttpStatus.CONFLICT, "CH04", "지정된 Message Type이 입력되지 않았습니다"),
     MENTEE_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH05", "멘티의 닉네임 정보가 존재하지 않습니다"),
     MENTOR_NICKNAME_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH06", "멘토의 닉네임 정보가 존재하지 않습니다"),
-    QALIST_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH07", "채팅 메시지 id가 유효하지 않습니다");
+    CHAT_MESSAGE_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH07", "채팅 메시지 id가 유효하지 않습니다"),
+    QALIST_NOT_EXISTED(HttpStatus.BAD_REQUEST, "CH07", "질문답변 메시지 객체 id가 유효하지 않습니다");
 
     private final HttpStatus httpStatus;
     private final String type;
