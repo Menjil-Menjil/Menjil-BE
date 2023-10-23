@@ -28,7 +28,7 @@ public class MessageRatingService {
         qaListRepository.save(qaList);
 
         // 평가 이후 AI_SUMMARY_RATING 메시지 제거
-        messageRepository.deleteById(request.getId());
+        messageRepository.deleteBy_id(request.getId());
 
         return MessageClickIncViewsAndLikesResponse.of(qaList.get_id(),
                 qaList.getViews(), qaList.getLikes());

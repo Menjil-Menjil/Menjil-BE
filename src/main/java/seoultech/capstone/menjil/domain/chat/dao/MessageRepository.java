@@ -17,5 +17,6 @@ public interface MessageRepository extends MongoRepository<ChatMessage, String> 
     List<ChatMessage> findChatMessageByRoomId(String roomId, Pageable pageable);
 
     void deleteChatMessagesByRoomId(String roomId);
+    void deleteBy_id(String _id);
 
 }
