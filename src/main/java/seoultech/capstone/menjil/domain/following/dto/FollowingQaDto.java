@@ -18,4 +18,7 @@ public class FollowingQaDto {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime answerTime;
+
+    private Long views;
+    private Long likes;
 }

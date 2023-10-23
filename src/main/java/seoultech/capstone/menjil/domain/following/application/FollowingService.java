@@ -90,15 +90,13 @@ public class FollowingService {
         Long answersCount = qaListRepository.countByMentorNicknameAndAnswerIsNotNull(followNickname);
 
         // 3. 작성 질문/답변 목록 리스트
+        // TODO: 조회수, 좋아요 추가
         Sort sort = Sort.by(Sort.Order.asc("answer_time"));
         List<FollowingQaDto> followingQaDtos = qaListRepository.findQuestionAndAnswerWithMentorNickname(followNickname, sort)
                 .stream()
                 .map(q -> new FollowingQaDto(q.getQuestionOrigin(), q.getQuestionSummary(),
-                        q.getAnswer(), q.getAnswerTime()))
+                        q.getAnswer(), q.getAnswerTime(), q.getViews(), q.getLikes()))
                 .collect(Collectors.toList());
-
-        // TODO: 4. 추천 답변 개수
-        // TODO: 5. 멘토링 후기
 
         return FollowingMentorInfoResponse.of(followingUserInfoDto, answersCount, followingQaDtos);
     }
