@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import seoultech.capstone.menjil.domain.auth.domain.OptionInfo;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 
 import javax.validation.constraints.*;
 import java.util.Objects;
@@ -29,8 +28,6 @@ public class SignUpRequest {
     @NotBlank
     @Pattern(regexp = "^[가-힣a-zA-Z0-9]*$", message = "닉네임은 공백이나 특수문자가 들어갈 수 없습니다")
     private String nickname;
-    @NotNull
-    private UserRole role;
     @NotNull(message = "생년은 OOOO형식으로 입력해주세요")
     private Integer birthYear;
     @NotNull(message = "1~12 사이의 값을 입력해주세요")
@@ -53,6 +50,8 @@ public class SignUpRequest {
     private String subMajor;
     private String minor;
     private String company;
+    private Integer companyYear;
+
     @NotBlank
     private String field;
     @NotBlank
@@ -73,7 +72,6 @@ public class SignUpRequest {
                 .email(email)
                 .provider(provider)
                 .nickname(nickname)
-                .role(role)
                 .birthYear(birthYear)
                 .birthMonth(birthMonth)
                 .school(school)
@@ -85,6 +83,7 @@ public class SignUpRequest {
                 .subMajor(subMajor)
                 .minor(minor)
                 .company(company)
+                .companyYear(companyYear)
                 .field(field)
                 .techStack(techStack)
                 .optionInfo(new OptionInfo(career, certificate, awards, activity))  // use Embedded type
@@ -100,7 +99,6 @@ public class SignUpRequest {
                 && Objects.equals(email, that.email)
                 && Objects.equals(provider, that.provider)
                 && Objects.equals(nickname, that.nickname)
-                && role == that.role
                 && Objects.equals(birthYear, that.birthYear)
                 && Objects.equals(birthMonth, that.birthMonth)
                 && Objects.equals(school, that.school)
@@ -112,6 +110,7 @@ public class SignUpRequest {
                 && Objects.equals(subMajor, that.subMajor)
                 && Objects.equals(minor, that.minor)
                 && Objects.equals(company, that.company)
+                && Objects.equals(companyYear, that.companyYear)
                 && Objects.equals(field, that.field)
                 && Objects.equals(techStack, that.techStack)
                 && Objects.equals(career, that.career)
@@ -123,8 +122,9 @@ public class SignUpRequest {
     @Override
     public int hashCode() {
         return Objects.hash(userId, email, provider, nickname,
-                role, birthYear, birthMonth, school, score,
+                birthYear, birthMonth, school, score,
                 scoreRange, graduateDate, graduateMonth, major,
-                subMajor, minor, company, field, techStack, career, certificate, awards, activity);
+                subMajor, minor, company, companyYear,
+                field, techStack, career, certificate, awards, activity);
     }
 }

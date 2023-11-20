@@ -13,7 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
@@ -59,8 +58,8 @@ class MainPageServiceTest {
 
     @BeforeEach
     void setUp() {
-        User userA = createTestUser("google_1231323", "test@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE);
-        User userB = createTestUser("google_1231324", "test2@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR);
+        User userA = createTestUser("google_1231323", "test@google.com", TEST_MENTEE_NICKNAME);
+        User userB = createTestUser("google_1231324", "test2@google.com", TEST_MENTOR_NICKNAME);
         userRepository.saveAll(List.of(userA, userB));
     }
 
@@ -92,7 +91,7 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
@@ -141,7 +140,7 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
@@ -192,7 +191,7 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
@@ -236,7 +235,7 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());
 
@@ -270,7 +269,7 @@ class MainPageServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         // when
         List<String> lastAnsweredMessages = mainPageService.getLastAnsweredMessages(mentor1.getNickname());
@@ -286,7 +285,7 @@ class MainPageServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         int qaNum = 1;
         List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
@@ -309,7 +308,7 @@ class MainPageServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         int qaNum = 5;
         List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
@@ -325,10 +324,10 @@ class MainPageServiceTest {
         assertThat(lastAnsweredMessages.size()).isEqualTo(2);
     }
 
-    private User createTestUser(String id, String email, String nickname, UserRole role) {
+    private User createTestUser(String id, String email, String nickname) {
         return User.builder()
                 .id(id).email(email).provider("google").nickname(nickname)
-                .role(role).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)

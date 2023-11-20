@@ -11,7 +11,6 @@ import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
@@ -165,7 +164,7 @@ class AuthServiceTest {
     private User createUser(String id, String email, String provider, String nickname) {
         return User.builder()
                 .id(id).email(email).provider(provider).nickname(nickname)
-                .role(UserRole.MENTEE).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)
@@ -176,10 +175,17 @@ class AuthServiceTest {
     }
 
     private SignUpRequest createSignUpReqDto(String id, String email, String provider, String nickname) {
+        String major = "컴퓨터공학과";
+        String subMajor = null;
+        String minor = null;
+        String company = null;
+        Integer companyYear = 3;
+        String field = "백엔드";
+        String techStack = "AWS";
         return new SignUpRequest(id, email, provider, nickname,
-                UserRole.MENTEE, 2000, 3, "고려대학교",
-                3, "중반", 2021, 3, "경제학과", null, null, null,
-                "Devops", "AWS", null, null, null, null);
+                2000, 3, "고려대학교",
+                3, "중반", 2021, 3, major, subMajor, minor, company, companyYear,
+                field, techStack, null, null, null, null);
     }
 
 }
