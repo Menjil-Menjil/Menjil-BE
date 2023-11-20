@@ -15,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequest;
 import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
 import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
@@ -361,10 +360,17 @@ class AuthControllerTest {
     private SignUpRequest createSignUpReqDto(String id, String email, String provider, String nickname,
                                              Integer birthYear, Integer birthMonth,
                                              String school, Integer score) {
+        String major = "컴퓨터공학과";
+        String subMajor = null;
+        String minor = null;
+        String company = null;
+        Integer companyYear = 3;
+        String field = "백엔드";
+        String techStack = "AWS";
         return new SignUpRequest(id, email, provider, nickname,
-                UserRole.MENTEE, birthYear, birthMonth, school,
-                score, "중반", 2021, 3, "경제학과", null, null, null,
-                "Devops", "AWS", null, null, null, null);
+                birthYear, birthMonth, school,
+                score, "중반", 2021, 3, major, subMajor, minor, company, companyYear,
+                field, techStack,null, null, null, null);
     }
 
 }

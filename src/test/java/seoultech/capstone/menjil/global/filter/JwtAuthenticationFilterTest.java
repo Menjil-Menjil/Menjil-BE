@@ -18,7 +18,6 @@ import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 
 import java.sql.Timestamp;
@@ -222,7 +221,7 @@ class JwtAuthenticationFilterTest {
     private User createUser(String id, String email, String provider, String nickname) {
         return User.builder()
                 .id(id).email(email).provider(provider).nickname(nickname)
-                .role(UserRole.MENTEE).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("고려대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)

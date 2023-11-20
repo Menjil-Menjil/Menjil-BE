@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -110,7 +109,7 @@ class TokenRepositoryTest {
     private User createUser(String id, String email, String provider, String nickname) {
         return User.builder()
                 .id(id).email(email).provider(provider).nickname(nickname)
-                .role(UserRole.MENTEE).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("고려대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)

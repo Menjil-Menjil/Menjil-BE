@@ -10,7 +10,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
@@ -41,12 +40,11 @@ public class MainPageService {
     private String BUCKET_NAME;
 
     /**
-     * 멘토들을 가져오는 메서드
      * nickname은, 추후 멘토 추천 알고리즘 사용시 필요할 수 있으므로, 우선 받도록 하였으나.
      * 현재 수행하는 기능은 없다.
      */
     public Page<MentorInfoResponse> getMentors(String nickname, Pageable pageable) {
-        Page<User> page = userRepository.findUsersByRole(UserRole.MENTOR, pageable);
+        Page<User> page = userRepository.findAll(pageable);
         Page<MentorInfoResponse> mentorInfoResponse = page.map(user -> {
             MentorInfoResponse dto = MentorInfoResponse.fromUserEntity(user);
 

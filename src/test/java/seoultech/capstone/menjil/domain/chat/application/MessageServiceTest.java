@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.MessageType;
@@ -27,8 +26,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static seoultech.capstone.menjil.global.exception.ErrorIntValue.TIME_INPUT_INVALID;
-import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @SpringBootTest
 @Transactional
@@ -59,10 +56,8 @@ class MessageServiceTest {
         roomRepository.save(room);
 
         // Save Mentee and Mentor
-        User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME,
-                UserRole.MENTEE);
-        User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME,
-                UserRole.MENTOR);
+        User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME );
+        User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME );
         userRepository.saveAll(List.of(mentee, mentor));
     }
 
@@ -285,10 +280,10 @@ class MessageServiceTest {
         return time.format(formatter);
     }
 
-    private User createUser(String id, String email, String nickname, UserRole role) {
+    private User createUser(String id, String email, String nickname) {
         return User.builder()
                 .id(id).email(email).provider("google").nickname(nickname)
-                .role(role).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)

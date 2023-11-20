@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.OptionInfo;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
@@ -50,8 +49,7 @@ class FollowingServiceTest {
     @BeforeEach
     void setUp() {
         // Save Mentee and Mentors
-        User mentee = createTestUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME,
-                UserRole.MENTEE);
+        User mentee = createTestUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME);
         userRepository.save(mentee);
 
         int mentorNum = 30;
@@ -60,7 +58,7 @@ class FollowingServiceTest {
                     String id = "google_" + i;
                     String email = "mentor" + i + "@mentor.com";
                     String nickname = "test_mentor_" + i;
-                    return createTestUser(id, email, nickname, UserRole.MENTOR);
+                    return createTestUser(id, email, nickname);
                 })
                 .collect(Collectors.toList());
         userRepository.saveAll(users);
@@ -179,7 +177,7 @@ class FollowingServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         // when
         List<String> lastAnsweredMessages = followingService.getLastAnsweredMessages(mentor1.getNickname());
@@ -195,7 +193,7 @@ class FollowingServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         int qaNum = 1;
         List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
@@ -217,8 +215,7 @@ class FollowingServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
-
+        User mentor1 = createTestUser(id, email, nickname);
         int qaNum = 5;
         List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
                 .mapToObj(i -> createTestQaListAndAnswerIsNotNull(mentor1.getNickname(), i))
@@ -232,10 +229,10 @@ class FollowingServiceTest {
         assertThat(lastAnsweredMessages.size()).isEqualTo(2);
     }
 
-    private User createTestUser(String id, String email, String nickname, UserRole role) {
+    private User createTestUser(String id, String email, String nickname) {
         return User.builder()
                 .id(id).email(email).provider("google").nickname(nickname)
-                .role(role).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("컴퓨터공학과").subMajor("심리학과")

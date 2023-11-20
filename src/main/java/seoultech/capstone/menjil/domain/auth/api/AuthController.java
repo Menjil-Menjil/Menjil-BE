@@ -40,11 +40,10 @@ public class AuthController {
     @ResponseBody
     public ResponseEntity<ApiResponse<?>> checkSignUpAvailability(@RequestParam("email") String email,
                                                                   @RequestParam("provider") String provider) {
-        log.info(">> 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
+        log.info("GET] /api/auth/signup 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
         int httpStatusValue = authService.findUserInDb(email, provider);
         if (httpStatusValue == SUCCESS.getValue()) {
             return ResponseEntity.status(HttpStatus.OK).body(success(SIGNUP_AVAILABLE));
-//          return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE), HttpStatus.OK);
         } else {
             throw new CustomException(USER_DUPLICATED);
         }
