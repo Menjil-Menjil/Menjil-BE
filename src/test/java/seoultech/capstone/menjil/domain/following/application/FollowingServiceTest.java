@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
-import seoultech.capstone.menjil.domain.auth.domain.OptionInfo;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
@@ -237,7 +236,10 @@ class FollowingServiceTest {
                 .graduateDate(2021).graduateMonth(3)
                 .major("컴퓨터공학과").subMajor("심리학과")
                 .minor(null).field("백엔드").techStack("AWS")
-                .optionInfo(new OptionInfo(null, null, null, null))
+                .career(null)
+                .certificate(null)
+                .awards(null)
+                .activity(null)
                 .imgUrl("default/profile.png")  // set img url
                 .build();
     }

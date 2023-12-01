@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 
@@ -20,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)    // MySQL 등의 db 를 사용할 경우 추가설정
 @DataJpaTest
 @ActiveProfiles("test")
-@Transactional
 class TokenRepositoryTest {
 
     @Autowired
@@ -114,7 +112,10 @@ class TokenRepositoryTest {
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
-                .optionInfo(null)
+                .career(null)
+                .certificate(null)
+                .awards(null)
+                .activity(null)
                 .build();
     }
 

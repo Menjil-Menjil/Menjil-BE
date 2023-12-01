@@ -76,8 +76,17 @@ public class User extends BaseTimeEntity {
     /**
      * 아래는 선택 입력 정보: 가입 단계에서 굳이 받지 않아도 되는 정보
      */
-    @Embedded
-    private OptionInfo optionInfo;
+    @Column(columnDefinition = "TEXT")
+    private String career;
+
+    @Column(columnDefinition = "TEXT")
+    private String certificate;
+
+    @Column(columnDefinition = "TEXT")
+    private String awards;
+
+    @Column(columnDefinition = "TEXT")
+    private String activity;
 
     @Column(name = "img_url", length = 100)
     private String imgUrl;
@@ -88,7 +97,9 @@ public class User extends BaseTimeEntity {
                  Integer birthYear, Integer birthMonth, String school,
                  Integer score, String scoreRange, Integer graduateDate, Integer graduateMonth, String major,
                  String subMajor, String minor, String company,Integer companyYear, String field,
-                 String techStack, OptionInfo optionInfo, String imgUrl) {
+                 String techStack,
+                 String career, String certificate, String awards, String activity,
+                 String imgUrl) {
         this.id = id;
         this.email = email;
         this.provider = provider;
@@ -107,7 +118,10 @@ public class User extends BaseTimeEntity {
         this.companyYear = companyYear;
         this.field = field;
         this.techStack = techStack;
-        this.optionInfo = optionInfo;
+        this.career = career;
+        this.certificate = certificate;
+        this.awards = awards;
+        this.activity = activity;
         this.imgUrl = imgUrl;
     }
 
