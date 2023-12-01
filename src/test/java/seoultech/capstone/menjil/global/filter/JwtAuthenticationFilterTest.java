@@ -226,7 +226,10 @@ class JwtAuthenticationFilterTest {
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
-                .optionInfo(null)
+                .career(null)
+                .certificate(null)
+                .awards(null)
+                .activity(null)
                 .build();
     }
 }

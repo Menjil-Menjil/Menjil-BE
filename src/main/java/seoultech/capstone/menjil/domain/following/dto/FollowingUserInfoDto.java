@@ -35,8 +35,8 @@ public class FollowingUserInfoDto {
         return new FollowingUserInfoDto(user.getNickname(), user.getCompany(), user.getField(),
                 user.getSchool(), user.getMajor(), user.getSubMajor(), user.getMinor(),
                 user.getTechStack(), user.getImgUrl(),
-                user.getOptionInfo().getCareer(), user.getOptionInfo().getCertificate(),
-                user.getOptionInfo().getAwards(), user.getOptionInfo().getActivity()
+                user.getCareer(), user.getCertificate(),
+                user.getAwards(), user.getActivity()
         );
     }
 }

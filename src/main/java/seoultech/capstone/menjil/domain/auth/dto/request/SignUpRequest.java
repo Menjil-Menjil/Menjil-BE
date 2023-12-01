@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import seoultech.capstone.menjil.domain.auth.domain.OptionInfo;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 
 import javax.validation.constraints.*;
@@ -86,7 +85,10 @@ public class SignUpRequest {
                 .companyYear(companyYear)
                 .field(field)
                 .techStack(techStack)
-                .optionInfo(new OptionInfo(career, certificate, awards, activity))  // use Embedded type
+                .career(career)
+                .certificate(certificate)
+                .awards(awards)
+                .activity(activity)
                 .build();
     }
 
