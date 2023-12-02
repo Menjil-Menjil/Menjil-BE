@@ -1,6 +1,6 @@
-package seoultech.capstone.menjil.domain.follow.dto.request;
+package seoultech.capstone.menjil.domain.follow.application.dto.request;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,8 +9,7 @@ import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-public class FollowRequest {
+public class FollowCreateServiceRequest {
 
     @NotBlank
     private String userNickname;
@@ -18,15 +17,21 @@ public class FollowRequest {
     @NotBlank
     private String followNickname;
 
-    public static FollowRequest of(String userNickname, String followNickname) {
-        return new FollowRequest(userNickname, followNickname);
+    public static FollowCreateServiceRequest of(String userNickname, String followNickname) {
+        return new FollowCreateServiceRequest(userNickname, followNickname);
+    }
+
+    @Builder
+    private FollowCreateServiceRequest(String userNickname, String followNickname) {
+        this.userNickname = userNickname;
+        this.followNickname = followNickname;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FollowRequest that = (FollowRequest) o;
+        FollowCreateServiceRequest that = (FollowCreateServiceRequest) o;
         return Objects.equals(userNickname, that.userNickname)
                 && Objects.equals(followNickname, that.followNickname);
     }
