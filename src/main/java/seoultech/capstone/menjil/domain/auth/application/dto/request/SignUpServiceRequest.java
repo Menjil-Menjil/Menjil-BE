@@ -1,6 +1,5 @@
-package seoultech.capstone.menjil.domain.auth.dto.request;
+package seoultech.capstone.menjil.domain.auth.application.dto.request;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +10,7 @@ import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-public class SignUpRequest {
+public class SignUpServiceRequest {
 
     @NotBlank
     private String userId;
@@ -27,7 +25,7 @@ public class SignUpRequest {
     @NotBlank
     @Pattern(regexp = "^[가-힣a-zA-Z0-9]*$", message = "닉네임은 공백이나 특수문자가 들어갈 수 없습니다")
     private String nickname;
-    @NotNull(message = "생년은 OOOO형식으로 입력해주세요")
+    @NotNull(message = "생년은 YYYY 형식으로 입력해주세요")
     private Integer birthYear;
     @NotNull(message = "1~12 사이의 값을 입력해주세요")
     private Integer birthMonth;
@@ -65,6 +63,38 @@ public class SignUpRequest {
     private String activity;
 
     @Builder
+    private SignUpServiceRequest(String userId, String email, String provider,
+                                 String nickname, Integer birthYear, Integer birthMonth,
+                                 String school, Integer score, String scoreRange,
+                                 Integer graduateDate, Integer graduateMonth, String major,
+                                 String subMajor, String minor, String company,
+                                 Integer companyYear, String field, String techStack,
+                                 String career, String certificate, String awards,
+                                 String activity) {
+        this.userId = userId;
+        this.email = email;
+        this.provider = provider;
+        this.nickname = nickname;
+        this.birthYear = birthYear;
+        this.birthMonth = birthMonth;
+        this.school = school;
+        this.score = score;
+        this.scoreRange = scoreRange;
+        this.graduateDate = graduateDate;
+        this.graduateMonth = graduateMonth;
+        this.major = major;
+        this.subMajor = subMajor;
+        this.minor = minor;
+        this.company = company;
+        this.companyYear = companyYear;
+        this.field = field;
+        this.techStack = techStack;
+        this.career = career;
+        this.certificate = certificate;
+        this.awards = awards;
+        this.activity = activity;
+    }
+
     public User toUserEntity() {
         return User.builder()
                 .id(userId)
@@ -96,7 +126,7 @@ public class SignUpRequest {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SignUpRequest that = (SignUpRequest) o;
+        SignUpServiceRequest that = (SignUpServiceRequest) o;
         return Objects.equals(userId, that.userId)
                 && Objects.equals(email, that.email)
                 && Objects.equals(provider, that.provider)
