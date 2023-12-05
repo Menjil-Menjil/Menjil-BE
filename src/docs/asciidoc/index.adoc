@@ -86,7 +86,7 @@ operation::api/auth/signin/fail-provider[snippets='http-request']
 operation::api/auth/signin/fail-provider[snippets='http-response']
 
 
-
+// ** 2. 팔로우 **
 == 팔로우
 === 팔로우 요청
 ==== 팔로우가 되어있지 않은 경우
@@ -119,3 +119,27 @@ return false
 
 operation::api/follow/check-status/false[snippets='http-request,request-parameters']
 operation::api/follow/check-status/false[snippets='http-response,response-fields']
+
+
+
+// ** 3. 팔로잉 페이지 **
+== 팔로잉
+=== 니의 팔로잉 목록 가져오기
+
+
+
+=== 팔로잉된 사용자의 상세 정보 조회
+==== 성공
+===== 사용자의 정보와 질문 답변 내역이 모두 존재하는 경우
+operation::api/following/info/200-ok[snippets='http-request,request-parameters']
+operation::api/following/info/200-ok[snippets='http-response,response-fields']
+
+===== 사용자의 정보만 존재하는 경우
+operation::api/following/info/200-only-userinfo[snippets='http-request']
+operation::api/following/info/200-only-userinfo[snippets='http-response']
+
+==== 실패
+===== 존재하지 않는 사용자의 닉네임을 요청한 경우
+operation::api/following/info/500-error[snippets='http-request']
+operation::api/following/info/500-error[snippets='http-response,response-fields']
+

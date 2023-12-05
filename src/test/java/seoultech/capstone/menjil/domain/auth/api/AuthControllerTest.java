@@ -6,19 +6,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
-import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import seoultech.capstone.menjil.domain.auth.application.AuthService;
 import seoultech.capstone.menjil.domain.auth.api.dto.request.SignInRequest;
 import seoultech.capstone.menjil.domain.auth.api.dto.request.SignUpRequest;
+import seoultech.capstone.menjil.domain.auth.application.AuthService;
 import seoultech.capstone.menjil.domain.auth.application.dto.request.SignInServiceRequest;
 import seoultech.capstone.menjil.domain.auth.application.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
@@ -27,14 +24,6 @@ import seoultech.capstone.menjil.global.exception.*;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
-import static org.springframework.restdocs.payload.JsonFieldType.STRING;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         excludeFilters = {
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebConfig.class)
         })
-@AutoConfigureRestDocs
 class AuthControllerTest {
 
     @Autowired
@@ -71,7 +59,7 @@ class AuthControllerTest {
         Mockito.when(authService.findUserInDb(email, provider)).thenReturn(SuccessIntValue.SUCCESS.getValue());
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/auth/signup")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/auth/signup")
                         .queryParam("email", email)
                         .queryParam("provider", provider))
                 .andExpect(status().isOk())
@@ -101,20 +89,7 @@ class AuthControllerTest {
                         is(ErrorCode.USER_ALREADY_EXISTED.getHttpStatus().value())))
                 .andExpect(jsonPath("$.message",
                         is(ErrorCode.USER_ALREADY_EXISTED.getMessage())))
-                .andDo(print())
-                .andDo(document("api/auth/signup-is-available/false",
-                        preprocessRequest(prettyPrint()),   // show json pretty in asciidoc
-                        preprocessResponse(prettyPrint()),  // show json pretty in asciidoc
-                        requestParameters(
-                                parameterWithName("email").description("사용자 이메일"),
-                                parameterWithName("provider").description("이메일 플랫폼")
-                        ),
-                        responseFields(
-                                fieldWithPath("code").type(JsonFieldType.NUMBER).description("응답 코드"),
-                                fieldWithPath("message").type(STRING).description("응답 메시지"),
-                                fieldWithPath("data").type(JsonFieldType.NULL).description("응답 데이터")
-                        )
-                ));
+                .andDo(print());
 
         verify(authService).findUserInDb(email, provider);
     }
