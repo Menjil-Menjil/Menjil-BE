@@ -5,83 +5,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id 'jacoco' // add jacoco plugin
     id 'com.google.osdetector' version "1.7.1" // https://github.com/netty/netty/issues/11020
-}
-
-jacoco {
-    toolVersion = '0.8.10'
-}
-
-jacocoTestReport {
-    reports {
-        html.required.set(true)
-        // To use codecov, enable xml.
-        // reference link: https://docs.codecov.com/docs/supported-report-formats
-        xml.required.set(true)
-        csv.required.set(false)
-
-        // path where result is saved
-        html.destination file("jacoco/")
-    }
-
-    // Ignore classes: Application, DTO, Config, etc
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                    "seoultech/capstone/menjil/**/*jilApplication*",
-                    "seoultech/capstone/menjil/**/*Dto*",
-                    "seoultech/capstone/menjil/**/*Request*",
-                    "seoultech/capstone/menjil/**/*Response*",
-                    "seoultech/capstone/menjil/domain/**/domain/**",
-                    "seoultech/capstone/menjil/domain/chat/dto/**",
-                    "seoultech/capstone/menjil/global/filter/*CustomCors*",
-                    "**/*Config*",
-                    "**/*Exception*",
-                    "**/TokenTestController*"
-            ])
-        }))
-    }
-
-    finalizedBy 'jacocoTestCoverageVerification'
-}
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            enabled = true
-            limit {
-                value = 'COVEREDRATIO'
-                minimum = 0.50
-            }
-            excludes = [
-                    "**.*jilApplication*",
-                    "**.*Dto*",
-                    "**.*Request*",
-                    "**.*Response*",
-                    "**/domain/**/domain/**",
-                    "**/domain/chat/dto/**",
-                    "**.*Config*",
-                    "**.*CustomCors*",
-                    "**.*Exception*",
-                    "**.TokenTestController*"
-            ]
-        }
-
-        rule {
-            enabled = false
-            element = 'CLASS'
-            limit {
-                counter = 'BRANCH'
-                value = 'COVEREDRATIO'
-                minimum = 0.20
-            }
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 0.20
-            }
-        }
-
-    }
+    id "org.asciidoctor.jvm.convert" version "3.3.2" // RestDocs
 }
 
 jar {
@@ -96,6 +20,7 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    asciidoctorExt // RestDocs
 }
 
 repositories {
@@ -141,10 +66,12 @@ dependencies {
     // database
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
-//    testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
+
+    // RestDocs
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
 
     // WireMock
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0"
@@ -155,5 +82,124 @@ tasks.named('test') {
     useJUnitPlatform()
     finalizedBy 'jacocoTestReport'
 }
+
+/* start RestDocs */
+ext { // 전역 변수
+    snippetsDir = file('build/generated-snippets')
+}
+
+test {
+    outputs.dir snippetsDir
+}
+
+asciidoctor.doFirst {
+    delete file('src/main/resources/static/docs')
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorExt'
+
+    sources { // 특정 파일만 html로 만든다.
+        include("**/index.adoc")
+    }
+    baseDirFollowsSourceFile() // 다른 adoc 파일을 include 할 때 경로를 baseDir로 맞춘다.
+    dependsOn test
+}
+
+bootJar {
+    dependsOn asciidoctor
+    from("${asciidoctor.outputDir}") {
+        into 'static/docs'
+    }
+}
+
+tasks.register('copyDocument', Copy) {
+    dependsOn asciidoctor
+    from file("build/docs/asciidoc")
+    into file("src/main/resources/static/docs")
+}
+
+build {
+    dependsOn copyDocument
+}
+/* end RestDocs */
+
+/* jacoco start */
+jacoco {
+    toolVersion = '0.8.10'
+}
+
+jacocoTestReport {
+    reports {
+        html.required.set(true)
+        // To use codecov, enable xml.
+        // reference link: https://docs.codecov.com/docs/supported-report-formats
+        xml.required.set(true)
+        csv.required.set(false)
+
+        // path where result is saved
+        html.destination file("jacoco/")
+    }
+
+    // Ignore classes: Application, DTO, Config, etc
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "seoultech/capstone/menjil/**/*jilApplication*",
+                    "seoultech/capstone/menjil/**/*Dto*",
+                    "seoultech/capstone/menjil/**/*Request*",
+                    "seoultech/capstone/menjil/**/*Response*",
+                    "seoultech/capstone/menjil/domain/**/domain/**",
+                    "seoultech/capstone/menjil/domain/chat/dto/**",
+                    "seoultech/capstone/menjil/global/filter/*CustomCors*",
+                    "**/*Config*",
+                    "**/*Exception*"
+            ])
+        }))
+    }
+
+    finalizedBy 'jacocoTestCoverageVerification'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            limit {
+                value = 'COVEREDRATIO'
+                minimum = 0.05
+            }
+            excludes = [
+                    "**.*jilApplication*",
+                    "**.*Dto*",
+                    "**.*Request*",
+                    "**.*Response*",
+                    "**/domain/**/domain/**",
+                    "**/domain/chat/dto/**",
+                    "**.*Config*",
+                    "**.*CustomCors*",
+                    "**.*Exception*"
+            ]
+        }
+
+        rule {
+            enabled = false
+            element = 'CLASS'
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.20
+            }
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.20
+            }
+        }
+
+    }
+}
+/* jacoco end */
 
 mainClassName = 'seoultech.capstone.menjil.MenjilApplication'

@@ -8,7 +8,7 @@ import lombok.Getter;
 public enum ErrorIntValue {
 
     // auth
-    USER_ALREADY_IN_DB(-1),
+    USER_ALREADY_EXISTED(-1),
 
     // chat
     TIME_INPUT_INVALID(-11),

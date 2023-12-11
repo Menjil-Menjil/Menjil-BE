@@ -5,12 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import seoultech.capstone.menjil.domain.auth.application.dto.request.SignInServiceRequest;
+import seoultech.capstone.menjil.domain.auth.application.dto.request.SignUpServiceRequest;
+import seoultech.capstone.menjil.domain.auth.application.dto.response.SignInResponse;
 import seoultech.capstone.menjil.domain.auth.dao.TokenRepository;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.RefreshToken;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
@@ -21,7 +22,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static seoultech.capstone.menjil.global.exception.ErrorIntValue.USER_ALREADY_IN_DB;
+import static seoultech.capstone.menjil.global.exception.ErrorCode.PROVIDER_NOT_ALLOWED;
+import static seoultech.capstone.menjil.global.exception.ErrorIntValue.USER_ALREADY_EXISTED;
 import static seoultech.capstone.menjil.global.exception.SuccessIntValue.SUCCESS;
 
 @Slf4j
@@ -46,7 +48,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public int findUserInDb(String email, String provider) {
         Optional<User> user = userRepository.findUserByEmailAndProvider(email, provider);
-        return checkIfUserInDb(user) ? USER_ALREADY_IN_DB.getValue() : SUCCESS.getValue();
+        return checkIfUserInDb(user) ? USER_ALREADY_EXISTED.getValue() : SUCCESS.getValue();
     }
 
     /**
@@ -55,52 +57,52 @@ public class AuthService {
     @Transactional(readOnly = true)
     public int findNicknameInDb(String nickname) {
         Optional<User> user = userRepository.findUserByNickname(nickname);
-        return checkIfUserInDb(user) ? USER_ALREADY_IN_DB.getValue() : SUCCESS.getValue();
+        return checkIfUserInDb(user) ? USER_ALREADY_EXISTED.getValue() : SUCCESS.getValue();
     }
 
     /**
      * 회원가입 로직 수행
      */
     @Transactional
-    public void signUp(SignUpRequest request) {
+    public void signUp(SignUpServiceRequest request) {
         // SignUpRequestDto -> User Entity 변환
         User user = request.toUserEntity();
 
         // 기존에 중복된 유저가 있는 지 조회
         // 이 부분은 의미없다. 처음 가입할 때 유저 확인 후 redirect 처리 하므로.
-        /*
-        List<User> userInDb = userRepository.findUserByEmailAndProvider(user.getEmail(), user.getProvider());
+        /*List<User> userInDb = userRepository.findUserByEmailAndProvider(user.getEmail(), user.getProvider());
         if (userInDb.size() > 0) {
             throw new CustomException(ErrorCode.USER_DUPLICATED);
-        }
-         */
+        }*/
 
         // 혹시 클라이언트에서 닉네임 중복 검증을 놓친 경우 확인
         User nicknameExistsInDb = userRepository.findUserByNickname(user.getNickname())
                 .orElse(null);
         if (nicknameExistsInDb != null) {
             // 이 부분은, 컨트롤러가 아닌 서비스에서 처리하는 것이 더 바람직할 것으로 보임.
-            throw new CustomException(ErrorCode.NICKNAME_DUPLICATED);
+            throw new CustomException(ErrorCode.NICKNAME_ALREADY_EXISTED);
         }
 
         // Set AWS S3 default image url in user
         user.setImgUrl(defaultImgUrl);
 
         // save in db
-        try {
-            userRepository.save(user);
-        } catch (RuntimeException e) {
-            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
+        saveUser(user);
     }
 
     /**
      * 로그인 처리
      */
     @Transactional
-    public SignInResponse signIn(String email, String provider) {
-        Optional<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
+    public SignInResponse signIn(SignInServiceRequest request) {
+        String email = request.getEmail();
+        String provider = request.getProvider();
 
+        if (!provider.equals("google") && !provider.equals("kakao")) {
+            throw new CustomException(PROVIDER_NOT_ALLOWED);
+        }
+
+        Optional<User> userInDb = userRepository.findUserByEmailAndProvider(email, provider);
         if (checkIfUserInDb(userInDb)) {
             User user = userInDb.get();
 
@@ -144,5 +146,13 @@ public class AuthService {
 
     private boolean checkIfUserInDb(Optional<User> user) {
         return user.isPresent();
+    }
+
+    private void saveUser(User user) {
+        try {
+            userRepository.save(user);
+        } catch (RuntimeException e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chat.domain.ChatMessage;
@@ -64,10 +63,8 @@ class RoomServiceTest {
         roomRepository.save(room);
 
         // Save Mentee and Mentor
-        User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME,
-                UserRole.MENTEE);
-        User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME,
-                UserRole.MENTOR);
+        User mentee = createUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME);
+        User mentor = createUser("google_1231234", "mentor@mentor.com", TEST_MENTOR_NICKNAME);
         userRepository.saveAll(List.of(mentee, mentor));
     }
 
@@ -339,8 +336,8 @@ class RoomServiceTest {
         List<User> mentors = Arrays.asList(
 //                 @BeforeEach에서 TEST_MENTOR_NICKNAME 유저를 저장하므로, 여기서 저장하면 DataIntegrityViolationException 발생함
 //                createUser("test_1", "testmentor1@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR),
-                createUser("test_2", "testmentor2@google.com", room2MentorNickname, UserRole.MENTOR),
-                createUser("test_3", "testmentor3@google.com", room3MentorNickname, UserRole.MENTOR)
+                createUser("test_2", "testmentor2@google.com", room2MentorNickname),
+                createUser("test_3", "testmentor3@google.com", room3MentorNickname)
         );
         userRepository.saveAll(mentors);
 
@@ -439,8 +436,8 @@ class RoomServiceTest {
         List<User> mentors = Arrays.asList(
                 // @BeforeEach에서 TEST_MENTOR_NICKNAME 유저를 저장하므로, 여기서 저장하면 DataIntegrityViolationException 발생함
 //                createUser("test_1", "testmentee1@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE),
-                createUser("test_2", "testmentee2@google.com", room2MenteeNickname, UserRole.MENTEE),
-                createUser("test_3", "testmentee3@google.com", room3MenteeNickname, UserRole.MENTEE)
+                createUser("test_2", "testmentee2@google.com", room2MenteeNickname),
+                createUser("test_3", "testmentee3@google.com", room3MenteeNickname)
         );
         userRepository.saveAll(mentors);
 
@@ -654,15 +651,18 @@ class RoomServiceTest {
         assertThat(lastMessage.getTime()).isAfterOrEqualTo(now.plusSeconds(FIXED_NUM * 1000).withNano(0));
     }
 
-    private User createUser(String id, String email, String nickname, UserRole role) {
+    private User createUser(String id, String email, String nickname) {
         return User.builder()
                 .id(id).email(email).provider("google").nickname(nickname)
-                .role(role).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
-                .optionInfo(null)
+                .career(null)
+                .certificate(null)
+                .awards(null)
+                .activity(null)
                 .imgUrl("default/profile.png")  // set img url
                 .build();
     }

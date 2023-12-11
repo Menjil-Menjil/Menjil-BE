@@ -182,20 +182,20 @@ public class MessageService {
         String message4th = "AI 챗봇을 종료하고 멘토 답변 기다리기";
         LocalDateTime now = getCurrentTimeWithNanos();
 
-        int initialSize = awsLambdaResponses.size();
-        int questionMaxSize = 3;
-
+        // TODO: 프론트 요청에 따라 이 부분 사용하지 않기로 결정됨. 추후 이견이 없을 경우 아래 주석 삭제
+//        int initialSize = awsLambdaResponses.size();
+//        int questionMaxSize = 3;
         // 첫 번째 메시지 추가 (만약 리스트가 비어 있을 경우)
-        if (initialSize == 0) {
-            awsLambdaResponses.add(AwsLambdaResponse.of(null,
-                    messageRequest.getSenderNickname()
-                            + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null));
-            initialSize++;
-        }
-        // 필요한 만큼 빈 메시지 추가
-        IntStream.range(initialSize, questionMaxSize)
-                .mapToObj(i -> AwsLambdaResponse.of(null, null, null, null))
-                .forEach(awsLambdaResponses::add);
+//        if (initialSize == 0) {
+//            awsLambdaResponses.add(AwsLambdaResponse.of(null,
+//                    messageRequest.getSenderNickname()
+//                            + "님의 질문과 유사도가 높은 대화 목록이 존재하지 않습니다", null, null));
+//            initialSize++;
+//        }
+//        // 필요한 만큼 빈 메시지 추가
+//        IntStream.range(initialSize, questionMaxSize)
+//                .mapToObj(i -> AwsLambdaResponse.of(null, null, null, null))
+//                .forEach(awsLambdaResponses::add);
         // 4번째 응답 추가(공통)
         awsLambdaResponses.add(AwsLambdaResponse.of(null, message4th, null, null));
 

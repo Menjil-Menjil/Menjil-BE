@@ -13,14 +13,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.auth.domain.UserRole;
 import seoultech.capstone.menjil.domain.chat.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.domain.Follow;
-import seoultech.capstone.menjil.domain.main.dto.response.FollowUserResponse;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,8 +58,8 @@ class MainPageServiceTest {
 
     @BeforeEach
     void setUp() {
-        User userA = createTestUser("google_1231323", "test@google.com", TEST_MENTEE_NICKNAME, UserRole.MENTEE);
-        User userB = createTestUser("google_1231324", "test2@google.com", TEST_MENTOR_NICKNAME, UserRole.MENTOR);
+        User userA = createTestUser("google_1231323", "test@google.com", TEST_MENTEE_NICKNAME);
+        User userB = createTestUser("google_1231324", "test2@google.com", TEST_MENTOR_NICKNAME);
         userRepository.saveAll(List.of(userA, userB));
     }
 
@@ -92,11 +91,11 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 UserInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -108,14 +107,14 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
+        Page<UserInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         assertThat(mentorList.getSize()).isEqualTo(3);
 
-        MentorInfoResponse firstMentor = mentorList.getContent().get(0);
-        MentorInfoResponse secondMentor = mentorList.getContent().get(1);
-        MentorInfoResponse thirdMentor = mentorList.getContent().get(2);
+        UserInfoResponse firstMentor = mentorList.getContent().get(0);
+        UserInfoResponse secondMentor = mentorList.getContent().get(1);
+        UserInfoResponse thirdMentor = mentorList.getContent().get(2);
 
         assertThat(firstMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 1);
         assertThat(firstMentor.getImgUrl()).isNotBlank();
@@ -141,11 +140,11 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 UserInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -157,7 +156,7 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
+        Page<UserInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         // size 값은 SIZE 값과 동일하다.
@@ -166,8 +165,8 @@ class MainPageServiceTest {
         // content의 개수가 2개이다.
         assertThat(mentorList.getContent().size()).isEqualTo(2);
 
-        MentorInfoResponse firstMentor = mentorList.getContent().get(0);
-        MentorInfoResponse secondMentor = mentorList.getContent().get(1);
+        UserInfoResponse firstMentor = mentorList.getContent().get(0);
+        UserInfoResponse secondMentor = mentorList.getContent().get(1);
 
         assertThat(firstMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 7);
         assertThat(firstMentor.getImgUrl()).isNotBlank();
@@ -192,11 +191,11 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 UserInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -208,7 +207,7 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
+        Page<UserInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         assertThat(mentorList.getContent().size()).isEqualTo(0);
@@ -236,7 +235,7 @@ class MainPageServiceTest {
                     String testId = "google_" + i;
                     String testEmail = "test_" + i + "@gmail.com";
                     String testNickname = MENTOR_NICKNAME + i;
-                    return createTestUser(testId, testEmail, testNickname, UserRole.MENTOR);
+                    return createTestUser(testId, testEmail, testNickname);
                 })
                 .collect(Collectors.toList());
 
@@ -270,7 +269,7 @@ class MainPageServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         // when
         List<String> lastAnsweredMessages = mainPageService.getLastAnsweredMessages(mentor1.getNickname());
@@ -286,7 +285,7 @@ class MainPageServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         int qaNum = 1;
         List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
@@ -309,7 +308,7 @@ class MainPageServiceTest {
         String id = "google_1234123124";
         String email = "mentor2@mentor.com";
         String nickname = "mentor_test_33";
-        User mentor1 = createTestUser(id, email, nickname, UserRole.MENTOR);
+        User mentor1 = createTestUser(id, email, nickname);
 
         int qaNum = 5;
         List<QaList> qaLists = IntStream.rangeClosed(1, qaNum)
@@ -325,15 +324,18 @@ class MainPageServiceTest {
         assertThat(lastAnsweredMessages.size()).isEqualTo(2);
     }
 
-    private User createTestUser(String id, String email, String nickname, UserRole role) {
+    private User createTestUser(String id, String email, String nickname) {
         return User.builder()
                 .id(id).email(email).provider("google").nickname(nickname)
-                .role(role).birthYear(2000).birthMonth(3)
+                .birthYear(2000).birthMonth(3)
                 .school("서울과학기술대학교").score(3).scoreRange("중반")
                 .graduateDate(2021).graduateMonth(3)
                 .major("경제학과").subMajor(null)
                 .minor(null).field("백엔드").techStack("AWS")
-                .optionInfo(null)
+                .career(null)
+                .certificate(null)
+                .awards(null)
+                .activity(null)
                 .imgUrl("default/profile.png")  // set img url
                 .build();
     }

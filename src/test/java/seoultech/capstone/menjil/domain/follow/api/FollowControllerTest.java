@@ -6,20 +6,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.domain.follow.application.FollowService;
-import seoultech.capstone.menjil.domain.follow.dto.request.FollowRequest;
+import seoultech.capstone.menjil.domain.follow.api.dto.request.FollowCreateRequest;
 import seoultech.capstone.menjil.global.config.WebConfig;
+import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
-import seoultech.capstone.menjil.global.exception.ErrorIntValue;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
 import static org.hamcrest.Matchers.is;
@@ -31,9 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static seoultech.capstone.menjil.global.exception.SuccessIntValue.*;
 
 
-@MockBean(JpaMetamodelMappingContext.class)
 @WebMvcTest(controllers = FollowController.class,
-        excludeAutoConfiguration = {SecurityAutoConfiguration.class},
         excludeFilters = {
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = WebConfig.class)
         })
@@ -42,28 +38,30 @@ class FollowControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private Gson gson;
+
     @MockBean
     private FollowService followService;
 
-    private final String TEST_USER_NICKNAME = "test_user_nickname";
-    private final String TEST_FOLLOW_NICKNAME = "test_follow_nickname";
+    private final String TEST_USER_NICKNAME = "user_nickname33";
+    private final String TEST_FOLLOW_NICKNAME = "follow_nickname33";
 
     /**
-     * followRequest
+     * createFollow
      */
     @Test
     @DisplayName("case 1: 팔로우가 생성된 경우")
-    void followRequest_follow_created() throws Exception {
+    void createFollow_follow_created() throws Exception {
         // given
-        FollowRequest followRequest = FollowRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
-        Gson gson = new Gson();
-        String content = gson.toJson(followRequest);
+        FollowCreateRequest followCreateRequest = FollowCreateRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
+        String content = gson.toJson(followCreateRequest);
 
         // when
-        Mockito.when(followService.followRequest(followRequest)).thenReturn(FOLLOW_CREATED.getValue());
+        Mockito.when(followService.createFollow(followCreateRequest.toServiceRequest())).thenReturn(FOLLOW_CREATED.getValue());
 
         // then
-        mvc.perform(MockMvcRequestBuilders.post("/api/follow/request")
+        mvc.perform(MockMvcRequestBuilders.post("/api/follow/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isCreated())
@@ -72,22 +70,21 @@ class FollowControllerTest {
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
 
-        verify(followService, times(1)).followRequest(followRequest);
+        verify(followService, times(1)).createFollow(followCreateRequest.toServiceRequest());
     }
 
     @Test
     @DisplayName("case 2: 팔로우가 제거된 경우")
-    void followRequest_follow_deleted() throws Exception {
+    void createFollow_follow_deleted() throws Exception {
         // given
-        FollowRequest followRequest = FollowRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
-        Gson gson = new Gson();
-        String content = gson.toJson(followRequest);
+        FollowCreateRequest followCreateRequest = FollowCreateRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
+        String content = gson.toJson(followCreateRequest);
 
         // when
-        Mockito.when(followService.followRequest(followRequest)).thenReturn(FOLLOW_DELETED.getValue());
+        Mockito.when(followService.createFollow(followCreateRequest.toServiceRequest())).thenReturn(FOLLOW_DELETED.getValue());
 
         // then
-        mvc.perform(MockMvcRequestBuilders.post("/api/follow/request")
+        mvc.perform(MockMvcRequestBuilders.post("/api/follow/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isCreated())
@@ -96,22 +93,22 @@ class FollowControllerTest {
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
 
-        verify(followService, times(1)).followRequest(followRequest);
+        verify(followService, times(1)).createFollow(followCreateRequest.toServiceRequest());
     }
 
     @Test
     @DisplayName("case 3: 서버 오류")
-    void followRequest_INTERNAL_SERVER_ERROR() throws Exception {
+    void createFollow_INTERNAL_SERVER_ERROR() throws Exception {
         // given
-        FollowRequest followRequest = FollowRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
-        Gson gson = new Gson();
-        String content = gson.toJson(followRequest);
+        FollowCreateRequest followCreateRequest = FollowCreateRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
+        String content = gson.toJson(followCreateRequest);
 
         // when
-        Mockito.when(followService.followRequest(followRequest)).thenReturn(ErrorIntValue.INTERNAL_SERVER_ERROR.getValue());
+        Mockito.when(followService.createFollow(followCreateRequest.toServiceRequest()))
+                .thenThrow(new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
 
         // then
-        mvc.perform(MockMvcRequestBuilders.post("/api/follow/request")
+        mvc.perform(MockMvcRequestBuilders.post("/api/follow/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().is5xxServerError())
@@ -120,7 +117,7 @@ class FollowControllerTest {
                 .andExpect(jsonPath("$.data", is(Matchers.nullValue())))  // Check for null
                 .andDo(print());
 
-        verify(followService, times(1)).followRequest(followRequest);
+        verify(followService, times(1)).createFollow(followCreateRequest.toServiceRequest());
     }
 
     /**

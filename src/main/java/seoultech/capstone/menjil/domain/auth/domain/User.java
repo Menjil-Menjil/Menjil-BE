@@ -31,10 +31,6 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 100)
     private String nickname;    // 고유 유저를 식별할 정보
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
-    private UserRole role;    // Mentor or Mentee
-
     @Column(name = "birth_year", nullable = false)
     private Integer birthYear;
 
@@ -68,6 +64,9 @@ public class User extends BaseTimeEntity {
     @Column(length = 100)
     private String company;     // 재직 중인 회사.
 
+    @Column(name = "company_year", length = 10)
+    private Integer companyYear;    // 회사 첫 입사 년도
+
     @Column(nullable = false)
     private String field;       // 관심 분야
 
@@ -77,8 +76,17 @@ public class User extends BaseTimeEntity {
     /**
      * 아래는 선택 입력 정보: 가입 단계에서 굳이 받지 않아도 되는 정보
      */
-    @Embedded
-    private OptionInfo optionInfo;
+    @Column(columnDefinition = "TEXT")
+    private String career;
+
+    @Column(columnDefinition = "TEXT")
+    private String certificate;
+
+    @Column(columnDefinition = "TEXT")
+    private String awards;
+
+    @Column(columnDefinition = "TEXT")
+    private String activity;
 
     @Column(name = "img_url", length = 100)
     private String imgUrl;
@@ -86,15 +94,16 @@ public class User extends BaseTimeEntity {
     /* Builder 로만 생성할 수 있도록 private 설정 */
     @Builder
     private User(String id, String email, String provider, String nickname,
-                 UserRole role, Integer birthYear, Integer birthMonth, String school,
+                 Integer birthYear, Integer birthMonth, String school,
                  Integer score, String scoreRange, Integer graduateDate, Integer graduateMonth, String major,
-                 String subMajor, String minor, String company, String field, String techStack,
-                 OptionInfo optionInfo, String imgUrl) {
+                 String subMajor, String minor, String company,Integer companyYear, String field,
+                 String techStack,
+                 String career, String certificate, String awards, String activity,
+                 String imgUrl) {
         this.id = id;
         this.email = email;
         this.provider = provider;
         this.nickname = nickname;
-        this.role = role;
         this.birthYear = birthYear;
         this.birthMonth = birthMonth;
         this.school = school;
@@ -106,9 +115,13 @@ public class User extends BaseTimeEntity {
         this.subMajor = subMajor;
         this.minor = minor;
         this.company = company;
+        this.companyYear = companyYear;
         this.field = field;
         this.techStack = techStack;
-        this.optionInfo = optionInfo;
+        this.career = career;
+        this.certificate = certificate;
+        this.awards = awards;
+        this.activity = activity;
         this.imgUrl = imgUrl;
     }
 

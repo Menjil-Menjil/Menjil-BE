@@ -7,10 +7,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import seoultech.capstone.menjil.domain.auth.api.dto.request.SignInRequest;
+import seoultech.capstone.menjil.domain.auth.api.dto.request.SignUpRequest;
 import seoultech.capstone.menjil.domain.auth.application.AuthService;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignInRequest;
-import seoultech.capstone.menjil.domain.auth.dto.request.SignUpRequest;
-import seoultech.capstone.menjil.domain.auth.dto.response.SignInResponse;
+import seoultech.capstone.menjil.domain.auth.application.dto.response.SignInResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
@@ -38,15 +38,14 @@ public class AuthController {
      */
     @GetMapping(value = "/signup", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<ApiResponse<?>> checkSignUpAvailability(@RequestParam("email") String email,
+    public ResponseEntity<ApiResponse<?>> checkSignUpIsAvailable(@RequestParam("email") String email,
                                                                   @RequestParam("provider") String provider) {
-        log.info(">> 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
+        log.info("GET] /api/auth/signup 사용자로부터 {} 유저가 {} 회원가입 가능 여부 조회를 요청 받음", email, provider);
         int httpStatusValue = authService.findUserInDb(email, provider);
         if (httpStatusValue == SUCCESS.getValue()) {
             return ResponseEntity.status(HttpStatus.OK).body(success(SIGNUP_AVAILABLE));
-//          return new ResponseEntity<ApiResponse<?>>(success(SuccessCode.SIGNUP_AVAILABLE), HttpStatus.OK);
         } else {
-            throw new CustomException(USER_DUPLICATED);
+            throw new CustomException(USER_ALREADY_EXISTED);
         }
     }
 
@@ -57,11 +56,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<?>> isNicknameAvailable(@RequestParam("nickname") String nickname) {
         String pattern1 = "^[가-힣a-zA-Z0-9]*$";    // 특수문자, 공백 모두 체크 가능
 
-        if (nickname.replaceAll(" ", "").equals("")) { // 먼저 공백 확인
-            throw new CustomException(NICKNAME_CONTAINS_BLANK);
-        }
         if (!Pattern.matches(pattern1, nickname)) {
-            throw new CustomException(NICKNAME_CONTAINS_SPECIAL_CHARACTER);
+            throw new CustomException(NICKNAME_FORMAT_IS_WRONG);
         }
         int httpStatusValue = authService.findNicknameInDb(nickname);
 
@@ -69,7 +65,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(success(NICKNAME_AVAILABLE));
         } else {
-            throw new CustomException(NICKNAME_DUPLICATED);
+            throw new CustomException(NICKNAME_ALREADY_EXISTED);
         }
     }
 
@@ -96,8 +92,7 @@ public class AuthController {
             throw exception;
         }
 
-        authService.signUp(signUpRequest);
-
+        authService.signUp(signUpRequest.toServiceRequest());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(success(SIGNUP_SUCCESS, signUpRequest.getEmail()));
     }
@@ -110,17 +105,9 @@ public class AuthController {
      * 가입된 유저가 없으면, CustomException 처리
      */
     @PostMapping(value = "/signin", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<SignInResponse>> signIn(@RequestBody SignInRequest dto) {
-
-        String provider = dto.getProvider();
-
-        if (!provider.equals("google") && !provider.equals("kakao")) {
-            throw new CustomException(PROVIDER_NOT_ALLOWED);
-        }
-
-        SignInResponse signInResponse = authService.signIn(dto.getEmail(), provider);
-
+    public ResponseEntity<ApiResponse<SignInResponse>> signIn(@RequestBody SignInRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED, signInResponse));
+                .body(ApiResponse.success(SuccessCode.TOKEN_CREATED,
+                        authService.signIn(request.toServiceRequest())));
     }
 }

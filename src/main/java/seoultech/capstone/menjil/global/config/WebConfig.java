@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import seoultech.capstone.menjil.domain.auth.jwt.JwtTokenProvider;
 import seoultech.capstone.menjil.global.filter.CustomCorsFilter;
@@ -32,6 +33,15 @@ public class WebConfig implements WebMvcConfigurer {
         registrationBean.setOrder(2);
         registrationBean.setName("Second-JwtAuthenticationFilter");
         return registrationBean;
+    }
+
+    /**
+     * /docs/index.html 접근이 가능하도록 하는 설정이다.
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/docs/**")
+                .addResourceLocations("classpath:/static/docs/");
     }
 
     /*
