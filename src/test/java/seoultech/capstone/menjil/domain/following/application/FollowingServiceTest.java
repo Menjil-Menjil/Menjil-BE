@@ -14,8 +14,8 @@ import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.domain.Follow;
-import seoultech.capstone.menjil.domain.following.dto.FollowingQaDto;
-import seoultech.capstone.menjil.domain.following.dto.response.FollowingMentorInfoResponse;
+import seoultech.capstone.menjil.domain.following.application.dto.FollowingQaDto;
+import seoultech.capstone.menjil.domain.following.application.dto.response.FollowingUserInfoResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,22 +41,23 @@ class FollowingServiceTest {
     @Autowired
     private QaListRepository qaListRepository;
 
-    private final String TEST_MENTEE_NICKNAME = "test_mentee_1";
-    private final String TEST_MENTOR_NICKNAME_1 = "test_mentor_1";
-    private final int qaNumWithAnswers = 11;
+    private final String USER_NICKNAME = "test_user_1";
+    private final String FOLLOWER_NICKNAME = "test_follower_1";
+    private final String FOLLOWER_NICKNAME_FORMAT = "test_follower_";
+    private final int QA_NUM_WITH_ANSWERS = 11;
 
     @BeforeEach
     void setUp() {
-        // Save Mentee and Mentors
-        User mentee = createTestUser("google_123123", "mentee@mentee.com", TEST_MENTEE_NICKNAME);
-        userRepository.save(mentee);
+        // Save Users
+        User user = createTestUser("google_1112223344", "userA@google.com", USER_NICKNAME);
+        userRepository.save(user);
 
-        int mentorNum = 30;
-        List<User> users = IntStream.rangeClosed(1, mentorNum)
+        int followerNum = 30;
+        List<User> users = IntStream.rangeClosed(1, followerNum)
                 .mapToObj(i -> {
-                    String id = "google_" + i;
-                    String email = "mentor" + i + "@mentor.com";
-                    String nickname = "test_mentor_" + i;
+                    String id = "google_" + (1234567899 + i);
+                    String email = "testFollower" + i + "@google.com";
+                    String nickname = FOLLOWER_NICKNAME_FORMAT + i;
                     return createTestUser(id, email, nickname);
                 })
                 .collect(Collectors.toList());
@@ -67,17 +68,17 @@ class FollowingServiceTest {
         int followNum = 6;
         List<Follow> follows = IntStream.rangeClosed(1, followNum)
                 .mapToObj(i -> {
-                    String menteeNickname = TEST_MENTEE_NICKNAME;
-                    String mentorNickname = "test_mentor_" + i;
-                    return Follow.of(menteeNickname, mentorNickname, now.plusMinutes(i));
+                    String userNickname = USER_NICKNAME;
+                    String followerNickname = FOLLOWER_NICKNAME_FORMAT + i;
+                    return Follow.of(userNickname, followerNickname, now.plusMinutes(i));
                 })
                 .collect(Collectors.toList());
         followRepository.saveAll(follows);
 
         // Save QaList with answer is not null
-        // mentor is only TEST_MENTOR_NICKNAME_1
-        List<QaList> qaLists = IntStream.rangeClosed(1, qaNumWithAnswers)
-                .mapToObj(i -> createTestQaListAndAnswerIsNotNull(TEST_MENTOR_NICKNAME_1, i))
+        // mentor is only TEST_FOLLOW_NICKNAME_1
+        List<QaList> qaLists = IntStream.rangeClosed(1, QA_NUM_WITH_ANSWERS)
+                .mapToObj(i -> createTestQaListAndAnswerIsNotNull(FOLLOWER_NICKNAME, i))
                 .collect(Collectors.toList());
         qaListRepository.saveAll(qaLists);
 
@@ -85,7 +86,7 @@ class FollowingServiceTest {
         // mentor is only TEST_MENTOR_NICKNAME_1
         int qaNumWithAnswerIsNull = 8;
         List<QaList> qaListsWithAnswerIsNull = IntStream.rangeClosed(1, qaNumWithAnswerIsNull)
-                .mapToObj(i -> createTestQaListAndAnswerIsNull(TEST_MENTOR_NICKNAME_1, i))
+                .mapToObj(i -> createTestQaListAndAnswerIsNull(FOLLOWER_NICKNAME, i))
                 .collect(Collectors.toList());
         qaListRepository.saveAll(qaListsWithAnswerIsNull);
     }
@@ -97,22 +98,23 @@ class FollowingServiceTest {
     }
 
     /**
-     * getAllFollowMentors
+     * getAllFollowOfUsers
      */
     @Test
-    void getAllFollowMentors() {
+    void getAllFollowOfUsers() {
     }
 
     /**
-     * getFollowMentorInfo
+     * getFollowUserInfo
      */
     @Test
-    @DisplayName("case 1: 멘토가 팔로우 되어 있고, 질문답변 데이터도 존재하는 경우")
-    void getFollowMentorInfo() {
+    @DisplayName("case 1: 팔로우 된 사용자가 존재하고, 질문답변 데이터도 존재하는 경우")
+    void getFollowUserInfo() {
         // given
+        String follower = FOLLOWER_NICKNAME;
 
         // when
-        FollowingMentorInfoResponse followMentorInfo = followingService.getFollowMentorInfo(TEST_MENTEE_NICKNAME, TEST_MENTOR_NICKNAME_1);
+        FollowingUserInfoResponse followMentorInfo = followingService.getFollowUserInfo(follower);
 
         // then
         assertThat(followMentorInfo).isNotNull();
@@ -120,8 +122,8 @@ class FollowingServiceTest {
                 .getMajor()).isEqualTo("컴퓨터공학과");
         assertThat(followMentorInfo.getFollowingUserInfoDto()
                 .getCareer()).isNull();
-        assertThat(followMentorInfo.getAnswersCount()).isEqualTo(qaNumWithAnswers);
-        assertThat(followMentorInfo.getAnswers().size()).isEqualTo(qaNumWithAnswers);
+        assertThat(followMentorInfo.getAnswersCount()).isEqualTo(QA_NUM_WITH_ANSWERS);
+        assertThat(followMentorInfo.getAnswers().size()).isEqualTo(QA_NUM_WITH_ANSWERS);
 
         // check if answer_time Order by ASC
         List<FollowingQaDto> qaDtos = followMentorInfo.getAnswers();
@@ -144,14 +146,14 @@ class FollowingServiceTest {
     }
 
     @Test
-    @DisplayName("case 2: 멘토가 팔로우는 되어 있으나, 질문답변 데이터가 존재하지 않는 경우")
-    void getFollowMentorInfo_QaData_is_Empty() {
+    @DisplayName("case 2: 팔로우 된 사용자는 존재하지만, 질문답변 데이터가 존재하지 않는 경우")
+    void getFollowUserInfo_QaData_is_Empty() {
         // given
-        // test_mentor_2의 경우 팔로우는 되어 있으나, 질문답변 정보는 없다.
-        String mentor2 = "test_mentor_2";
+        // test_follower_2의 경우 팔로우는 되어 있으나, 질문답변 정보는 없다.
+        String follower_2 = "test_follower_2";
 
         // when
-        FollowingMentorInfoResponse followMentorInfo = followingService.getFollowMentorInfo(TEST_MENTEE_NICKNAME, mentor2);
+        FollowingUserInfoResponse followMentorInfo = followingService.getFollowUserInfo(follower_2);
 
         // then
         assertThat(followMentorInfo).isNotNull();
@@ -164,6 +166,24 @@ class FollowingServiceTest {
         assertThat(followMentorInfo.getAnswersCount()).isZero();
         assertThat(followMentorInfo.getAnswers().size()).isZero();
     }
+
+    /**
+     이 부분은 회의에서 로직상, 팔로우 관계 없이도 사용자 정보를 열람하도록 정하였으므로, 따로 구현하지 않음.
+     */
+    /*@Test
+    @DisplayName("case 3: 팔로우 관계가 존재하지 않는 사용자에 대해 요청하면, CustomException을 유발한다")
+    void getFollowUserInfo_Follow_is_not_existed_between_users() {
+        // given
+        String follower_100 = "test_follower_100";
+
+        // save User
+        User user = createTestUser("google_1112223344", follower_100 + "@google.com", follower_100);
+        userRepository.save(user);
+
+        // when // then
+        Assertions.assertThatThrownBy(() -> followingService.getFollowUserInfo(follower_100))
+                .isInstanceOf(CustomException.class);
+    }*/
 
 
     /**
@@ -236,6 +256,8 @@ class FollowingServiceTest {
                 .graduateDate(2021).graduateMonth(3)
                 .major("컴퓨터공학과").subMajor("심리학과")
                 .minor(null).field("백엔드").techStack("AWS")
+                .company(null)
+                .companyYear(0)
                 .career(null)
                 .certificate(null)
                 .awards(null)
@@ -247,7 +269,7 @@ class FollowingServiceTest {
     private QaList createTestQaListAndAnswerIsNotNull(String mentorNickname, int index) {
         LocalDateTime now = LocalDateTime.now();
         return QaList.builder()
-                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .menteeNickname(USER_NICKNAME)
                 .mentorNickname(mentorNickname)
                 .questionOrigin("origin message_" + index)
                 .questionSummary("summary message_" + index)
@@ -258,10 +280,11 @@ class FollowingServiceTest {
                 .build();
     }
 
+    // TODO: QaList를 QaObject로 명칭 변경, 및 menteeNickname, mentorNickname column 명 변경
     private QaList createTestQaListAndAnswerIsNull(String mentorNickname, int index) {
         LocalDateTime now = LocalDateTime.now();
         return QaList.builder()
-                .menteeNickname(TEST_MENTEE_NICKNAME)
+                .menteeNickname(USER_NICKNAME)
                 .mentorNickname(mentorNickname)
                 .questionOrigin("origin message_" + index)
                 .questionSummary("summary message_" + index)

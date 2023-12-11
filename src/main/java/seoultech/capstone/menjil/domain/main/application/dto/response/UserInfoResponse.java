@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.main.dto.response;
+package seoultech.capstone.menjil.domain.main.application.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MentorInfoResponse {
+public class UserInfoResponse {
     /**
      * 메인 화면에 보여질 멘토의 정보를 담는 DTO.
      * User Entity로부터 정보를 가져온다.
@@ -23,8 +23,8 @@ public class MentorInfoResponse {
     private String imgUrl;
     private List<String> lastAnsweredMessages; // 가장 최근에 답변한 질문(최대 2개)
 
-    public static MentorInfoResponse fromUserEntity(User user) {
-        return new MentorInfoResponse(user.getNickname(), user.getMajor(), user.getCompany(),
+    public static UserInfoResponse fromUserEntity(User user) {
+        return new UserInfoResponse(user.getNickname(), user.getMajor(), user.getCompany(),
                 user.getField(), user.getTechStack(), user.getImgUrl(), null);
     }
 

@@ -3,14 +3,15 @@ package seoultech.capstone.menjil.domain.follow.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import seoultech.capstone.menjil.domain.follow.application.dto.request.FollowCreateServiceRequest;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.domain.Follow;
-import seoultech.capstone.menjil.domain.follow.dto.request.FollowRequest;
+import seoultech.capstone.menjil.global.exception.CustomException;
+import seoultech.capstone.menjil.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static seoultech.capstone.menjil.global.exception.ErrorIntValue.INTERNAL_SERVER_ERROR;
 import static seoultech.capstone.menjil.global.exception.SuccessIntValue.FOLLOW_CREATED;
 import static seoultech.capstone.menjil.global.exception.SuccessIntValue.FOLLOW_DELETED;
 
@@ -21,10 +22,11 @@ public class FollowService {
 
     private final FollowRepository followRepository;
 
-    public int followRequest(FollowRequest followRequest) {
-        String userNickname = followRequest.getUserNickname();
-        String followNickname = followRequest.getFollowNickname();
+    public int createFollow(FollowCreateServiceRequest request) {
+        String userNickname = request.getUserNickname();
+        String followNickname = request.getFollowNickname();
 
+        // TODO: 이 부분에서, 조회할 때 실제 User가 있는지 확인이 필요하므로, 추후 User & Follow 연관관계 설정
         Optional<Follow> follow = followRepository.findFollowByUserNicknameAndFollowNickname(userNickname, followNickname);
         if (followIsExist(follow)) {
             // 팔로우가 존재하는 경우 팔로우 취소
@@ -33,12 +35,7 @@ public class FollowService {
         } else {
             // 팔로우가 존재하지 않는 경우 팔로우 등록
             Follow newfollow = Follow.of(userNickname, followNickname, LocalDateTime.now());
-            try {
-                followRepository.save(newfollow);
-            } catch (RuntimeException e) {
-                log.error(">> save exception occurred in: ", e);
-                return INTERNAL_SERVER_ERROR.getValue();
-            }
+            saveFollow(newfollow);
             return FOLLOW_CREATED.getValue();
         }
     }
@@ -48,7 +45,16 @@ public class FollowService {
         return followIsExist(follow);
     }
 
-    public boolean followIsExist(Optional<Follow> follow) {
+    protected boolean followIsExist(Optional<Follow> follow) {
         return follow.isPresent();
+    }
+
+    private void saveFollow(Follow follow) {
+        try {
+            followRepository.save(follow);
+        } catch (RuntimeException e) {
+            log.error(">> Follow save exception occurred in: ", e);
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.main.dto.response;
+package seoultech.capstone.menjil.domain.main.application.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

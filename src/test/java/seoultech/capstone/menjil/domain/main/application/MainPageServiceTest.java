@@ -18,8 +18,8 @@ import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.domain.Follow;
-import seoultech.capstone.menjil.domain.main.dto.response.FollowUserResponse;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,7 +95,7 @@ class MainPageServiceTest {
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 UserInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -107,14 +107,14 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
+        Page<UserInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         assertThat(mentorList.getSize()).isEqualTo(3);
 
-        MentorInfoResponse firstMentor = mentorList.getContent().get(0);
-        MentorInfoResponse secondMentor = mentorList.getContent().get(1);
-        MentorInfoResponse thirdMentor = mentorList.getContent().get(2);
+        UserInfoResponse firstMentor = mentorList.getContent().get(0);
+        UserInfoResponse secondMentor = mentorList.getContent().get(1);
+        UserInfoResponse thirdMentor = mentorList.getContent().get(2);
 
         assertThat(firstMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 1);
         assertThat(firstMentor.getImgUrl()).isNotBlank();
@@ -144,7 +144,7 @@ class MainPageServiceTest {
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 UserInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -156,7 +156,7 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
+        Page<UserInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         // size 값은 SIZE 값과 동일하다.
@@ -165,8 +165,8 @@ class MainPageServiceTest {
         // content의 개수가 2개이다.
         assertThat(mentorList.getContent().size()).isEqualTo(2);
 
-        MentorInfoResponse firstMentor = mentorList.getContent().get(0);
-        MentorInfoResponse secondMentor = mentorList.getContent().get(1);
+        UserInfoResponse firstMentor = mentorList.getContent().get(0);
+        UserInfoResponse secondMentor = mentorList.getContent().get(1);
 
         assertThat(firstMentor.getNickname()).isEqualTo(MENTOR_NICKNAME + 7);
         assertThat(firstMentor.getImgUrl()).isNotBlank();
@@ -195,7 +195,7 @@ class MainPageServiceTest {
                 })
                 .collect(Collectors.toList());  // collects the User objects into a List<User>
 
-        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 MentorInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
+        // createdDate 값을 조절하기 위해, Thread.sleep() 사용: 하지만 UserInfoResponse에서 시간 데이터를 사용하지 않으므로, 큰 의미는 없다.
         // 추후 리팩토링할때 무시할 것
         userRepository.saveAll(List.of(users.get(0), users.get(1)));
         Thread.sleep(1000);
@@ -207,7 +207,7 @@ class MainPageServiceTest {
 
         // when
         // nickname은 중요하지 않다.
-        Page<MentorInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
+        Page<UserInfoResponse> mentorList = mainPageService.getMentors("test1", pageRequest);
 
         // then
         assertThat(mentorList.getContent().size()).isEqualTo(0);

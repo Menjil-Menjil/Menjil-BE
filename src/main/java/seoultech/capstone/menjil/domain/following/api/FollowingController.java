@@ -10,8 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import seoultech.capstone.menjil.domain.following.application.FollowingService;
-import seoultech.capstone.menjil.domain.following.dto.response.FollowingMentorInfoResponse;
-import seoultech.capstone.menjil.domain.following.dto.response.FollowingMentorResponse;
+import seoultech.capstone.menjil.domain.following.application.dto.response.FollowingUserInfoResponse;
+import seoultech.capstone.menjil.domain.following.application.dto.response.FollowingUserResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -25,19 +25,20 @@ public class FollowingController {
     private final int PAGE_SIZE = 9;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<Page<FollowingMentorResponse>>> getAllFollowMentors(@RequestParam("nickname") String nickname, @PageableDefault(size = PAGE_SIZE, sort = {"createdDate"},
-            direction = Sort.Direction.ASC) Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<FollowingUserResponse>>> getAllFollowOfUsers(
+            @RequestParam("nickname") String nickname,
+            @PageableDefault(size = PAGE_SIZE, sort = {"createdDate"},
+                    direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.GET_ALL_FOLLOW_MENTOR_SUCCESS,
-                        followingService.getAllFollowMentors(nickname, pageable)));
+                .body(ApiResponse.success(SuccessCode.GET_ALL_FOLLOW_USERS_SUCCESS,
+                        followingService.getAllFollowOfUsers(nickname, pageable)));
     }
 
     @GetMapping("/info")
-    public ResponseEntity<ApiResponse<FollowingMentorInfoResponse>> getFollowMentorInfo(
-            @RequestParam("nickname") String nickname,
+    public ResponseEntity<ApiResponse<FollowingUserInfoResponse>> getFollowUserInfo(
             @RequestParam("followNickname") String followNickname) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.GET_FOLLOW_MENTOR_INFO_SUCCESS,
-                        followingService.getFollowMentorInfo(nickname, followNickname)));
+                .body(ApiResponse.success(SuccessCode.GET_FOLLOW_USER_INFO_SUCCESS,
+                        followingService.getFollowUserInfo(followNickname)));
     }
 }

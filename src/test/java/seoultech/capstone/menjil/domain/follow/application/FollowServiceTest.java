@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import seoultech.capstone.menjil.domain.follow.application.dto.request.FollowCreateServiceRequest;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.domain.Follow;
-import seoultech.capstone.menjil.domain.follow.dto.request.FollowRequest;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -40,39 +40,36 @@ class FollowServiceTest {
     }
 
     /**
-     * followRequest
+     * createFollow
      */
     @Test
-    @DisplayName("db에 이미 팔로우 내용이 존재하는 경우, FOLLOW_DELETED=1 을 리턴한다")
-    void followRequest_return_FOLLOW_DELETED() {
+    @DisplayName("case 1: db에 이미 팔로우 내용이 존재하는 경우, FOLLOW_DELETED=1 을 리턴한다")
+    void createFollow_return_FOLLOW_DELETED() {
         // given
-        FollowRequest followRequest = FollowRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
+        FollowCreateServiceRequest request = FollowCreateServiceRequest.of(TEST_USER_NICKNAME, TEST_FOLLOW_NICKNAME);
 
         // when
-        // 실행하기 전 db에 데이터가 존재하는지 검증
-        assertThat(followRepository.findAll().size()).isOne();
+        assertThat(followRepository.findAll().size()).isOne(); // 실행하기 전 db에 데이터가 존재하는지 검증
 
-        int result = followService.followRequest(followRequest);
+        int result = followService.createFollow(request);
 
         // then
         assertThat(result).isEqualTo(FOLLOW_DELETED.getValue());
-
-        // db에서 지워졌는지 검증
-        assertThat(followRepository.findAll().size()).isZero();
+        assertThat(followRepository.findAll().size()).isZero(); // db에서 지워졌는지 검증
     }
 
     @Test
-    @DisplayName("팔로우 내용이 db에 존재하지 않는 경우, FOLLOW_CRETAED=0 을 리턴한다")
-    void followRequest_return_FOLLOW_CRETAED() {
+    @DisplayName("case 2: db에 팔로우 내용이 존재하지 않는 경우, FOLLOW_CRETAED=0 을 리턴한다")
+    void createFollow_return_FOLLOW_CRETAED() {
         // given
         String testUser = "testUser";
-        FollowRequest followRequest = FollowRequest.of(testUser, TEST_FOLLOW_NICKNAME);
+        FollowCreateServiceRequest request = FollowCreateServiceRequest.of(testUser, TEST_FOLLOW_NICKNAME);
 
         // when
         // 실행하기 전 db에 데이터가 존재하는지 검증
         assertThat(followRepository.findAll().size()).isOne();
 
-        int result = followService.followRequest(followRequest);
+        int result = followService.createFollow(request);
 
         // then
         assertThat(result).isEqualTo(FOLLOW_CREATED.getValue());

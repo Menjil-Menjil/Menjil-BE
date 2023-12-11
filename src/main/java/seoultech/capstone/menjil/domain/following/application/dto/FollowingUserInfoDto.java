@@ -1,13 +1,12 @@
-package seoultech.capstone.menjil.domain.following.dto;
+package seoultech.capstone.menjil.domain.following.application.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import seoultech.capstone.menjil.domain.auth.domain.User;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class FollowingUserInfoDto {
 
     private String nickname;
@@ -38,5 +37,25 @@ public class FollowingUserInfoDto {
                 user.getCareer(), user.getCertificate(),
                 user.getAwards(), user.getActivity()
         );
+    }
+
+    @Builder
+    private FollowingUserInfoDto(String nickname, String company, String field, String school,
+                                String major, String subMajor, String minor,
+                                String techStack, String imgUrl, String career,
+                                String certificate, String awards, String activity) {
+        this.nickname = nickname;
+        this.company = company;
+        this.field = field;
+        this.school = school;
+        this.major = major;
+        this.subMajor = subMajor;
+        this.minor = minor;
+        this.techStack = techStack;
+        this.imgUrl = imgUrl;
+        this.career = career;
+        this.certificate = certificate;
+        this.awards = awards;
+        this.activity = activity;
     }
 }

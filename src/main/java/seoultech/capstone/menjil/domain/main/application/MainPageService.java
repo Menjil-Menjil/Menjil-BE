@@ -14,8 +14,8 @@ import seoultech.capstone.menjil.domain.chat.dao.QaListRepository;
 import seoultech.capstone.menjil.domain.chat.domain.QaList;
 import seoultech.capstone.menjil.domain.follow.dao.FollowRepository;
 import seoultech.capstone.menjil.domain.follow.domain.Follow;
-import seoultech.capstone.menjil.domain.main.dto.response.FollowUserResponse;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
 import java.time.Duration;
@@ -43,10 +43,10 @@ public class MainPageService {
      * nickname은, 추후 멘토 추천 알고리즘 사용시 필요할 수 있으므로, 우선 받도록 하였으나.
      * 현재 수행하는 기능은 없다.
      */
-    public Page<MentorInfoResponse> getMentors(String nickname, Pageable pageable) {
+    public Page<UserInfoResponse> getMentors(String nickname, Pageable pageable) {
         Page<User> page = userRepository.findAll(pageable);
-        Page<MentorInfoResponse> mentorInfoResponse = page.map(user -> {
-            MentorInfoResponse dto = MentorInfoResponse.fromUserEntity(user);
+        Page<UserInfoResponse> mentorInfoResponse = page.map(user -> {
+            UserInfoResponse dto = UserInfoResponse.fromUserEntity(user);
 
             // set AWS S3 presigned url
             dto.setImgUrl(String.valueOf(awsS3Handler.generatePresignedUrl(

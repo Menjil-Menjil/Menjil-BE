@@ -1,4 +1,4 @@
-package seoultech.capstone.menjil.domain.following.dto;
+package seoultech.capstone.menjil.domain.following.application.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
