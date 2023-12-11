@@ -17,8 +17,8 @@ import seoultech.capstone.menjil.domain.auth.domain.User;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
-import seoultech.capstone.menjil.domain.main.dto.response.FollowUserResponse;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -71,8 +71,8 @@ class MainPageControllerTest {
         /* 여기서 주의사항: MainPageController의 파라미터 중 @PageableDefault에서 작성한 값과 일치하도록 작성해야 한다 */
         Pageable pageable = PageRequest.of(pageNumber, SIZE, SORT);
 
-        List<MentorInfoResponse> responseList = new ArrayList<>();
-        Page<MentorInfoResponse> page = new PageImpl<>(responseList);
+        List<UserInfoResponse> responseList = new ArrayList<>();
+        Page<UserInfoResponse> page = new PageImpl<>(responseList);
 
         // when
         Mockito.when(mainPageService.getMentors(nickname, pageable)).thenReturn(page);
@@ -82,8 +82,8 @@ class MainPageControllerTest {
                         .queryParam("nickname", nickname)
                         .queryParam("page", String.valueOf(pageable.getPageNumber())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getCode())))
-                .andExpect(jsonPath("$.message", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_USERS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_USERS_AVAILABLE.getMessage())))
                 .andExpect(jsonPath("$.data.content").isEmpty())    // 빈 리스트이므로, doesNotExist() (X)
                 .andDo(print());
 
@@ -100,13 +100,13 @@ class MainPageControllerTest {
         /* 여기서 주의사항: MainPageController의 파라미터 중 @PageableDefault에서 작성한 값과 일치하도록 작성해야 한다 */
         Pageable pageable = PageRequest.of(pageNumber, SIZE, SORT);
 
-        // 현재 MentorInfoResponse는 of 메서드가 없으므로,
+        // 현재 UserInfoResponse는 of 메서드가 없으므로,
         // fromUserEntity 메서드를 사용하기 위해, userA, userB 생성
         User userA = createTestUser("google_1231323", "test@google.com", "test_1");
         User userB = createTestUser("google_1231324", "test2@google.com", "test_2");
-        List<MentorInfoResponse> responseList = List.of(MentorInfoResponse.fromUserEntity(userA),
-                MentorInfoResponse.fromUserEntity(userB));
-        Page<MentorInfoResponse> page = new PageImpl<>(responseList);
+        List<UserInfoResponse> responseList = List.of(UserInfoResponse.fromUserEntity(userA),
+                UserInfoResponse.fromUserEntity(userB));
+        Page<UserInfoResponse> page = new PageImpl<>(responseList);
 
         // when
         Mockito.when(mainPageService.getMentors(nickname, pageable)).thenReturn(page);
@@ -116,8 +116,8 @@ class MainPageControllerTest {
                         .queryParam("nickname", nickname)
                         .queryParam("page", String.valueOf(pageable.getPageNumber())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getCode())))
-                .andExpect(jsonPath("$.message", is(SuccessCode.GET_MENTOR_LIST_AVAILABLE.getMessage())))
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_USERS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_USERS_AVAILABLE.getMessage())))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.content[0]").isNotEmpty())
                 .andExpect(jsonPath("$.data.content[1]").isNotEmpty())

@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import seoultech.capstone.menjil.domain.chat.application.RoomService;
 import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
-import seoultech.capstone.menjil.domain.main.dto.response.FollowUserResponse;
-import seoultech.capstone.menjil.domain.main.dto.response.MentorInfoResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
+import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
 import seoultech.capstone.menjil.global.common.dto.ApiResponse;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
@@ -33,11 +33,11 @@ public class MainPageController {
     private final int pageSize = 3;
 
     @GetMapping("/mentors")
-    public ResponseEntity<ApiResponse<Page<MentorInfoResponse>>> getMentors(String nickname, @PageableDefault(size = pageSize, sort = {"createdDate", "nickname"},
+    public ResponseEntity<ApiResponse<Page<UserInfoResponse>>> getMentors(String nickname, @PageableDefault(size = pageSize, sort = {"createdDate", "nickname"},
             direction = Sort.Direction.ASC) Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(SuccessCode.GET_MENTOR_LIST_AVAILABLE, mainPageService.getMentors(nickname, pageable)));
+                .body(ApiResponse.success(SuccessCode.GET_USERS_AVAILABLE, mainPageService.getMentors(nickname, pageable)));
     }
 
     @GetMapping("/rooms")
