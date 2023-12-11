@@ -6,6 +6,10 @@ on:
 
 permissions:
   contents: read
+    
+  # PR 코멘트 등록을 위한 write 권한
+  checks: write
+  pull-requests: write
 
 jobs:
   build:
