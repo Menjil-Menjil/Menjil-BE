@@ -1,9 +1,8 @@
-## Use codecov, and not Continuous Deployment & Delivery
-name: Code Coverage in main, develop branch
+name: CI in develop branch
 
 on:
-  pull_request:
-    branches: [ "main", "develop" ]
+  push:
+    branches: [ "develop" ]
 
 permissions:
   contents: read
@@ -87,18 +86,3 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
-      - name: Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./build/reports/jacoco/test/jacocoTestReport.xml
-
-
-#  code-coverage:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Upload coverage reports to Codecov
-#        uses: codecov/codecov-action@v3
-#        env:
-#          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
