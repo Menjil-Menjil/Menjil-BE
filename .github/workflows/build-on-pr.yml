@@ -1,12 +1,12 @@
-name: CI in develop branch
+name: Build on PR to develop and main branch
 
 on:
-  push:
-    branches: [ "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
 
 permissions:
   contents: read
-    
+
   # PR 코멘트 등록을 위한 write 권한
   checks: write
   pull-requests: write
@@ -42,8 +42,8 @@ jobs:
           --health-retries=3
 
     steps:
-      # workflow 실행 전 기본적으로 checkout 필요
-      # 최신 버전은 v3
+      ## workflow 실행 전 기본적으로 checkout 필요
+      ## 최신 버전은 v3
       - uses: actions/checkout@v3
       - name: Install Ubuntu dependencies
         run: sudo apt-get update
@@ -90,6 +90,12 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
+      ## Codecov
+      - name: Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./build/reports/jacoco/test/jacocoTestReport.xml
 
       ## 테스트 결과 PR 코멘트에 등록
       - name: Register the test results as PR comments
@@ -98,16 +104,19 @@ jobs:
         with:
           files: '**/build/test-results/test/TEST-*.xml'
 
-      ## 테스트 실패시 코드 라인에 대한 체크 추가
+      ## 테스트 실패시 코드 라인에 대한 check comment 추가
       - name: If test fail, add check comment on failed code line
         uses: mikepenz/action-junit-report@v3
         if: always()
         with:
           report_paths: '**/build/test-results/test/TEST-*.html'
 
-      ## 테스트 결과 업로드
-      - name: Upload test report
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-report
-          path: build/reports/tests/test/
+
+#  code-coverage:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Upload coverage reports to Codecov
+#        uses: codecov/codecov-action@v3
+#        env:
+#          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
