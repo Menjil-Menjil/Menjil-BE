@@ -40,8 +40,8 @@ jobs:
     steps:
       # workflow 실행 전 기본적으로 checkout 필요
       # 최신 버전은 v3
-      - name: Install Ubuntu dependencies
       - uses: actions/checkout@v4
+      - name: Install Ubuntu dependencies
         run: sudo apt-get update
 
       - name: Set up JDK 17
