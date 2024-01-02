@@ -3,7 +3,6 @@ package seoultech.capstone.menjil.domain.chatbot.application;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomDto;
 import seoultech.capstone.menjil.domain.chatbot.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chatbot.dao.RoomRepository;
 import seoultech.capstone.menjil.domain.chatbot.domain.ChatMessage;

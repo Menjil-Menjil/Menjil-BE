@@ -14,9 +14,10 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomDto;
+import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.api.dto.request.DeleteChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.ChatBotRoomService;
+import seoultech.capstone.menjil.domain.chatbot.application.dto.request.DeleteChatBotRoomServiceRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomIdResponse;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
@@ -60,7 +61,7 @@ class ChatBotRoomControllerTest {
         // given
         String initNick = "initNicknameNotExisted";
         String receiverNick = "receiverNicknameExisted";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
@@ -68,7 +69,7 @@ class ChatBotRoomControllerTest {
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenThrow(new CustomException(ErrorCode.INITIATOR_USER_NOT_EXISTED));
 
         // then
@@ -77,7 +78,7 @@ class ChatBotRoomControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
 
-        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto);
+        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto.toServiceRequest());
     }
 
     @Test
@@ -86,7 +87,7 @@ class ChatBotRoomControllerTest {
         // given
         String initNick = "initNicknameExisted";
         String receiverNick = "receiverNicknameNotExisted";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
@@ -94,7 +95,7 @@ class ChatBotRoomControllerTest {
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenThrow(new CustomException(ErrorCode.RECEPIENT_USER_NOT_EXISTED));
 
         // then
@@ -103,7 +104,7 @@ class ChatBotRoomControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
 
-        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto);
+        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto.toServiceRequest());
     }
 
     @Test
@@ -113,14 +114,14 @@ class ChatBotRoomControllerTest {
         // given
         String initNick = "userNickname";
         String receiverNick = "receiverUserNickname";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenReturn(new ChatBotRoomIdResponse("new-chat-room-id"));
 
         // then
@@ -130,7 +131,7 @@ class ChatBotRoomControllerTest {
                 .andExpect(status().isOk())
                         .andDo(print());
 
-        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto);
+        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto.toServiceRequest());
     }
 
     @Test
@@ -139,14 +140,14 @@ class ChatBotRoomControllerTest {
         // given
         String initNick = "userNickname";
         String receiverNick = "receiverUserNickname";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenReturn(new ChatBotRoomIdResponse("existed-chat-room-id"));
 
         // then
@@ -156,7 +157,7 @@ class ChatBotRoomControllerTest {
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto);
+        verify(chatBotRoomService, times(1)).enterChatBotRoom(roomDto.toServiceRequest());
     }
 
     /**
@@ -260,7 +261,7 @@ class ChatBotRoomControllerTest {
         String content = gson.toJson(request);
 
         // when
-        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomRequest.class)))
+        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomServiceRequest.class)))
                 .thenReturn(true);
 
         // then
@@ -273,7 +274,8 @@ class ChatBotRoomControllerTest {
                 .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 
-        verify(chatBotRoomService, times(1)).quitRoom(Mockito.any(DeleteChatBotRoomRequest.class));
+        verify(chatBotRoomService, times(1))
+                .quitRoom(Mockito.any(DeleteChatBotRoomServiceRequest.class));
     }
 
     @Test
@@ -293,7 +295,7 @@ class ChatBotRoomControllerTest {
         String content = gson.toJson(request);
 
         // when
-        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomRequest.class)))
+        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomServiceRequest.class)))
                 .thenReturn(false);
 
         // then
@@ -306,6 +308,7 @@ class ChatBotRoomControllerTest {
                 .andExpect(jsonPath("$.data").isEmpty())
                 .andDo(print());
 
-        verify(chatBotRoomService, times(1)).quitRoom(Mockito.any(DeleteChatBotRoomRequest.class));
+        verify(chatBotRoomService, times(1))
+                .quitRoom(Mockito.any(DeleteChatBotRoomServiceRequest.class));
     }
 }

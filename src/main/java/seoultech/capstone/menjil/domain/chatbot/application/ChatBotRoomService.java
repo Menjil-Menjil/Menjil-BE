@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomDto;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.DeleteChatBotRoomRequest;
+import seoultech.capstone.menjil.domain.chatbot.application.dto.request.ChatBotRoomServiceRequest;
+import seoultech.capstone.menjil.domain.chatbot.application.dto.request.DeleteChatBotRoomServiceRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomIdResponse;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomResponse;
 import seoultech.capstone.menjil.domain.chatbot.dao.ChatBotRoomRepository;
@@ -34,20 +34,20 @@ public class ChatBotRoomService {
     @Value("${cloud.aws.s3.bucket}")
     private String BUCKET_NAME;
 
-    public ChatBotRoomIdResponse enterChatBotRoom(ChatBotRoomDto chatBotRoomDto) {
+    public ChatBotRoomIdResponse enterChatBotRoom(ChatBotRoomServiceRequest serviceRequest) {
 
         // case 0: 사용자 닉네임이 DB에 존재하지 않을 경우 예외발생
-        validateUserIsExisted(chatBotRoomDto);
+        validateUserIsExisted(serviceRequest);
 
         // case 1: RoomId 생성
-        String roomId = createRoomId(chatBotRoomDto.getInitiatorNickname(), chatBotRoomDto.getRecipientNickname());
+        String roomId = createRoomId(serviceRequest.getInitiatorNickname(), serviceRequest.getRecipientNickname());
 
         ChatBotRoom chatBotRoom = chatBotRoomRepository.findChatBotRoomByRoomId(roomId)
                 .orElse(null);
         if (chatBotRoom == null) {
             // case 2: 채팅방이 존재하지 않는 경우
             // 채팅방을 생성해서 웰컴 메시지를 생성한 후, 채팅방 아이디를 전달한다.
-            createNewChatBotRoom(roomId, chatBotRoomDto);
+            createNewChatBotRoom(roomId, serviceRequest);
 
             // 여기서 생성 로직을 수행
             return new ChatBotRoomIdResponse(roomId);
@@ -58,11 +58,11 @@ public class ChatBotRoomService {
         }
     }
 
-    private void validateUserIsExisted(ChatBotRoomDto chatBotRoomDto) {
-        Optional<User> initiatorInDb = userRepository.findUserByNickname(chatBotRoomDto.getInitiatorNickname());
+    private void validateUserIsExisted(ChatBotRoomServiceRequest serviceRequest) {
+        Optional<User> initiatorInDb = userRepository.findUserByNickname(serviceRequest.getInitiatorNickname());
         initiatorInDb.orElseThrow(() -> new CustomException(ErrorCode.INITIATOR_USER_NOT_EXISTED));
 
-        Optional<User> receiverInDb = userRepository.findUserByNickname(chatBotRoomDto.getRecipientNickname());
+        Optional<User> receiverInDb = userRepository.findUserByNickname(serviceRequest.getRecipientNickname());
         receiverInDb.orElseThrow(() -> new CustomException(ErrorCode.RECEPIENT_USER_NOT_EXISTED));
     }
 
@@ -77,24 +77,24 @@ public class ChatBotRoomService {
         return UUID.nameUUIDFromBytes(bytes).toString();
     }
 
-    private void createNewChatBotRoom(String roomId, ChatBotRoomDto chatBotRoomDto) {
+    private void createNewChatBotRoom(String roomId, ChatBotRoomServiceRequest serviceRequest) {
         // 1. Save ChatBot Room
-        ChatBotRoom newChatBotRoom = saveChatBotRoom(roomId, chatBotRoomDto);
+        ChatBotRoom newChatBotRoom = saveChatBotRoom(roomId, serviceRequest);
 
         // 2. Save Chat Message
         boolean createAndSaveWelcomeMsg = messageService.createWelcomeMessage(newChatBotRoom.getRoomId(),
-                chatBotRoomDto.getInitiatorNickname(),
-                chatBotRoomDto.getRecipientNickname());
+                serviceRequest.getInitiatorNickname(),
+                serviceRequest.getRecipientNickname());
         if (!createAndSaveWelcomeMsg) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private ChatBotRoom saveChatBotRoom(String roomId, ChatBotRoomDto chatBotRoomDto) {
+    private ChatBotRoom saveChatBotRoom(String roomId, ChatBotRoomServiceRequest serviceRequest) {
         ChatBotRoom newChatBotRoom = ChatBotRoom.builder()
                 .roomId(roomId)
-                .initiatorNickname(chatBotRoomDto.getInitiatorNickname())
-                .recipientNickname(chatBotRoomDto.getRecipientNickname())
+                .initiatorNickname(serviceRequest.getInitiatorNickname())
+                .recipientNickname(serviceRequest.getRecipientNickname())
                 .build();
         try {
             return chatBotRoomRepository.save(newChatBotRoom);
@@ -146,7 +146,7 @@ public class ChatBotRoomService {
         ));
     }
 
-    public boolean quitRoom(DeleteChatBotRoomRequest request) {
+    public boolean quitRoom(DeleteChatBotRoomServiceRequest request) {
         String roomId = request.getRoomId();
 
         // 1. ChatMessage 데이터 제거

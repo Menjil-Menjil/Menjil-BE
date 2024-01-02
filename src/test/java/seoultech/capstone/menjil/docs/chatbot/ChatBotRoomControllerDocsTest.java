@@ -12,12 +12,12 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.docs.RestDocsSupport;
 import seoultech.capstone.menjil.domain.chatbot.api.ChatBotRoomController;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomDto;
+import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.api.dto.request.DeleteChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.ChatBotRoomService;
+import seoultech.capstone.menjil.domain.chatbot.application.dto.request.DeleteChatBotRoomServiceRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomIdResponse;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
@@ -56,7 +56,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         // given
         String initNick = "initNicknameNotExisted";
         String receiverNick = "receiverNicknameExisted";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
@@ -64,7 +64,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenThrow(new CustomException(ErrorCode.INITIATOR_USER_NOT_EXISTED));
 
         // then
@@ -95,7 +95,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         // given
         String initNick = "initNicknameExisted";
         String receiverNick = "receiverNicknameNotExisted";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
@@ -103,7 +103,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenThrow(new CustomException(ErrorCode.RECEPIENT_USER_NOT_EXISTED));
 
         // then
@@ -134,14 +134,14 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         // given
         String initNick = "userNickname";
         String receiverNick = "receiverUserNickname";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenReturn(new ChatBotRoomIdResponse("new-chat-room-id"));
 
         // then
@@ -171,14 +171,14 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         // given
         String initNick = "userNickname";
         String receiverNick = "receiverUserNickname";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
         String content = gson.toJson(roomDto);
 
         // when
-        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto))
+        Mockito.when(chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()))
                 .thenReturn(new ChatBotRoomIdResponse("existed-chat-room-id"));
 
         // then
@@ -326,7 +326,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         String content = gson.toJson(request);
 
         // when
-        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomRequest.class)))
+        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomServiceRequest.class)))
                 .thenReturn(true);
 
         // then
@@ -368,7 +368,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
         String content = gson.toJson(request);
 
         // when
-        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomRequest.class)))
+        Mockito.when(chatBotRoomService.quitRoom(Mockito.any(DeleteChatBotRoomServiceRequest.class)))
                 .thenReturn(false);
 
         // then

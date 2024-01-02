@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomDto;
+import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.api.dto.request.DeleteChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.ChatBotRoomService;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomIdResponse;
@@ -31,10 +31,10 @@ public class ChatBotRoomController {
      * 챗봇 대화방에 입장한다.
      */
     @PostMapping("/room/enter")
-    public ResponseEntity<ApiResponse<ChatBotRoomIdResponse>> enterChatBotRoom(@RequestBody ChatBotRoomDto chatBotRoomDto) {
+    public ResponseEntity<ApiResponse<ChatBotRoomIdResponse>> enterChatBotRoom(@RequestBody ChatBotRoomRequest chatBotRoomRequest) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(SuccessCode.GET_CHAT_BOT_ROOM_AVAILABLE,
-                        chatBotRoomService.enterChatBotRoom(chatBotRoomDto)));
+                        chatBotRoomService.enterChatBotRoom(chatBotRoomRequest.toServiceRequest())));
     }
 
     @GetMapping("/rooms")
@@ -53,7 +53,7 @@ public class ChatBotRoomController {
 
     @PostMapping("/room/quit")
     public ResponseEntity<ApiResponse<?>> quitRoom(@RequestBody DeleteChatBotRoomRequest request) {
-        boolean result = chatBotRoomService.quitRoom(request);
+        boolean result = chatBotRoomService.quitRoom(request.toServiceRequest());
         if (result) {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(SuccessCode.ROOM_DELETE_SUCCESS));

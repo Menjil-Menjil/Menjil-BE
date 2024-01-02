@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomDto;
+import seoultech.capstone.menjil.domain.chatbot.api.dto.request.ChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.api.dto.request.DeleteChatBotRoomRequest;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomIdResponse;
 import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBotRoomResponse;
@@ -84,13 +84,13 @@ class ChatBotRoomServiceTest {
         // given
         String initNick = "hello";
         String receiverNick = "hello2";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(initNick)
                 .recipientNickname(receiverNick)
                 .build();
 
         // when // then
-        assertThrows(CustomException.class, () -> chatBotRoomService.enterChatBotRoom(roomDto));
+        assertThrows(CustomException.class, () -> chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()));
     }
 
     @Test
@@ -98,13 +98,13 @@ class ChatBotRoomServiceTest {
     void enterChatBotRoom_receiverNick_Not_In_Db() {
         // given
         String receiverNick = "hello2";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(TEST_INITIATOR_NICKNAME)
                 .recipientNickname(receiverNick)
                 .build();
 
         // when // then
-        assertThrows(CustomException.class, () -> chatBotRoomService.enterChatBotRoom(roomDto));
+        assertThrows(CustomException.class, () -> chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest()));
     }
 
     @Test
@@ -113,7 +113,7 @@ class ChatBotRoomServiceTest {
     void enterChatBotRoom_Room_Not_Exists() {
         // given
         String user = "nickname33";
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(TEST_INITIATOR_NICKNAME)
                 .recipientNickname(user)
                 .build();
@@ -124,7 +124,7 @@ class ChatBotRoomServiceTest {
         userRepository.save(receiver2);
 
         // when
-        ChatBotRoomIdResponse response = chatBotRoomService.enterChatBotRoom(roomDto);
+        ChatBotRoomIdResponse response = chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest());
 
         // then
         // 방 Id 생성 검증
@@ -144,13 +144,13 @@ class ChatBotRoomServiceTest {
     @DisplayName("case 2-1: 방 입장 요청시 채팅방이 이미 존재하는 경우 채팅방 Id를 리턴한다")
     void enterChatBotRoom_Room_Existed() {
         // given
-        ChatBotRoomDto roomDto = ChatBotRoomDto.builder()
+        ChatBotRoomRequest roomDto = ChatBotRoomRequest.builder()
                 .initiatorNickname(TEST_INITIATOR_NICKNAME)
                 .recipientNickname(TEST_RECIPIENT_NICKNAME)
                 .build();
 
         // when
-        ChatBotRoomIdResponse response = chatBotRoomService.enterChatBotRoom(roomDto);
+        ChatBotRoomIdResponse response = chatBotRoomService.enterChatBotRoom(roomDto.toServiceRequest());
 
         // then
         String chatBotRoomId = response.getChatBotRoomId();
@@ -196,7 +196,7 @@ class ChatBotRoomServiceTest {
                 .build();
 
         // when
-        List<MessageOrderResponse> messageOrderResponses = roomService.enterChatBotRoom(roomDto);
+        List<MessageOrderResponse> messageOrderResponses = roomService.enterChatBotRoom(roomDto.toServiceRequest());
 
         // then
         assertThat(messageOrderResponses.size()).isEqualTo(1);
@@ -251,7 +251,7 @@ class ChatBotRoomServiceTest {
         messageRepository.saveAll(saveThreeMessages);
 
         // when
-        List<MessageOrderResponse> messageOrderResponses = roomService.enterChatBotRoom(roomDto);
+        List<MessageOrderResponse> messageOrderResponses = roomService.enterChatBotRoom(roomDto.toServiceRequest());
 
         // then
         assertThat(messageOrderResponses.size()).isEqualTo(3);
@@ -333,7 +333,7 @@ class ChatBotRoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        List<MessageOrderResponse> messageOrderResponses = roomService.enterChatBotRoom(roomDto);
+        List<MessageOrderResponse> messageOrderResponses = roomService.enterChatBotRoom(roomDto.toServiceRequest());
 
         // then
         assertThat(messageOrderResponses.size()).isEqualTo(10);
@@ -455,7 +455,7 @@ class ChatBotRoomServiceTest {
         messageRepository.saveAll(chatMessageList);
 
         // when
-        boolean result = chatBotRoomService.quitRoom(deleteChatBotRoomRequest);
+        boolean result = chatBotRoomService.quitRoom(deleteChatBotRoomRequest.toServiceRequest());
 
         // then
         assertThat(result).isTrue();
