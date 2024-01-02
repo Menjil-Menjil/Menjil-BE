@@ -162,7 +162,7 @@ operation::api/chat-bot/room/enter/500/case1[snippets='http-request']
 operation::api/chat-bot/room/enter/500/case1-1[snippets='http-response,response-fields']
 
 
-=== 대화목록 불러오기
+=== 대화방 목록 불러오기
 ==== 성공
 ===== 기존에 존재하던 대화방이 1개인 경우
 operation::api/chat-bot/rooms/200/case1[snippets='http-request,request-parameters']

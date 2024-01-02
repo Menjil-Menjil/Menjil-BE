@@ -116,6 +116,7 @@ public class ChatBotRoomService {
     /**
      * 사용자의 챗봇 대화방 목록을 불러온다.
      */
+    // TODO: 이 메서드는 추후 개별 함수로 분리 및, 성능 테스트를 시도해볼 것.
     public List<ChatBotRoomResponse> getAllChatBotRooms(String initiatorNickname) {
         List<ChatBotRoom> chatBotRooms = chatBotRoomRepository.findAllByInitiatorNickname(initiatorNickname);
 
