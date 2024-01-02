@@ -107,7 +107,7 @@ class ChatBotRoomControllerTest {
     }
 
     @Test
-    @DisplayName("case 2: 방 입장 요청시 채팅방이 존재하지 않는 경우, 채팅방 및 WelcomeMsg를 생성 한다. " +
+    @DisplayName("case 2: 방 입장 요청시 채팅방이 존재하지 않는 경우, 채팅방 및 Welcome Message를 생성 한다. " +
             "그리고 채팅방 Id를 리턴한다")
     void enterChatBotRoom_Room_Not_Exists() throws Exception {
         // given
