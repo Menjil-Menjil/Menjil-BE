@@ -14,17 +14,14 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import seoultech.capstone.menjil.domain.auth.domain.User;
-import seoultech.capstone.menjil.domain.chat.application.RoomService;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.chatbot.application.ChatBotRoomService;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
 import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
 import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
 import seoultech.capstone.menjil.global.config.WebConfig;
 import seoultech.capstone.menjil.global.exception.SuccessCode;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -49,7 +46,7 @@ class MainPageControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private RoomService roomService;
+    private ChatBotRoomService chatBotRoomService;
 
     @MockBean
     private MainPageService mainPageService;
@@ -125,67 +122,6 @@ class MainPageControllerTest {
                 .andDo(print());
 
         verify(mainPageService, times(1)).getMentors(nickname, pageable);
-    }
-
-    /**
-     * getAllRoomsOfUser
-     */
-    @Test
-    @DisplayName("사용자의 전체 방 목록을 불러온다")
-    void getAllRoomsOfUser() throws Exception {
-        // given
-        String targetNickname = "test_HOHO";
-        String roomId2 = "test_room_2";
-        String roomId3 = "test_room_3";
-        String nickname2 = "서울과기대2123";
-        String nickname3 = "서울시립1873";
-        String type = "MENTEE";
-        LocalDateTime now = LocalDateTime.now();
-
-        // when
-        Mockito.when(roomService.getAllRoomsOfUser(targetNickname, type)).thenReturn(Arrays.asList(
-                RoomInfoResponse.of(roomId2, nickname2, "test_url", "hello here~~22", now),
-                RoomInfoResponse.of(roomId3, nickname3, "test_url", "hello there~~33", now.plusSeconds(1L))
-        ));
-
-        // then
-        mvc.perform(MockMvcRequestBuilders.get("/api/main/rooms/")
-                        .queryParam("nickname", targetNickname)
-                        .queryParam("type", type))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AVAILABLE.getCode())))
-                .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AVAILABLE.getMessage())))
-                .andExpect(jsonPath("$.data[0]").exists())     // check data is not null
-                .andExpect(jsonPath("$.data[0].roomId", is(roomId2)))
-                .andExpect(jsonPath("$.data[1]").exists())     // check data is not null
-                .andExpect(jsonPath("$.data[1].roomId", is(roomId3)))
-                .andDo(print());
-
-        verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
-    }
-
-    @Test
-    @DisplayName("사용자의 채팅방 목록이 존재하지 않는 경우")
-    void getAllRoomsOfUser_when_room_not_exists() throws Exception {
-        // given
-        String targetNickname = "test_HOHO";
-        String type = "MENTEE";
-        List<RoomInfoResponse> result = new ArrayList<>();
-
-        // when
-        Mockito.when(roomService.getAllRoomsOfUser(targetNickname, type)).thenReturn(result);
-
-        // then
-        mvc.perform(MockMvcRequestBuilders.get("/api/main/rooms/")
-                        .queryParam("nickname", targetNickname)
-                        .queryParam("type", type))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getCode())))
-                .andExpect(jsonPath("$.message", is(SuccessCode.GET_ROOMS_AND_NOT_EXISTS.getMessage())))
-                .andExpect(jsonPath("$.data").isEmpty())
-                .andDo(print());
-
-        verify(roomService, times(1)).getAllRoomsOfUser(targetNickname, type);
     }
 
     /**
