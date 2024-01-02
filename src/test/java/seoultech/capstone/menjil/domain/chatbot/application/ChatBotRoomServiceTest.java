@@ -24,8 +24,8 @@ import seoultech.capstone.menjil.global.exception.CustomException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -53,9 +53,9 @@ class ChatBotRoomServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Save Chat-bot Room
         TEST_ROOM_ID = chatBotRoomService.createRoomId(TEST_INITIATOR_NICKNAME, TEST_RECIPIENT_NICKNAME);
 
+        // Save Chat-bot Room
         ChatBotRoom chatBotRoom = ChatBotRoom.builder()
                 .initiatorNickname(TEST_INITIATOR_NICKNAME)
                 .recipientNickname(TEST_RECIPIENT_NICKNAME)
@@ -351,51 +351,124 @@ class ChatBotRoomServiceTest {
     @Test
     @DisplayName("case 1: 기존 챗봇 대화방이 1개 존재하는 경우")
     void getAllChatBotRooms_Number_of_Room_Is_One() {
-        // given // when
+        // given
+        String roomId = TEST_ROOM_ID;
+        MessageType type = MessageType.C_QUESTION;
+        String cMessage = "질문 1";
+        String senderNickname = TEST_RECIPIENT_NICKNAME;
+        LocalDateTime now = LocalDateTime.now();
+
+        createAndSaveChatMessage(roomId, cMessage, senderNickname, type, now);
+
+        // when
         List<ChatBotRoomResponse> getChatBotRooms = chatBotRoomService.getAllChatBotRooms(TEST_INITIATOR_NICKNAME);
 
         // then
         assertThat(getChatBotRooms.size()).isEqualTo(1);
+
+        ChatBotRoomResponse response = getChatBotRooms.get(0);
+        assertThat(response.getRoomId()).isEqualTo(roomId);
+        assertThat(response.getQuestionMessage()).isEqualTo(cMessage);
+        assertThat(response.getRecipientNickname()).isEqualTo(senderNickname);
+        assertThat(response.getCreatedDateTime().withNano(0)).isEqualTo(now.withNano(0));
+        assertThat(response.getImgUrl()).isNotNull();
     }
 
     @Test
-    @DisplayName("case 1-1: 기존 챗봇 대화방이 2개 존재하는 경우")
-    void getAllChatBotRooms_Number_Of_Room_Is_Two() {
+    @DisplayName("case 1-1: 기존 챗봇 대화방이 1개, C_QUESTION 메시지가 여러개 존재하는 경우 가장 최신의 메시지가 전달된다")
+    void getAllChatBotRooms_Number_of_Room_Is_One_And_Messages() {
         // given
+        int NUMBER_OF_MESSAGES = 3;
+
+        String roomId = TEST_ROOM_ID;
+        String cMessage1 = "질문 1";
+        String cMessage2 = "질문 2";
+        String cMessage3 = "질문 3";
+        String senderNickname = TEST_RECIPIENT_NICKNAME;
+        LocalDateTime now = LocalDateTime.now();
+
+        // save chat messages of C_QUESTION
+        String[] messages = {cMessage1, cMessage2, cMessage3};
+
+        for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
+            createAndSaveChatMessage(roomId, messages[i], senderNickname,
+                    MessageType.C_QUESTION, now.plusMinutes(i));
+        }
+
+        // when
+        List<ChatBotRoomResponse> getChatBotRooms = chatBotRoomService.getAllChatBotRooms(TEST_INITIATOR_NICKNAME);
+
+        // then
+        assertThat(getChatBotRooms.size()).isEqualTo(1);
+
+        // 가장 최근에 작성된 C_QUESTION인 cMessage3 정보가 담겨있는지 확인한다.
+        ChatBotRoomResponse response = getChatBotRooms.get(0);
+        assertThat(response.getQuestionMessage()).isEqualTo(cMessage3);
+        assertThat(response.getQuestionMessageDateTime()).isAfter(now); // C_QUESTION 메시지의 시간이 현재보다 빠르다.
+
+        assertThat(response.getImgUrl()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("case 1-2: 기존 챗봇 대화방이 3개 존재하는 경우: Response 정렬 순서 검증")
+    void getAllChatBotRooms_Number_Of_Room_Is_Three() {
+        // given
+        Integer NUMBER_OF_ROOMS = 3;
+
         String room2Id = "room2";
         String room2RecipientNickname = TEST_RECIPIENT_NICKNAME + "room2";
+        String room3Id = "room3";
+        String room3RecipientNickname = TEST_RECIPIENT_NICKNAME + "room3";
 
-        // save chatbot room
+        // save chatbot rooms
         ChatBotRoom room2 = ChatBotRoom.builder()
                 .roomId(room2Id)
                 .initiatorNickname(TEST_INITIATOR_NICKNAME)
                 .recipientNickname(room2RecipientNickname)
                 .build();
-        chatBotRoomRepository.save(room2);
+        ChatBotRoom room3 = ChatBotRoom.builder()
+                .roomId(room3Id)
+                .initiatorNickname(TEST_INITIATOR_NICKNAME)
+                .recipientNickname(room3RecipientNickname)
+                .build();
+        chatBotRoomRepository.saveAll(List.of(room2, room3));
+
+        // save chat messages of C_QUESTION
+        String[] roomIds = {TEST_ROOM_ID, room2Id, room3Id};
+        String[] messages = {"질문 1", "질문 2", "질문 3"};
+        String[] senderNicknames = {TEST_RECIPIENT_NICKNAME, room2RecipientNickname, room3RecipientNickname};
+        LocalDateTime now = LocalDateTime.now();
+
+        for (int i = 0; i < NUMBER_OF_ROOMS; i++) {
+            createAndSaveChatMessage(roomIds[i], messages[i], senderNicknames[i],
+                    MessageType.C_QUESTION, now.plusMinutes(i));
+        }
 
         // save receiver user data
         String imgUrl2 = "default/img_url_222";
+        String imgUrl3 = "default/img_url_333";
         User receiver2 = createUser("google_9998887776", "room2@google.com", room2RecipientNickname, imgUrl2);
-        userRepository.save(receiver2);
+        User receiver3 = createUser("google_9998887775", "room3@google.com", room3RecipientNickname, imgUrl3);
+        userRepository.saveAll(List.of(receiver2, receiver3));
 
         // when
         List<ChatBotRoomResponse> chatBotRooms = chatBotRoomService.getAllChatBotRooms(TEST_INITIATOR_NICKNAME);
 
         // then
-        // test if size is 2
-        assertThat(chatBotRooms.size()).isEqualTo(2);
+        // test if size is three
+        assertThat(chatBotRooms.size()).isEqualTo(NUMBER_OF_ROOMS);
 
-        // Recipient nickname 정보가 잘 담겨있는지 검증
-        List<String> receivers = Arrays.asList(chatBotRooms.get(0).getRecipientNickname(),
-                chatBotRooms.get(1).getRecipientNickname());
-        boolean ChatBotRoomResponseContainsReceiver1 = receivers.stream().anyMatch(msg -> msg.equals(TEST_RECIPIENT_NICKNAME));
-        boolean ChatBotRoomResponseContainsReceiver2 = receivers.stream().anyMatch(msg -> msg.equals(room2RecipientNickname));
-        assertThat(ChatBotRoomResponseContainsReceiver1).isTrue();
-        assertThat(ChatBotRoomResponseContainsReceiver2).isTrue();
+        // C_QUESTION 메시지가 가장 최신인 response가 index 0 인지 검증
+        ChatBotRoomResponse firstRoomResponse = chatBotRooms.get(0);
+        assertThat(firstRoomResponse.getRoomId()).isEqualTo(room3Id);
+        assertThat(firstRoomResponse.getRecipientNickname()).isEqualTo(room3RecipientNickname);
+        assertThat(firstRoomResponse.getImgUrl()).isNotNull();
 
-        // img_url 정보가 잘 담기는지 검증
-        assertThat(chatBotRooms.get(0).getImgUrl()).isNotNull();
-        assertThat(chatBotRooms.get(1).getImgUrl()).isNotNull();
+        // C_QUESTION 메시지가 가장 나중인 response가 index 2(마지막) 인지 검증
+        ChatBotRoomResponse thirdRoomResponse = chatBotRooms.get(NUMBER_OF_ROOMS - 1);
+        assertThat(thirdRoomResponse.getRoomId()).isEqualTo(TEST_ROOM_ID);
+        assertThat(thirdRoomResponse.getRecipientNickname()).isEqualTo(TEST_RECIPIENT_NICKNAME);
+        assertThat(thirdRoomResponse.getImgUrl()).isNotNull();
     }
 
     @Test
@@ -461,6 +534,20 @@ class ChatBotRoomServiceTest {
         assertThat(result).isTrue();
         assertThat(messageRepository.findAll().size()).isZero();    // Delete Messages
         assertThat(chatBotRoomRepository.findAll().size()).isZero(); // Delete chatbot room
+    }
+
+    private void createAndSaveChatMessage(String roomId, String message,
+                                          String senderNickname, MessageType type,
+                                          LocalDateTime time) {
+        ChatMessage chatMessage = ChatMessage.builder()
+                .senderNickname(senderNickname)
+                .message(message)
+                ._id("message_id_" + UUID.randomUUID().toString())
+                .messageType(type)
+                .roomId(roomId)
+                .time(time)
+                .build();
+        messageRepository.save(chatMessage);
     }
 
     private User createUser(String id, String email, String nickname, String imgUrl) {

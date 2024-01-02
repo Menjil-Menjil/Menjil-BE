@@ -3,6 +3,10 @@ package seoultech.capstone.menjil.domain.chatbot.application;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import seoultech.capstone.menjil.domain.auth.dao.UserRepository;
 import seoultech.capstone.menjil.domain.auth.domain.User;
@@ -13,12 +17,17 @@ import seoultech.capstone.menjil.domain.chatbot.application.dto.response.ChatBot
 import seoultech.capstone.menjil.domain.chatbot.dao.ChatBotRoomRepository;
 import seoultech.capstone.menjil.domain.chatbot.dao.MessageRepository;
 import seoultech.capstone.menjil.domain.chatbot.domain.ChatBotRoom;
+import seoultech.capstone.menjil.domain.chatbot.domain.ChatMessage;
+import seoultech.capstone.menjil.domain.chatbot.domain.MessageType;
 import seoultech.capstone.menjil.global.exception.CustomException;
 import seoultech.capstone.menjil.global.exception.ErrorCode;
 import seoultech.capstone.menjil.global.handler.AwsS3Handler;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -115,26 +124,46 @@ public class ChatBotRoomService {
         }
 
         // 챗봇 대화방을 순회하면서, 수신자 닉네임을 가져온다.
-        List<String> recipientNicknames = new ArrayList<>();
-        for (ChatBotRoom c : chatBotRooms) {
-            recipientNicknames.add(c.getRecipientNickname());
-        }
+        List<String> recipientNicknames = chatBotRooms.stream()
+                .map(ChatBotRoom::getRecipientNickname)
+                .collect(Collectors.toList());
 
-        List<String> recipientImgUrls = new ArrayList<>();
-        for (String nickname: recipientNicknames) {
-            User user = userRepository.findUserByNickname(nickname).orElse(null);
-            assert user != null;
-            recipientImgUrls.add(generatePreSignedUrlForUserImage(user));
-        }
+        List<User> users = userRepository.findAllByNicknameIn(recipientNicknames);
 
-        List<ChatBotRoomResponse> result = new ArrayList<>();
-        for (int i = 0; i < chatBotRooms.size(); i++) {
-            ChatBotRoomResponse response = ChatBotRoomResponse.of(
-                    chatBotRooms.get(i).getRoomId(),  chatBotRooms.get(i).getRecipientNickname(),
-                    recipientImgUrls.get(i));
-            result.add(response);
-        }
-        return result;
+        // User 객체를 recipientNickname을 키로 하는 맵으로 변환
+        Map<String, User> nicknameToUser = users.stream()
+                .collect(Collectors.toMap(User::getNickname, Function.identity()));
+
+        return chatBotRooms.stream().map(room -> {
+            User user = nicknameToUser.get(room.getRecipientNickname());
+            if (user == null) {
+                // 적절한 예외 처리 또는 대체 로직
+                throw new CustomException(ErrorCode.USER_NOT_EXISTED);
+            }
+
+            Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "time"));
+            Page<ChatMessage> chatMessagePage = messageRepository
+                    .findByRoomIdAndMessageTypeSortedByTimeDesc(room.getRoomId(), MessageType.C_QUESTION, pageable);
+
+            ChatMessage latestChatMessage = null;
+            LocalDateTime latestMessageTime = null;
+            if (!chatMessagePage.isEmpty()) {
+                latestChatMessage = chatMessagePage.getContent().get(0);
+                latestMessageTime = latestChatMessage.getTime();
+            }
+
+            return ChatBotRoomResponse.builder()
+                    .roomId(room.getRoomId())
+                    .recipientNickname(room.getRecipientNickname())
+                    .imgUrl(generatePreSignedUrlForUserImage(user))
+                    .createdDateTime(room.getCreatedDate())
+                    .questionMessage(latestChatMessage != null ? latestChatMessage.getMessage() : null)
+                    .questionMessageDateTime(latestMessageTime)
+                    .build();
+            })
+            .sorted(Comparator.comparing(ChatBotRoomResponse::getQuestionMessageDateTime,
+                    Comparator.nullsLast(Comparator.reverseOrder())))
+            .collect(Collectors.toList());
     }
 
     private String generatePreSignedUrlForUserImage(User mentor) {
