@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-FROM openjdk:11
+FROM openjdk:17
 ARG DEBIAN_FRONTEND=noninteractive
 ARG JAR_FILE=build/libs/*.jar
 #RUN apt-get install -y tzdata
