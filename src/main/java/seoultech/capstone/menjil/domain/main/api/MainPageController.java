@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import seoultech.capstone.menjil.domain.chat.application.RoomService;
-import seoultech.capstone.menjil.domain.chat.dto.response.RoomInfoResponse;
+import seoultech.capstone.menjil.domain.chatbot.application.ChatBotRoomService;
+import seoultech.capstone.menjil.domain.chatbot.dto.response.RoomInfoResponse;
 import seoultech.capstone.menjil.domain.main.application.MainPageService;
 import seoultech.capstone.menjil.domain.main.application.dto.response.FollowUserResponse;
 import seoultech.capstone.menjil.domain.main.application.dto.response.UserInfoResponse;
@@ -28,7 +28,7 @@ import java.util.List;
 @RequestMapping(value = "/api/main")
 public class MainPageController {
 
-    private final RoomService roomService;
+    private final ChatBotRoomService chatBotRoomService;
     private final MainPageService mainPageService;
     private final int pageSize = 3;
 
@@ -40,19 +40,19 @@ public class MainPageController {
                 .body(ApiResponse.success(SuccessCode.GET_USERS_AVAILABLE, mainPageService.getMentors(nickname, pageable)));
     }
 
-    @GetMapping("/rooms")
-    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllRoomsOfUser(@RequestParam("nickname") String nickname,
-                                                                                 @RequestParam("type") String type) {
-        List<RoomInfoResponse> result = roomService.getAllRoomsOfUser(nickname, type);
-
-        if (userHasNoRooms(result)) {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(ApiResponse.success(SuccessCode.GET_ROOMS_AND_NOT_EXISTS, result));
-        } else {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(ApiResponse.success(SuccessCode.GET_ROOMS_AVAILABLE, result));
-        }
-    }
+//    @GetMapping("/rooms")
+//    public ResponseEntity<ApiResponse<List<RoomInfoResponse>>> getAllChatBotRooms(@RequestParam("nickname") String nickname,
+//                                                                                 @RequestParam("type") String type) {
+//        List<RoomInfoResponse> result = roomService.getAllChatBotRooms(nickname, type);
+//
+//        if (userHasNoRooms(result)) {
+//            return ResponseEntity.status(HttpStatus.OK)
+//                    .body(ApiResponse.success(SuccessCode.NO_ROOMS_AVAILABLE, result));
+//        } else {
+//            return ResponseEntity.status(HttpStatus.OK)
+//                    .body(ApiResponse.success(SuccessCode.GET_ROOMS_AVAILABLE, result));
+//        }
+//    }
 
     /**
      * 관심 멘토의 목록을 불러온다

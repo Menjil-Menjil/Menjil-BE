@@ -21,8 +21,9 @@ public enum SuccessCode {
 
     // chat
     MESSAGE_CREATED(HttpStatus.OK.value(), "채팅방 입장이 정상적으로 처리되었습니다"),
-    GET_ROOMS_AND_NOT_EXISTS(HttpStatus.OK.value(), "채팅방 목록이 존재하지 않습니다"),
-    GET_ROOMS_AVAILABLE(HttpStatus.OK.value(), "채팅방 목록을 불러오는데 성공하였습니다"),
+    GET_CHAT_BOT_ROOM_AVAILABLE(HttpStatus.OK.value(), "챗봇 대화방 id를 불러오는데 성공하였습니다"),
+    NO_CHAT_BOT_ROOMS_AVAILABLE(HttpStatus.OK.value(), "불러올 챗봇 대화방이 존재하지 않습니다"),
+    GET_CHAT_BOT_ROOMS_AVAILABLE(HttpStatus.OK.value(), "챗봇 대화방 목록을 불러오는데 성공하였습니다"),
 
     // main
     GET_USER_ROOMS_AVAILABLE(HttpStatus.OK.value(), "사용자의 채팅방 목록을 불러오는데 성공하였습니다"),
@@ -45,7 +46,7 @@ public enum SuccessCode {
     TOKEN_CREATED(HttpStatus.CREATED.value(), "Access Token, Refresh Token이 정상적으로 생성되었습니다"),
 
     // chat
-    ROOM_DELETE_SUCCESS(HttpStatus.CREATED.value(), "채팅방 퇴장이 정상적으로 처리되었습니다"),
+    ROOM_DELETE_SUCCESS(HttpStatus.CREATED.value(), "채팅방 퇴장 요청이 정상적으로 처리되었습니다"),
     MESSAGE_SEND_SUCCESS(HttpStatus.CREATED.value(), "채팅 메시지가 정상적으로 입력되었습니다"),
     AI_QUESTION_RESPONSE(HttpStatus.CREATED.value(), "AI 챗봇 응답입니다"),
     MESSAGE_RATING_SUCCESS(HttpStatus.CREATED.value(), "답변에 대한 평가가 정상적으로 등록되었습니다"),
