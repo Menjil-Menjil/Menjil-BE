@@ -151,7 +151,7 @@ jacocoTestReport {
                     "seoultech/capstone/menjil/**/*Request*",
                     "seoultech/capstone/menjil/**/*Response*",
                     "seoultech/capstone/menjil/domain/**/domain/**",
-                    "seoultech/capstone/menjil/domain/chat/dto/**",
+                    "seoultech/capstone/menjil/domain/chatbot/dto/**",
                     "seoultech/capstone/menjil/global/filter/*CustomCors*",
                     "**/*Config*",
                     "**/*Exception*"
@@ -176,7 +176,7 @@ jacocoTestCoverageVerification {
                     "**.*Request*",
                     "**.*Response*",
                     "**/domain/**/domain/**",
-                    "**/domain/chat/dto/**",
+                    "**/domain/chatbot/dto/**",
                     "**.*Config*",
                     "**.*CustomCors*",
                     "**.*Exception*"

@@ -72,16 +72,13 @@ operation::api/auth/signup/false-score-max[snippets='http-request']
 operation::api/auth/signup/false-score-max[snippets='http-response']
 
 
-
-
 == 로그인
-=== 로그인
-==== 성공
+=== 성공
 operation::api/auth/signin/success[snippets='http-request,request-fields']
 operation::api/auth/signin/success[snippets='http-response,response-fields']
 
-==== 실패
-===== 플랫폼이 google, kakao 가 아닌 경우
+=== 실패
+==== 플랫폼이 google, kakao 가 아닌 경우
 operation::api/auth/signin/fail-provider[snippets='http-request']
 operation::api/auth/signin/fail-provider[snippets='http-response']
 
@@ -89,25 +86,26 @@ operation::api/auth/signin/fail-provider[snippets='http-response']
 // ** 2. 팔로우 **
 == 팔로우
 === 팔로우 요청
-==== 팔로우가 되어있지 않은 경우
+==== 성공
+===== 팔로우가 되어있지 않은 경우
 팔로우가 생성된다.
 
 operation::api/follow/create/201/true[snippets='http-request,request-fields']
 operation::api/follow/create/201/true[snippets='http-response,response-fields']
 
-==== 이미 팔로우가 되어 있는 경우
+===== 이미 팔로우가 되어 있는 경우
 팔로우가 해제된다.
 
 operation::api/follow/create/201/false[snippets='http-request,request-fields']
 operation::api/follow/create/201/false[snippets='http-response,response-fields']
 
-==== 서버 오류
-
+==== 실패
+===== 서버 내부 오류
 operation::api/follow/create/500[snippets='http-request,request-fields']
 operation::api/follow/create/500[snippets='http-response,response-fields']
 
-=== 팔로우 상태 확인
 
+=== 팔로우 상태 확인
 ==== 팔로우가 되어있는 경우
 return true
 
@@ -125,7 +123,7 @@ operation::api/follow/check-status/false[snippets='http-response,response-fields
 // ** 3. 팔로잉 페이지 **
 == 팔로잉
 === 니의 팔로잉 목록 가져오기
-
+-> 작성 중 ...
 
 
 === 팔로잉된 사용자의 상세 정보 조회
@@ -142,4 +140,54 @@ operation::api/following/info/200-only-userinfo[snippets='http-response']
 ===== 존재하지 않는 사용자의 닉네임을 요청한 경우
 operation::api/following/info/500-error[snippets='http-request']
 operation::api/following/info/500-error[snippets='http-response,response-fields']
+
+
+// ** 4. 챗봇 대화방 **
+== 챗봇
+=== 다른 사용자에게 질문하기
+==== 성공
+===== 기존에 챗봇 대화방이 존재하지 않는 경우(처음 질문하는 경우)
+operation::api/chat-bot/room/enter/200/case2[snippets='http-request']
+operation::api/chat-bot/room/enter/200/case2[snippets='http-response,response-fields']
+
+===== 기존에 챗봇 대화방이 존재하는 경우
+처음 질문하는 경우와 동일한 응답을 출력한다
+
+operation::api/chat-bot/room/enter/200/case2-1[snippets='http-request']
+operation::api/chat-bot/room/enter/200/case2-1[snippets='http-response,response-fields']
+
+==== 실패
+===== 사용자 정보가 존재하지 않는 경우
+operation::api/chat-bot/room/enter/500/case1[snippets='http-request']
+operation::api/chat-bot/room/enter/500/case1-1[snippets='http-response,response-fields']
+
+
+=== 대화방 목록 불러오기
+==== 성공
+===== 기존에 존재하던 대화방이 1개인 경우
+operation::api/chat-bot/rooms/200/case1[snippets='http-request,request-parameters']
+operation::api/chat-bot/rooms/200/case1[snippets='http-response,response-fields']
+
+==== 기존에 존재하던 대화방이 2개 이상 경우
+operation::api/chat-bot/rooms/200/case1-1[snippets='http-request,request-parameters']
+operation::api/chat-bot/rooms/200/case1-1[snippets='http-response,response-fields']
+
+==== 대화방이 존재하지 않는 경우
+operation::api/chat-bot/rooms/200/case2[snippets='http-request,request-parameters']
+operation::api/chat-bot/rooms/200/case2[snippets='http-response,response-fields']
+
+
+=== 대화방 퇴장하기
+==== 성공
+===== 정상적으로 퇴장에 성공한 경우
+operation::api/chat-bot/room/quit/201/case1[snippets='http-request']
+operation::api/chat-bot/room/quit/201/case1[snippets='http-response,response-fields']
+
+==== 실패
+===== 서버, DB 오류 등으로 인해 퇴장에 실패한 경우
+operation::api/chat-bot/room/quit/500/case2[snippets='http-request']
+operation::api/chat-bot/room/quit/500/case2[snippets='http-response,response-fields']
+
+
+
 
