@@ -165,7 +165,7 @@ class ChatBotRoomControllerTest {
      * getAllChatBotRooms
      */
     @Test
-    @DisplayName("case 1: 기존 챗봇 대화방이 1개 존재하는 경우")
+    @DisplayName("case 1: 챗봇 대화방이 1개, C_QUESTION 메시지가 1개 존재한다.")
     void getAllChatBotRooms_Number_of_Room_Is_One() throws Exception {
         // given
         String initiatorNickname = "nickname1";
@@ -199,7 +199,41 @@ class ChatBotRoomControllerTest {
     }
 
     @Test
-    @DisplayName("case 1-1: 기존 챗봇 대화방이 2개 존재하는 경우")
+    @DisplayName("case 1-1: 챗봇 대화방이 1개, C_QUESTION 메시지가 존재하지 않는 경우 Null이 담긴다")
+    void getAllChatBotRooms_Number_of_Room_Is_One_And_Message_Is_Null() throws Exception {
+        // given
+        String initiatorNickname = "nickname1";
+        LocalDateTime now = LocalDateTime.now();
+        ChatBotRoomResponse response = ChatBotRoomResponse.
+                builder()
+                .roomId("room-id")
+                .imgUrl("profile/default.png")
+                .recipientNickname("상대방 닉네임")
+                .createdDateTime(now)
+                .questionMessage(null)
+                .questionMessageDateTime(null)
+                .build();
+
+        List<ChatBotRoomResponse> result = new ArrayList<>();
+        result.add(response);
+
+        // when
+        Mockito.when(chatBotRoomService.getAllChatBotRooms(initiatorNickname))
+                .thenReturn(result);
+
+        // then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/chat-bot/rooms/")
+                        .queryParam("initiatorNickname", initiatorNickname))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(SuccessCode.GET_CHAT_BOT_ROOMS_AVAILABLE.getCode())))
+                .andExpect(jsonPath("$.message", is(SuccessCode.GET_CHAT_BOT_ROOMS_AVAILABLE.getMessage())))
+                .andDo(print());
+
+        verify(chatBotRoomService, times(1)).getAllChatBotRooms(initiatorNickname);
+    }
+
+    @Test
+    @DisplayName("case 1-2: 챗봇 대화방이 1개, C_QUESTION 메시지가 여러개 존재하는 경우")
     void getAllChatBotRooms_Number_Of_Room_Is_Two() throws Exception {
         // given
         String initiatorNickname = "nickname1";

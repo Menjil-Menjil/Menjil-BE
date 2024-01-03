@@ -206,7 +206,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
      * getAllChatBotRooms
      */
     @Test
-    @DisplayName("case 1: 기존 챗봇 대화방이 1개 존재하는 경우")
+    @DisplayName("case 1: 챗봇 대화방이 1개, C_QUESTION 메시지가 1개 존재한다.")
     void getAllChatBotRooms_Number_of_Room_Is_One() throws Exception {
         // given
         String initiatorNickname = "nickname1";
@@ -252,7 +252,53 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
     }
 
     @Test
-    @DisplayName("case 1-1: 기존 챗봇 대화방이 2개 존재하는 경우")
+    @DisplayName("case 1-1: 챗봇 대화방이 1개, C_QUESTION 메시지가 존재하지 않는 경우 Null이 담긴다")
+    void getAllChatBotRooms_Number_of_Room_Is_One_And_Message_Is_Null() throws Exception {
+        // given
+        String initiatorNickname = "nickname1";
+        LocalDateTime now = LocalDateTime.now();
+        ChatBotRoomResponse response = ChatBotRoomResponse.
+                builder()
+                .roomId("room-id")
+                .imgUrl("profile/default.png")
+                .recipientNickname("상대방 닉네임")
+                .createdDateTime(now)
+                .questionMessage(null)
+                .questionMessageDateTime(null)
+                .build();
+
+        List<ChatBotRoomResponse> result = new ArrayList<>();
+        result.add(response);
+
+        // when
+        Mockito.when(chatBotRoomService.getAllChatBotRooms(initiatorNickname))
+                .thenReturn(result);
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/chat-bot/rooms/")
+                        .queryParam("initiatorNickname", initiatorNickname))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("api/chat-bot/rooms/200/case1-1",
+                        requestParameters(
+                                parameterWithName("initiatorNickname").description("사용자 닉네임")
+                        ),
+                        responseFields(
+                                fieldWithPath("code").type(JsonFieldType.NUMBER).description("응답 코드"),
+                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                fieldWithPath("data").type(JsonFieldType.ARRAY).description("대화방 목록 리스트"),
+                                fieldWithPath("data[].roomId").type(JsonFieldType.STRING).description("채팅방 ID"),
+                                fieldWithPath("data[].recipientNickname").type(JsonFieldType.STRING).description("수신자 닉네임"),
+                                fieldWithPath("data[].imgUrl").type(JsonFieldType.STRING).description("프로필 이미지 URL"),
+                                fieldWithPath("data[].createdDateTime").type(JsonFieldType.STRING).description("대화방 생성 시간"),
+                                fieldWithPath("data[].questionMessage").type(JsonFieldType.NULL).description("질문 메시지"),
+                                fieldWithPath("data[].questionMessageDateTime").type(JsonFieldType.NULL).description("질문 메시지가 작성된 날짜와 시간")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("case 1-2: 챗봇 대화방이 1개, C_QUESTION 메시지가 여러개 존재하는 경우")
     void getAllChatBotRooms_Number_Of_Room_Is_Two() throws Exception {
         // given
         String initiatorNickname = "nickname1";
@@ -292,7 +338,7 @@ public class ChatBotRoomControllerDocsTest extends RestDocsSupport {
                         .queryParam("initiatorNickname", initiatorNickname))
                 .andExpect(status().isOk())
                 .andDo(print())
-                .andDo(document("api/chat-bot/rooms/200/case1-1",
+                .andDo(document("api/chat-bot/rooms/200/case1-2",
                         requestParameters(
                                 parameterWithName("initiatorNickname").description("사용자 닉네임")
                         ),
