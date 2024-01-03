@@ -349,7 +349,7 @@ class ChatBotRoomServiceTest {
      * getAllChatBotRooms
      */
     @Test
-    @DisplayName("case 1: 기존 챗봇 대화방이 1개 존재하는 경우")
+    @DisplayName("case 1: 챗봇 대화방이 1개, C_QUESTION 메시지가 1개 존재한다.")
     void getAllChatBotRooms_Number_of_Room_Is_One() {
         // given
         String roomId = TEST_ROOM_ID;
@@ -375,7 +375,31 @@ class ChatBotRoomServiceTest {
     }
 
     @Test
-    @DisplayName("case 1-1: 기존 챗봇 대화방이 1개, C_QUESTION 메시지가 여러개 존재하는 경우 가장 최신의 메시지가 전달된다")
+    @DisplayName("case 1-1: 챗봇 대화방이 1개, C_QUESTION 메시지가 존재하지 않는 경우 Null이 담긴다")
+    void getAllChatBotRooms_Number_of_Room_Is_One_And_Message_Is_Null() {
+        // given
+        String roomId = TEST_ROOM_ID;
+        String cMessage1 = "질문 1";
+        String senderNickname = TEST_RECIPIENT_NICKNAME;
+        LocalDateTime now = LocalDateTime.now();
+
+        // save chat message of ENTER, not C_QUESTION
+        createAndSaveChatMessage(roomId, cMessage1, senderNickname, MessageType.ENTER, now);
+
+        // when
+        List<ChatBotRoomResponse> getChatBotRooms = chatBotRoomService.getAllChatBotRooms(TEST_INITIATOR_NICKNAME);
+
+        // then
+        assertThat(getChatBotRooms.size()).isEqualTo(1);
+
+        ChatBotRoomResponse response = getChatBotRooms.get(0);
+        assertThat(response.getQuestionMessage()).isNull(); // Null이 담기는지 검증
+        assertThat(response.getQuestionMessageDateTime()).isNull(); // Null이 담기는지 검증
+        assertThat(response.getImgUrl()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("case 1-2: 챗봇 대화방이 1개, C_QUESTION 메시지가 여러개 존재하는 경우 가장 최신의 메시지가 전달된다")
     void getAllChatBotRooms_Number_of_Room_Is_One_And_Messages() {
         // given
         int NUMBER_OF_MESSAGES = 3;
